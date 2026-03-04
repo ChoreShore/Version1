@@ -1,20 +1,29 @@
-import type { ResetPasswordPayload } from '~/types/auth';
-import { serverSupabaseClient } from '#supabase/server';
+import { serverSupabaseClient, serverSupabaseUser } from '#supabase/server';
+import type { ApplicationsResponse } from '~/types/application';
 
 export default defineEventHandler(async (event) => {
   try {
-    const { email } = await readBody<ResetPasswordPayload>(event);
+    const user = await serverSupabaseUser(event);
+
+    if (!user) {
+      throw createError({ 
+        statusCode: 401, 
+        statusMessage: 'Sign in to view your applications' 
+      });
+    }
+
     const client = await serverSupabaseClient(event);
 
-    const { error } = await client.auth.resetPasswordForEmail(email, {
-      redirectTo: `${getRequestURL(event).origin}/auth/reset`
+    // Use your existing get_worker_applications function
+    const { data, error } = await client.rpc('get_worker_applications', {
+      worker_uuid: user.id
     });
 
     if (error) {
       throw createError({ statusCode: 400, statusMessage: error.message });
     }
 
-    return { success: true };
+    return { applications: data || [] } as ApplicationsResponse;
   } catch (error: any) {
     // Handle Supabase client initialization errors
     if (error.message?.includes('Auth session missing') || 

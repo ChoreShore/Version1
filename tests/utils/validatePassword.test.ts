@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { validatePassword } from './validatePassword';
+import { validatePassword } from '~/server/utils/validatePassword'; // ← Fixed import path
 
 describe('validatePassword', () => {
   it('should reject passwords shorter than 12 characters', () => {

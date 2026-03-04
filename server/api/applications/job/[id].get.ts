@@ -1,43 +1,40 @@
-import type { AddRolePayload, Role } from '~/types/auth';
 import { serverSupabaseClient, serverSupabaseUser } from '#supabase/server';
+import type { JobApplicationsResponse } from '~/types/application';
 
 export default defineEventHandler(async (event) => {
   try {
+    const jobId = getRouterParam(event, 'id');
     const user = await serverSupabaseUser(event);
+
     if (!user) {
       throw createError({ 
         statusCode: 401, 
-        statusMessage: 'Sign in to update your roles' 
+        statusMessage: 'Sign in to view applications' 
       });
     }
 
-    const { role } = await readBody<AddRolePayload>(event);
-    const client = await serverSupabaseClient(event);
-
-    const { data: profile, error: profileError } = await client
-      .from('profiles')
-      .select('roles')
-      .eq('id', user.id)
-      .single();
-
-    if (profileError) {
-      throw createError({ statusCode: 400, statusMessage: profileError.message });
+    if (!jobId) {
+      throw createError({ statusCode: 400, statusMessage: 'Job ID is required' });
     }
 
-    const existingRoles = Array.isArray(profile?.roles) ? profile.roles : [];
-    const roles = new Set<Role>(existingRoles);
-    roles.add(role);
+    // Validate job ID format
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+    if (!uuidRegex.test(jobId)) {
+      throw createError({ statusCode: 400, statusMessage: 'Invalid job ID format' });
+    }
 
-    const { error } = await client
-      .from('profiles')
-      .update({ roles: Array.from(roles) })
-      .eq('id', user.id);
+    const client = await serverSupabaseClient(event);
+
+    // Use your existing get_job_applications function
+    const { data, error } = await client.rpc('get_job_applications', {
+      job_uuid: jobId
+    });
 
     if (error) {
       throw createError({ statusCode: 400, statusMessage: error.message });
     }
 
-    return { roles: Array.from(roles) };
+    return { applications: data || [] } as JobApplicationsResponse;
   } catch (error: any) {
     // Handle Supabase client initialization errors
     if (error.message?.includes('Auth session missing') || 

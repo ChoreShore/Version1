@@ -1,6 +1,15 @@
 import { defineConfig } from 'vitest/config';
 import { fileURLToPath } from 'node:url';
 
+// Load test environment variables BEFORE any other imports
+import { config } from 'dotenv';
+config({ path: '.env.test' });
+
+// Set environment variables globally for the test run
+process.env.SUPABASE_URL = process.env.SUPABASE_URL || 'https://ywqjgusyluhchlvvtnlp.supabase.co';
+process.env.SUPABASE_KEY = process.env.SUPABASE_KEY || 'sb_publishable_RsC53VHhXi1OkdGtcQqokg_fPq-GyXA';
+process.env.NODE_ENV = 'test';
+
 export default defineConfig({
   resolve: {
     alias: {
@@ -10,6 +19,7 @@ export default defineConfig({
   },
   test: {
     environment: 'node',
+    setupFiles: ['./tests/setup.ts'],
     include: [
       'server/**/*.test.ts',
       'tests/**/*.test.ts'
@@ -17,8 +27,7 @@ export default defineConfig({
     exclude: [
       'node_modules/**',
       '.nuxt/**',
-      'dist/**',
-      'tests/server/**/*.test.ts' // Exclude full Nuxt integration tests for now
+      'dist/**'
     ],
     coverage: {
       provider: 'v8',

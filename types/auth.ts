@@ -1,7 +1,28 @@
 import type { Role } from './role';
+import type { 
+  Job, 
+  JobPreview, 
+  JobWithDetails, 
+  CreateJobPayload, 
+  UpdateJobPayload,
+  BudgetType,
+  JobStatus,
+  JobCategory
+} from './job';
 
 export type { Role };
+export type { 
+  Job, 
+  JobPreview, 
+  JobWithDetails, 
+  CreateJobPayload, 
+  UpdateJobPayload,
+  BudgetType,
+  JobStatus,
+  JobCategory
+};
 
+// Existing auth types...
 export interface SignUpPayload {
   email: string;
   password: string;
