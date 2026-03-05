@@ -1,3 +1,5 @@
+import { isValidUuid } from './api';
+
 export function validateBudget(amount: number): { valid: boolean; message?: string } {
   if (typeof amount !== 'number' || isNaN(amount)) {
     return { valid: false, message: 'Budget amount must be a valid number' };
@@ -147,9 +149,7 @@ export function validateCategoryId(categoryId: string): { valid: boolean; messag
     return { valid: false, message: 'Category ID is required' };
   }
   
-  // More permissive UUID validation
-  const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
-  if (!uuidRegex.test(categoryId)) {
+  if (!isValidUuid(categoryId)) {
     return { valid: false, message: 'Invalid category ID format' };
   }
   

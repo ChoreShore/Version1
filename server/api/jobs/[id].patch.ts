@@ -1,28 +1,17 @@
 import { serverSupabaseClient, serverSupabaseUser } from '#supabase/server';
 import type { UpdateJobPayload, JobResponse } from '~/types/job';
 import { validateUpdateJobPayload } from '../../utils/jobValidation';
+import { assertValidUuid, ensureAuthenticated, handleSupabaseAuthErrors } from '~/server/utils/api';
 
 export default defineEventHandler(async (event) => {
   try {
-    const user = await serverSupabaseUser(event);
-    const jobId = getRouterParam(event, 'id');
-
-    if (!jobId) {
-      throw createError({ statusCode: 400, statusMessage: 'Job ID is required' });
-    }
-
-    // Validate job ID format
-    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
-    if (!uuidRegex.test(jobId)) {
-      throw createError({ statusCode: 400, statusMessage: 'Invalid job ID format' });
-    }
-
-    if (!user) {
-      throw createError({ 
-        statusCode: 401, 
-        statusMessage: 'Sign in to update job details' 
-      });
-    }
+    const user = ensureAuthenticated(
+      await serverSupabaseUser(event),
+      'Sign in to update job details'
+    );
+    const jobId = assertValidUuid(getRouterParam(event, 'id'), {
+      label: 'Job ID'
+    });
 
     const body = await readBody(event);
     
@@ -83,18 +72,7 @@ export default defineEventHandler(async (event) => {
     const response: JobResponse = { job: data };
     return response;
   } catch (error: any) {
-    // Handle Supabase client initialization errors
-    if (error.message?.includes('Auth session missing') || 
-        error.message?.includes('Supabase') ||
-        error.message?.includes('session') ||
-        error.message?.includes('authentication') ||
-        error.statusCode === 500 ||
-        error.statusCode === 401) {
-      throw createError({ 
-        statusCode: 401, 
-        statusMessage: 'Auth session missing!' 
-      });
-    }
+    handleSupabaseAuthErrors(error);
     throw error;
   }
 });

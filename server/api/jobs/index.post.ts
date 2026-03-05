@@ -1,17 +1,14 @@
 import { serverSupabaseClient, serverSupabaseUser } from '#supabase/server';
 import type { CreateJobPayload, JobResponse } from '~/types/job';
 import { validateCreateJobPayload } from '../../utils/jobValidation';
+import { ensureAuthenticated, handleSupabaseAuthErrors } from '~/server/utils/api';
 
 export default defineEventHandler(async (event) => {
   try {
-    const user = await serverSupabaseUser(event);
-    
-    if (!user) {
-      throw createError({ 
-        statusCode: 401, 
-        statusMessage: 'Sign in to create jobs' 
-      });
-    }
+    const user = ensureAuthenticated(
+      await serverSupabaseUser(event),
+      'Sign in to create jobs'
+    );
 
     const body = await readBody<CreateJobPayload>(event);
     
@@ -71,18 +68,7 @@ export default defineEventHandler(async (event) => {
     const response: JobResponse = { job: data };
     return response;
   } catch (error: any) {
-    // Handle Supabase client initialization errors
-    if (error.message?.includes('Auth session missing') || 
-        error.message?.includes('Supabase') ||
-        error.message?.includes('session') ||
-        error.message?.includes('authentication') ||
-        error.statusCode === 500 ||
-        error.statusCode === 401) {
-      throw createError({ 
-        statusCode: 401, 
-        statusMessage: 'Auth session missing!' 
-      });
-    }
+    handleSupabaseAuthErrors(error);
     throw error;
   }
 });
