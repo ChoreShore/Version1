@@ -1,5 +1,6 @@
 export default defineNuxtConfig({
   devtools: { enabled: true },
+  css: ['~/assets/css/tokens.css'],
   modules: ['@nuxtjs/supabase'],
   supabase: {
     redirect: false,
