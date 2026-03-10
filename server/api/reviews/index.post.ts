@@ -1,5 +1,5 @@
 import { serverSupabaseClient, serverSupabaseUser } from '#supabase/server';
-import type { CreateReviewPayload, ReviewResponse } from '~/types/review';
+import { validateCreateReview, ReviewResponseSchema } from '~/schemas/review';
 import { mapReview, reviewSelect } from './utils';
 
 export default defineEventHandler(async (event) => {
@@ -13,30 +13,30 @@ export default defineEventHandler(async (event) => {
       });
     }
 
-    const body = await readBody<CreateReviewPayload>(event);
+    const body = await readBody(event);
 
-    if (!body.job_id) {
-      throw createError({ statusCode: 400, statusMessage: 'Job ID is required' });
+    // Validate request body with Zod
+    const validation = validateCreateReview(body);
+    if (!validation.success || !validation.data) {
+      throw createError({ 
+        statusCode: 400, 
+        statusMessage: 'Validation failed',
+        data: { errors: validation.errors }
+      });
     }
 
-    if (!body.reviewed_user_id) {
-      throw createError({ statusCode: 400, statusMessage: 'Reviewed user ID is required' });
-    }
-
-    if (!body.rating || body.rating < 1 || body.rating > 5) {
-      throw createError({ statusCode: 400, statusMessage: 'Rating must be between 1 and 5' });
-    }
+    const validatedData = validation.data;
 
     const client = await serverSupabaseClient(event);
 
     const { data, error } = await client
       .from('reviews')
       .insert({
-        job_id: body.job_id,
+        job_id: validatedData.job_id,
         reviewer_id: user.id,
-        reviewed_user_id: body.reviewed_user_id,
-        rating: body.rating,
-        comment: body.comment ?? null
+        reviewed_user_id: validatedData.reviewed_user_id,
+        rating: validatedData.rating,
+        comment: validatedData.comment ?? null
       })
       .select(reviewSelect)
       .single();
@@ -45,7 +45,16 @@ export default defineEventHandler(async (event) => {
       throw createError({ statusCode: 400, statusMessage: error.message });
     }
 
-    return { review: mapReview(data) } satisfies ReviewResponse;
+    const response = { review: mapReview(data) };
+    
+    // Validate response with Zod schema (safe validation)
+    try {
+      return ReviewResponseSchema.parse(response);
+    } catch (validationError) {
+      console.error('API Response validation failed:', validationError);
+      // Return unvalidated response to prevent breaking the application
+      return response;
+    }
   } catch (error: any) {
     if (
       error.message?.includes('Auth session missing') ||

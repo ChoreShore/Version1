@@ -1,25 +1,31 @@
 import type {
-  CreateReviewPayload,
-  ReviewResponse,
-  ReviewsResponse
-} from '~/types/review';
+  CreateReviewInput,
+  ReviewResponseInput,
+  ReviewsResponseInput
+} from '~/schemas/review';
+import type { Role } from '~/schemas/role';
 
 export const useReviews = () => {
-  const listReviews = async (type: 'received' | 'given' = 'received') => {
-    const params = type === 'received' ? undefined : { type };
-    return await $fetch<ReviewsResponse>('/api/reviews', { params });
+  const listReviews = async (type: 'received' | 'given' = 'received', role?: Role) => {
+    const params = { 
+      ...(type !== 'received' ? { type } : {}),
+      ...(role ? { role } : {})
+    };
+    return await $fetch<ReviewsResponseInput>('/api/reviews', { 
+      params: Object.keys(params).length > 0 ? params : undefined 
+    });
   };
 
   const getJobReview = async (jobId: string) => {
-    return await $fetch<ReviewResponse>(`/api/reviews/job/${jobId}`);
+    return await $fetch<ReviewResponseInput>(`/api/reviews/job/${jobId}`);
   };
 
   const listWorkerReviews = async (workerId: string) => {
-    return await $fetch<ReviewsResponse>(`/api/reviews/worker/${workerId}`);
+    return await $fetch<ReviewsResponseInput>(`/api/reviews/worker/${workerId}`);
   };
 
-  const createReview = async (payload: CreateReviewPayload) => {
-    return await $fetch<ReviewResponse>('/api/reviews', {
+  const createReview = async (payload: CreateReviewInput) => {
+    return await $fetch<ReviewResponseInput>('/api/reviews', {
       method: 'POST',
       body: payload
     });

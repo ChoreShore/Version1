@@ -1,4 +1,4 @@
-import type { Review } from '~/types/review';
+import type { ReviewInput } from '~/schemas/review';
 
 export const reviewSelect = `
   review_id,
@@ -26,7 +26,7 @@ export type ReviewRow = {
   reviewed_user?: { id: string; first_name: string | null; last_name: string | null } | null;
 };
 
-export const mapReview = (row: ReviewRow): Review => ({
+export const mapReview = (row: ReviewRow): ReviewInput => ({
   review_id: row.review_id,
   job_id: row.job_id,
   reviewer_id: row.reviewer_id,

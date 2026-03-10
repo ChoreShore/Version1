@@ -1,5 +1,5 @@
 import { serverSupabaseClient } from '#supabase/server';
-import type { CategoriesResponse } from '~/types/job';
+import { CategoriesResponseSchema } from '~/schemas/job';
 
 export default defineEventHandler(async (event) => {
   const client = await serverSupabaseClient(event);
@@ -13,6 +13,13 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 400, statusMessage: error.message });
   }
 
-  const response: CategoriesResponse = { categories: data || [] };
-  return response;
+  const response = { categories: data || [] };
+
+  // Validate response with Zod schema
+  try {
+    return CategoriesResponseSchema.parse(response);
+  } catch (validationError) {
+    console.error('API Response validation failed:', validationError);
+    throw createError({ statusCode: 500, statusMessage: 'Invalid response format' });
+  }
 });

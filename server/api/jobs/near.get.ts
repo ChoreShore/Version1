@@ -1,5 +1,5 @@
 import { serverSupabaseClient } from '#supabase/server';
-import type { NearJobsResponse } from '~/types/job';
+import { NearJobsResponseSchema } from '~/schemas/job';
 
 export default defineEventHandler(async (event) => {
   try {
@@ -41,8 +41,15 @@ export default defineEventHandler(async (event) => {
       throw createError({ statusCode: 400, statusMessage: error.message });
     }
 
-    const response: NearJobsResponse = { jobs: data || [] };
-    return response;
+    const response = { jobs: data || [] };
+    
+    // Validate response with Zod schema
+    try {
+      return NearJobsResponseSchema.parse(response);
+    } catch (validationError) {
+      console.error('API Response validation failed:', validationError);
+      throw createError({ statusCode: 500, statusMessage: 'Invalid response format' });
+    }
   } catch (error: any) {
     // Handle Supabase client initialization errors
     if (error.message?.includes('Auth session missing') || 

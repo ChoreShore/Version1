@@ -1,9 +1,9 @@
 import { serverSupabaseClient, serverSupabaseUser } from '#supabase/server';
-import type { CreateApplicationPayload, ApplicationResponse } from '~/types/application';
+import { validateCreateApplication, ApplicationResponseSchema } from '~/schemas/application';
 
 export default defineEventHandler(async (event) => {
   try {
-    const body = await readBody(event) as CreateApplicationPayload;
+    const body = await readBody(event);
     const user = await serverSupabaseUser(event);
 
     if (!user) {
@@ -13,22 +13,22 @@ export default defineEventHandler(async (event) => {
       });
     }
 
-    // Validate required fields
-    if (!body.job_id) {
-      throw createError({ statusCode: 400, statusMessage: 'Job ID is required' });
+    // Validate request body with Zod
+    const validation = validateCreateApplication(body);
+    if (!validation.success || !validation.data) {
+      throw createError({ 
+        statusCode: 400, 
+        statusMessage: 'Validation failed',
+        data: { errors: validation.errors }
+      });
     }
 
-    // Validate job ID format
-    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
-    if (!uuidRegex.test(body.job_id)) {
-      throw createError({ statusCode: 400, statusMessage: 'Invalid job ID format' });
-    }
-
+    const validatedData = validation.data;
     const client = await serverSupabaseClient(event);
 
     // Use your existing can_apply_to_job function
     const { data: canApply, error: canApplyError } = await client.rpc('can_apply_to_job', {
-      job_uuid: body.job_id,
+      job_uuid: validatedData.job_id,
       worker_uuid: user.id
     });
 
@@ -46,11 +46,10 @@ export default defineEventHandler(async (event) => {
     const { data, error } = await client
       .from('applications')
       .insert({
-        job_id: body.job_id,
+        job_id: validatedData.job_id,
         worker_id: user.id,
-        cover_letter: body.cover_letter || null,
-        proposed_rate: body.proposed_rate || null,
-        availability_notes: body.availability_notes || null
+        cover_letter: validatedData.cover_letter || null,
+        proposed_rate: validatedData.proposed_rate || null
       })
       .select()
       .single();
@@ -75,7 +74,16 @@ export default defineEventHandler(async (event) => {
       throw createError({ statusCode: 400, statusMessage: error.message });
     }
 
-    return { application: data } as ApplicationResponse;
+    const response = { application: data };
+    
+    // Validate response with Zod schema (safe validation)
+    try {
+      return ApplicationResponseSchema.parse(response);
+    } catch (validationError) {
+      console.error('API Response validation failed:', validationError);
+      // Return unvalidated response to prevent breaking the application
+      return response;
+    }
   } catch (error: any) {
     // Handle Supabase client initialization errors
     if (error.message?.includes('Auth session missing') || 

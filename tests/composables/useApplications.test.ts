@@ -1,11 +1,11 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { useApplications } from '~/composables/useApplications';
 import type {
-  ApplicationsResponse,
-  ApplicationResponse,
-  JobApplicationsResponse,
-  ApplicationStatsResponse
-} from '~/types/application';
+  CreateApplicationInput,
+  ApplicationsResponseInput,
+  ApplicationResponseInput,
+  ApplicationStatsResponseInput
+} from '~/schemas/application';
 
 const applicationsComposable = useApplications();
 const mockFetch = vi.fn();
@@ -17,7 +17,7 @@ describe('useApplications composable', () => {
   });
 
   it('listMyApplications fetches worker applications', async () => {
-    const response: ApplicationsResponse = {
+    const response: ApplicationsResponseInput = {
       applications: []
     };
 
@@ -26,11 +26,11 @@ describe('useApplications composable', () => {
     const result = await applicationsComposable.listMyApplications();
 
     expect(result).toBe(response);
-    expect(mockFetch).toHaveBeenCalledWith('/api/applications');
+    expect(mockFetch).toHaveBeenCalledWith('/api/applications', { params: undefined });
   });
 
   it('getApplication fetches a specific application', async () => {
-    const response: ApplicationResponse = {
+    const response: ApplicationResponseInput = {
       application: {
         id: 'app-1',
         job_id: 'job-1',
@@ -53,7 +53,7 @@ describe('useApplications composable', () => {
   });
 
   it('createApplication posts payload to /api/applications', async () => {
-    const response: ApplicationResponse = {
+    const response: ApplicationResponseInput = {
       application: {
         id: 'app-1',
         job_id: 'job-1',
@@ -86,7 +86,7 @@ describe('useApplications composable', () => {
   });
 
   it('updateApplication patches an application', async () => {
-    const response: ApplicationResponse = {
+    const response: ApplicationResponseInput = {
       application: {
         id: 'app-1',
         job_id: 'job-1',
@@ -114,34 +114,35 @@ describe('useApplications composable', () => {
   });
 
   it('listJobApplications fetches applications for a job', async () => {
-    const response: JobApplicationsResponse = {
+    const response: ApplicationsResponseInput = {
       applications: [
         {
           id: 'app-1',
+          job_id: 'job-1',
           worker_id: 'worker-1',
-          worker_name: 'Test Worker',
           status: 'pending',
           cover_letter: 'Cover letter',
           proposed_rate: 120,
-          created_at: '2025-01-01T00:00:00Z'
+          created_at: '2025-01-01T00:00:00Z',
+          updated_at: '2025-01-01T00:00:00Z'
         }
       ]
     };
 
     mockFetch.mockResolvedValue(response);
 
-    const result = await applicationsComposable.listJobApplications('job-1');
+    const result = await applicationsComposable.getJobApplications('job-123');
 
     expect(result).toBe(response);
     expect(mockFetch).toHaveBeenCalledWith('/api/applications/job/job-1');
   });
 
   it('getJobApplicationStats fetches stats for a job', async () => {
-    const response: ApplicationStatsResponse = {
-      total_applications: 5,
-      pending_applications: 3,
-      accepted_applications: 1,
-      rejected_applications: 1
+    const response: ApplicationStatsResponseInput = {
+      total: 5,
+      pending: 3,
+      accepted: 1,
+      rejected: 1
     };
 
     mockFetch.mockResolvedValue(response);

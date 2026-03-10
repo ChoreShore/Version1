@@ -1,13 +1,13 @@
-import type { SignUpPayload, SignInPayload, Role } from '~/types/auth';
+import type { SignUpInput, SignInInput, Role } from '~/schemas/auth';
 
 export const useAuth = () => {
   const user = useSupabaseUser();
 
-  const signup = async (payload: SignUpPayload) => {
+  const signup = async (payload: SignUpInput) => {
     await $fetch('/api/auth/signup', { method: 'POST', body: payload });
   };
 
-  const signin = async (payload: SignInPayload) => {
+  const signin = async (payload: SignInInput) => {
     await $fetch('/api/auth/signin', { method: 'POST', body: payload });
   };
 

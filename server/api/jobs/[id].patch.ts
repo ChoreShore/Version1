@@ -1,6 +1,5 @@
 import { serverSupabaseClient, serverSupabaseUser } from '#supabase/server';
-import type { UpdateJobPayload, JobResponse } from '~/types/job';
-import { validateUpdateJobPayload } from '../../utils/jobValidation';
+import { UpdateJobInput, JobResponseSchema, validateUpdateJob } from '~/schemas/job';
 import { assertValidUuid, ensureAuthenticated, handleSupabaseAuthErrors } from '~/server/utils/api';
 
 export default defineEventHandler(async (event) => {
@@ -15,12 +14,12 @@ export default defineEventHandler(async (event) => {
 
     const body = await readBody(event);
     
-    const validation = validateUpdateJobPayload(body);
-    if (!validation.valid) {
+    const validation = validateUpdateJob(body);
+    if (!validation.success) {
       throw createError({ 
         statusCode: 400, 
-        statusMessage: validation.message || 'Validation failed',
-        data: { field: validation.field }
+        statusMessage: 'Validation failed',
+        data: { errors: validation.errors }
       });
     }
 
@@ -69,8 +68,15 @@ export default defineEventHandler(async (event) => {
       throw createError({ statusCode: 400, statusMessage: error.message });
     }
 
-    const response: JobResponse = { job: data };
-    return response;
+    const response = { job: data };
+    
+    // Validate response with Zod schema
+    try {
+      return JobResponseSchema.parse(response);
+    } catch (validationError) {
+      console.error('API Response validation failed:', validationError);
+      throw createError({ statusCode: 500, statusMessage: 'Invalid response format' });
+    }
   } catch (error: any) {
     handleSupabaseAuthErrors(error);
     throw error;

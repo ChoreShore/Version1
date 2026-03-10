@@ -20,9 +20,9 @@
 </template>
 
 <script setup lang="ts">
-import type { Review } from '~/types/review';
+import type { ReviewInput } from '~/schemas/review';
 
-const props = defineProps<{ review: Review }>();
+const props = defineProps<{ review: ReviewInput }>();
 
 const jobTitle = computed(() => props.review.job_title ?? 'Job');
 const reviewerName = computed(() => props.review.reviewer_first_name ?? 'Employer');

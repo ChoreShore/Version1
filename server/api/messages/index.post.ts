@@ -1,5 +1,5 @@
 import { serverSupabaseClient, serverSupabaseUser } from '#supabase/server';
-import type { CreateMessagePayload, MessageResponse } from '~/types/message';
+import { validateCreateMessage, MessageResponseSchema } from '~/schemas/message';
 
 export default defineEventHandler(async (event) => {
   try {
@@ -12,21 +12,26 @@ export default defineEventHandler(async (event) => {
       });
     }
 
-    const body = await readBody<CreateMessagePayload>(event);
+    const body = await readBody(event);
 
-    if (!body.job_id || !body.application_id || !body.receiver_id || !body.body?.trim()) {
-      throw createError({
-        statusCode: 400,
-        statusMessage: 'job_id, application_id, receiver_id and body are required'
+    // Validate request body with Zod
+    const validation = validateCreateMessage(body);
+    if (!validation.success || !validation.data) {
+      throw createError({ 
+        statusCode: 400, 
+        statusMessage: 'Validation failed',
+        data: { errors: validation.errors }
       });
     }
+
+    const validatedData = validation.data;
 
     const client = await serverSupabaseClient(event);
 
     const { data: canSend, error: guardError } = await client.rpc('can_send_message', {
-      p_job_id: body.job_id,
+      p_job_id: validatedData.job_id,
       p_sender_id: user.id,
-      p_receiver_id: body.receiver_id
+      p_receiver_id: validatedData.receiver_id
     });
 
     if (guardError) {
@@ -43,12 +48,12 @@ export default defineEventHandler(async (event) => {
     const { data, error } = await client
       .from('messages')
       .insert({
-        job_id: body.job_id,
-        application_id: body.application_id,
+        job_id: validatedData.job_id,
+        application_id: validatedData.application_id,
         sender_id: user.id,
-        receiver_id: body.receiver_id,
-        body: body.body.trim(),
-        attachment_url: body.attachment_url || null
+        receiver_id: validatedData.receiver_id,
+        body: validatedData.body,
+        attachment_url: validatedData.attachment_url || null
       })
       .select(`
         *,
@@ -61,7 +66,16 @@ export default defineEventHandler(async (event) => {
       throw createError({ statusCode: 400, statusMessage: error.message });
     }
 
-    return { message: data } as MessageResponse;
+    const response = { message: data };
+    
+    // Validate response with Zod schema (safe validation)
+    try {
+      return MessageResponseSchema.parse(response);
+    } catch (validationError) {
+      console.error('API Response validation failed:', validationError);
+      // Return unvalidated response to prevent breaking the application
+      return response;
+    }
   } catch (error: any) {
     if (error.message?.includes('Auth session missing') ||
         error.message?.includes('Supabase') ||

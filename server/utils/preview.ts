@@ -1,5 +1,5 @@
 // server/utils/jobs/preview.ts
-import type { JobsQuery, JobsResponse, JobPreview } from '~/types/job';
+import type { JobsQueryInput, JobsResponseInput, JobPreviewInput } from '~/schemas/job';
 
 export async function fetchPreviewJobs(
   client: {
@@ -7,8 +7,8 @@ export async function fetchPreviewJobs(
       select: (columns: string) => any;
     };
   },
-  query: JobsQuery
-): Promise<JobsResponse> {
+  query: JobsQueryInput
+): Promise<JobsResponseInput> {
   const limit = query.limit ? parseInt(query.limit, 10) : 20;
 
   let builder = client
@@ -41,7 +41,7 @@ export async function fetchPreviewJobs(
     throw new Error(error.message);
   }
 
-  const previews: JobPreview[] = (data || []).map((job: any) => ({
+  const previews: JobPreviewInput[] = (data || []).map((job: any) => ({
     id: job.id,
     title: job.title,
     description_preview: `${job.description.slice(0, 100)}...`,

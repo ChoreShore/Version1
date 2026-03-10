@@ -1,5 +1,5 @@
 import { serverSupabaseClient, serverSupabaseUser } from '#supabase/server';
-import type { ApplicationsResponse } from '~/types/application';
+import { ApplicationsResponseSchema } from '~/schemas/application';
 
 export default defineEventHandler(async (event) => {
   try {
@@ -12,18 +12,53 @@ export default defineEventHandler(async (event) => {
       });
     }
 
+    const query = getQuery(event);
+    const role = query.role as string;
     const client = await serverSupabaseClient(event);
 
-    // Use your existing get_worker_applications function
-    const { data, error } = await client.rpc('get_worker_applications', {
-      worker_uuid: user.id
-    });
+    let data, error;
+
+    if (role === 'employer') {
+      // Get applications for jobs posted by this employer using direct query
+      const result = await client
+        .from('applications')
+        .select(`
+          *,
+          job:jobs!inner(title, employer_id),
+          worker:profiles!worker_id(first_name, last_name)
+        `)
+        .eq('jobs.employer_id', user.id)
+        .order('created_at', { ascending: false });
+      
+      data = result.data?.map(app => ({
+        ...app,
+        job_title: app.job?.title,
+        worker_name: app.worker ? `${app.worker.first_name} ${app.worker.last_name}` : null
+      }));
+      error = result.error;
+    } else {
+      // Default: get applications submitted by this worker
+      const result = await client.rpc('get_worker_applications', {
+        worker_uuid: user.id
+      });
+      data = result.data;
+      error = result.error;
+    }
 
     if (error) {
       throw createError({ statusCode: 400, statusMessage: error.message });
     }
 
-    return { applications: data || [] } as ApplicationsResponse;
+    const response = { applications: data || [] };
+    
+    // Validate response with Zod schema (safe validation)
+    try {
+      return ApplicationsResponseSchema.parse(response);
+    } catch (validationError) {
+      console.error('API Response validation failed:', validationError);
+      // Return unvalidated response to prevent breaking the application
+      return response;
+    }
   } catch (error: any) {
     // Handle Supabase client initialization errors
     if (error.message?.includes('Auth session missing') || 

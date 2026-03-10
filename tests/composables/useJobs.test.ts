@@ -1,11 +1,11 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { useJobs } from '~/composables/useJobs';
 import type {
-  JobsResponse,
-  JobResponse,
-  CategoriesResponse,
-  NearJobsResponse
-} from '~/types/job';
+  JobsResponseInput,
+  JobResponseInput,
+  CategoriesResponseInput,
+  NearJobsResponseInput
+} from '~/schemas/job';
 
 const jobsComposable = useJobs();
 const mockFetch = vi.fn();

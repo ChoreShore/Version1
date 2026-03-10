@@ -1,21 +1,24 @@
 import type {
-  CreateMessagePayload,
-  MessageResponse,
-  ConversationsResponse,
-  JobMessagesResponse
-} from '~/types/message';
+  CreateMessageInput,
+  MessageResponseInput,
+  ConversationsResponseInput,
+  MessagesResponseInput
+} from '~/schemas/message';
+import type { Role } from '~/schemas/role';
 
 export const useMessages = () => {
-  const listConversations = async () => {
-    return await $fetch<ConversationsResponse>('/api/messages');
+  const listConversations = async (role?: Role) => {
+    return await $fetch<ConversationsResponseInput>('/api/messages', {
+      params: role ? { role } : undefined
+    });
   };
 
   const getJobMessages = async (jobId: string) => {
-    return await $fetch<JobMessagesResponse>(`/api/messages/${jobId}`);
+    return await $fetch<MessagesResponseInput>(`/api/messages/${jobId}`);
   };
 
-  const sendMessage = async (payload: CreateMessagePayload) => {
-    return await $fetch<MessageResponse>('/api/messages', {
+  const sendMessage = async (payload: CreateMessageInput) => {
+    return await $fetch<MessageResponseInput>('/api/messages', {
       method: 'POST',
       body: payload
     });

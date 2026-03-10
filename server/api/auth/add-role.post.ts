@@ -1,4 +1,4 @@
-import type { AddRolePayload, Role } from '~/types/auth';
+import { validateAddRole } from '~/schemas/auth';
 import { serverSupabaseClient, serverSupabaseUser } from '#supabase/server';
 
 export default defineEventHandler(async (event) => {
@@ -11,7 +11,18 @@ export default defineEventHandler(async (event) => {
       });
     }
 
-    const { role } = await readBody<AddRolePayload>(event);
+    const body = await readBody(event);
+    
+    // Validate request body with Zod
+    const validation = validateAddRole(body);
+    if (!validation.success || !validation.data) {
+      throw createError({ 
+        statusCode: 400, 
+        statusMessage: 'Validation failed',
+        data: { errors: validation.errors }
+      });
+    }
+
     const client = await serverSupabaseClient(event);
 
     const { data: profile, error: profileError } = await client
@@ -25,8 +36,8 @@ export default defineEventHandler(async (event) => {
     }
 
     const existingRoles = Array.isArray(profile?.roles) ? profile.roles : [];
-    const roles = new Set<Role>(existingRoles);
-    roles.add(role);
+    const roles = new Set(existingRoles);
+    roles.add(validation.data.role);
 
     const { error } = await client
       .from('profiles')

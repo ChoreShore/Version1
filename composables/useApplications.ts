@@ -1,41 +1,43 @@
 import type {
-  ApplicationsResponse,
-  ApplicationResponse,
-  CreateApplicationPayload,
-  UpdateApplicationPayload,
-  JobApplicationsResponse,
-  ApplicationStatsResponse
-} from '~/types/application';
+  CreateApplicationInput,
+  ApplicationsResponseInput,
+  ApplicationResponseInput,
+  UpdateApplicationInput,
+  ApplicationStatsResponseInput
+} from '~/schemas/application';
+import type { Role } from '~/schemas/role';
 
 export const useApplications = () => {
-  const listMyApplications = async () => {
-    return await $fetch<ApplicationsResponse>('/api/applications');
+  const listMyApplications = async (role?: Role) => {
+    return await $fetch<ApplicationsResponseInput>('/api/applications', {
+      params: role ? { role } : undefined
+    });
   };
 
   const getApplication = async (applicationId: string) => {
-    return await $fetch<ApplicationResponse>(`/api/applications/${applicationId}`);
+    return await $fetch<ApplicationResponseInput>(`/api/applications/${applicationId}`);
   };
 
-  const createApplication = async (payload: CreateApplicationPayload) => {
-    return await $fetch<ApplicationResponse>('/api/applications', {
+  const createApplication = async (payload: CreateApplicationInput) => {
+    return await $fetch<ApplicationResponseInput>('/api/applications', {
       method: 'POST',
       body: payload
     });
   };
 
-  const updateApplication = async (applicationId: string, payload: UpdateApplicationPayload) => {
-    return await $fetch<ApplicationResponse>(`/api/applications/${applicationId}`, {
+  const updateApplication = async (applicationId: string, payload: UpdateApplicationInput) => {
+    return await $fetch<ApplicationResponseInput>(`/api/applications/${applicationId}`, {
       method: 'PATCH',
       body: payload
     });
   };
 
-  const listJobApplications = async (jobId: string) => {
-    return await $fetch<JobApplicationsResponse>(`/api/applications/job/${jobId}`);
+  const getJobApplications = async (jobId: string) => {
+    return await $fetch<ApplicationsResponseInput>(`/api/applications/job/${jobId}`);
   };
 
   const getJobApplicationStats = async (jobId: string) => {
-    return await $fetch<ApplicationStatsResponse>(`/api/applications/job/${jobId}/stats`);
+    return await $fetch<ApplicationStatsResponseInput>(`/api/applications/job/${jobId}/stats`);
   };
 
   return {
@@ -43,7 +45,7 @@ export const useApplications = () => {
     getApplication,
     createApplication,
     updateApplication,
-    listJobApplications,
+    getJobApplications,
     getJobApplicationStats
   };
 };

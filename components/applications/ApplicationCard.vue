@@ -37,7 +37,7 @@
 </template>
 
 <script setup lang="ts">
-import type { ApplicationWithDetails } from '~/types/application';
+import type { ApplicationWithDetails } from '~/schemas/application';
 import StatusPill from '~/components/primitives/StatusPill.vue';
 import InfoBadge from '~/components/primitives/InfoBadge.vue';
 

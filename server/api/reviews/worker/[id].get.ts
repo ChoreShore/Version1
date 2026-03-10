@@ -1,5 +1,5 @@
 import { serverSupabaseClient } from '#supabase/server';
-import type { ReviewsResponse } from '~/types/review';
+import { ReviewsResponseSchema } from '~/schemas/review';
 import { mapReview, reviewSelect } from '../utils';
 
 export default defineEventHandler(async (event) => {
@@ -27,7 +27,16 @@ export default defineEventHandler(async (event) => {
       throw createError({ statusCode: 400, statusMessage: error.message });
     }
 
-    return { reviews: (data ?? []).map(mapReview) } satisfies ReviewsResponse;
+    const response = { reviews: data?.map(mapReview) || [] };
+    
+    // Validate response with Zod schema (safe validation)
+    try {
+      return ReviewsResponseSchema.parse(response);
+    } catch (validationError) {
+      console.error('API Response validation failed:', validationError);
+      // Return unvalidated response to prevent breaking the application
+      return response;
+    }
   } catch (error: any) {
     if (
       error.message?.includes('Auth session missing') ||

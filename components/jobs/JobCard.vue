@@ -37,11 +37,11 @@
 </template>
 
 <script setup lang="ts">
-import type { JobWithDetails } from '~/types/job';
+import type { JobWithDetailsInput } from '~/schemas/job';
 import InfoBadge from '~/components/primitives/InfoBadge.vue';
 import StatusPill from '~/components/primitives/StatusPill.vue';
 
-const props = defineProps<{ job: JobWithDetails & { application_count?: number } }>();
+const props = defineProps<{ job: JobWithDetailsInput & { application_count?: number } }>();
 
 const statusVariantMap: Record<string, 'neutral' | 'info' | 'success' | 'warning'> = {
   open: 'info',

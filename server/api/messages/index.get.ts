@@ -1,5 +1,5 @@
 import { serverSupabaseClient, serverSupabaseUser } from '#supabase/server';
-import type { ConversationsResponse } from '~/types/message';
+import { ConversationsResponseSchema } from '~/schemas/message';
 
 export default defineEventHandler(async (event) => {
   try {
@@ -12,17 +12,37 @@ export default defineEventHandler(async (event) => {
       });
     }
 
+    const query = getQuery(event);
+    const role = query.role as string;
     const client = await serverSupabaseClient(event);
 
-    const { data, error } = await client.rpc('get_message_conversations', {
-      p_user_id: user.id
-    });
+    // Get message conversations by grouping messages by application
+    const { data, error } = await client
+      .from('messages')
+      .select(`
+        *,
+        job:jobs!inner(title, employer_id),
+        application:applications!inner(id, job_id, worker_id),
+        sender:profiles!sender_id(first_name, last_name),
+        receiver:profiles!receiver_id(first_name, last_name)
+      `)
+      .or(`sender_id.eq.${user.id},receiver_id.eq.${user.id}`)
+      .order('sent_at', { ascending: false });
 
     if (error) {
       throw createError({ statusCode: 400, statusMessage: error.message });
     }
 
-    return { conversations: data || [] } as ConversationsResponse;
+    const response = { conversations: data || [] };
+    
+    // Validate response with Zod schema (safe validation)
+    try {
+      return ConversationsResponseSchema.parse(response);
+    } catch (validationError) {
+      console.error('API Response validation failed:', validationError);
+      // Return unvalidated response to prevent breaking the application
+      return response;
+    }
   } catch (error: any) {
     if (error.message?.includes('Auth session missing') ||
         error.message?.includes('Supabase') ||

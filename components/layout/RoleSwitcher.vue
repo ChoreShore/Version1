@@ -59,22 +59,24 @@ const select = (value: string) => {
 
 <style scoped>
 .role-switcher {
-  display: inline-grid;
-  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  display: inline-flex;
   gap: 6px;
   padding: 4px;
   border-radius: var(--radius-lg);
   background-color: var(--color-surface);
   border: 1px solid var(--color-border);
+  min-width: 280px;
 }
 
 .role-switcher__option {
   border: none;
   border-radius: calc(var(--radius-md) - 2px);
-  padding: 10px;
+  padding: 10px 16px;
   text-align: left;
   background: transparent;
   transition: background 150ms ease, color 150ms ease, box-shadow 150ms ease;
+  flex: 1;
+  cursor: pointer;
 }
 
 .role-switcher__option:hover {

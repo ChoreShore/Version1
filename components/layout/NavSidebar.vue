@@ -49,6 +49,8 @@
 </template>
 
 <script setup lang="ts">
+import { NuxtLink } from '#components';
+
 type NavItem = {
   label: string;
   to: string;

@@ -1,37 +1,33 @@
-import type { SignUpPayload } from '~/types/auth';
+import { validateSignUp } from '~/schemas/auth';
 import { serverSupabaseClient } from '#supabase/server';
-import { validatePassword } from '~/server/utils/validatePassword';
 
 export default defineEventHandler(async (event) => {
   try {
-    const body = await readBody<SignUpPayload>(event);
+    const body = await readBody(event);
 
-    if (!body.email || !body.password || !body.first_name || !body.last_name || !body.phone || !body.role) {
+    // Validate request body with Zod
+    const validation = validateSignUp(body);
+    if (!validation.success || !validation.data) {
       throw createError({ 
         statusCode: 400, 
-        statusMessage: 'All fields are required: email, password, first_name, last_name, phone, role' 
+        statusMessage: 'Validation failed',
+        data: { errors: validation.errors }
       });
     }
 
-    const passwordValidation = validatePassword(body.password);
-    if (!passwordValidation.valid) {
-      throw createError({ 
-        statusCode: 400, 
-        statusMessage: passwordValidation.message 
-      });
-    }
+    const validatedData = validation.data;
 
     const client = await serverSupabaseClient(event);
 
     const { data, error } = await client.auth.signUp({
-      email: body.email,
-      password: body.password,
+      email: validatedData.email,
+      password: validatedData.password,
       options: {
         data: {
-          first_name: body.first_name,
-          last_name: body.last_name,
-          phone: body.phone ?? '',
-          roles: [body.role]
+          first_name: validatedData.first_name,
+          last_name: validatedData.last_name,
+          phone: validatedData.phone ?? '',
+          roles: [validatedData.role]
         },
         emailRedirectTo: `${getRequestURL(event).origin}/auth/callback`
       }

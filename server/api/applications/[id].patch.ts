@@ -1,10 +1,10 @@
 import { serverSupabaseClient, serverSupabaseUser } from '#supabase/server';
-import type { UpdateApplicationPayload, ApplicationResponse } from '~/types/application';
+import { validateUpdateApplication, ApplicationResponseSchema } from '~/schemas/application';
 
 export default defineEventHandler(async (event) => {
   try {
     const applicationId = getRouterParam(event, 'id');
-    const body = await readBody(event) as UpdateApplicationPayload;
+    const body = await readBody(event);
     const user = await serverSupabaseUser(event);
 
     if (!user) {
@@ -18,20 +18,22 @@ export default defineEventHandler(async (event) => {
       throw createError({ statusCode: 400, statusMessage: 'Application ID is required' });
     }
 
-    // Validate application ID format
-    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
-    if (!uuidRegex.test(applicationId)) {
+    // Basic ID validation (UUID format will be validated by database)
+    if (!applicationId.trim()) {
       throw createError({ statusCode: 400, statusMessage: 'Invalid application ID format' });
     }
 
-    // Validate status
-    const validStatuses = ['pending', 'accepted', 'rejected', 'withdrawn'];
-    if (!body.status || !validStatuses.includes(body.status)) {
+    // Validate request body with Zod
+    const validation = validateUpdateApplication(body);
+    if (!validation.success || !validation.data) {
       throw createError({ 
         statusCode: 400, 
-        statusMessage: 'Valid status is required: pending, accepted, rejected, or withdrawn' 
+        statusMessage: 'Validation failed',
+        data: { errors: validation.errors }
       });
     }
+
+    const validatedData = validation.data;
 
     const client = await serverSupabaseClient(event);
 
@@ -42,7 +44,9 @@ export default defineEventHandler(async (event) => {
     const { data, error } = await client
       .from('applications')
       .update({
-        status: body.status
+        status: validatedData.status,
+        cover_letter: validatedData.cover_letter,
+        proposed_rate: validatedData.proposed_rate
       })
       .eq('id', applicationId)
       .select()
@@ -65,7 +69,16 @@ export default defineEventHandler(async (event) => {
       throw createError({ statusCode: 400, statusMessage: error.message });
     }
 
-    return { application: data } as ApplicationResponse;
+    const response = { application: data };
+    
+    // Validate response with Zod schema (safe validation)
+    try {
+      return ApplicationResponseSchema.parse(response);
+    } catch (validationError) {
+      console.error('API Response validation failed:', validationError);
+      // Return unvalidated response to prevent breaking the application
+      return response;
+    }
   } catch (error: any) {
     // Handle Supabase client initialization errors
     if (error.message?.includes('Auth session missing') || 

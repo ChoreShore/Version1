@@ -1,10 +1,11 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { useMessages } from '~/composables/useMessages';
 import type {
-  ConversationsResponse,
-  JobMessagesResponse,
-  MessageResponse
-} from '~/types/message';
+  CreateMessageInput,
+  ConversationsResponseInput,
+  MessagesResponseInput,
+  MessageResponseInput
+} from '~/schemas/message';
 
 const messagesComposable = useMessages();
 const mockFetch = vi.fn();
@@ -16,7 +17,7 @@ describe('useMessages composable', () => {
   });
 
   it('listConversations fetches user conversations', async () => {
-    const response: ConversationsResponse = {
+    const response: ConversationsResponseInput = {
       conversations: []
     };
 
@@ -25,11 +26,11 @@ describe('useMessages composable', () => {
     const result = await messagesComposable.listConversations();
 
     expect(result).toBe(response);
-    expect(mockFetch).toHaveBeenCalledWith('/api/messages');
+    expect(mockFetch).toHaveBeenCalledWith('/api/messages', { params: undefined });
   });
 
   it('getJobMessages fetches messages for a job', async () => {
-    const response: JobMessagesResponse = {
+    const response: MessagesResponseInput = {
       messages: []
     };
 
@@ -42,7 +43,7 @@ describe('useMessages composable', () => {
   });
 
   it('sendMessage posts payload to /api/messages', async () => {
-    const response: MessageResponse = {
+    const response: MessageResponseInput = {
       message: {
         id: 'msg-1',
         job_id: 'job-1',
@@ -51,7 +52,8 @@ describe('useMessages composable', () => {
         receiver_id: 'user-2',
         body: 'Hello there',
         attachment_url: null,
-        created_at: '2025-01-01T00:00:00Z'
+        created_at: '2025-01-01T00:00:00Z',
+        updated_at: '2025-01-01T00:00:00Z'
       }
     };
 

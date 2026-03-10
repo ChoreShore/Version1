@@ -1,33 +1,34 @@
 import type {
-  JobsQuery,
-  JobsResponse,
-  JobResponse,
-  CreateJobPayload,
-  UpdateJobPayload,
-  CategoriesResponse,
-  NearJobsResponse
-} from '~/types/job';
+  CreateJobInput,
+  UpdateJobInput,
+  JobsQueryInput,
+  JobsResponseInput,
+  JobResponseInput,
+  CategoriesResponseInput,
+  NearJobsResponseInput
+} from '~/schemas/job';
+import type { Role } from '~/schemas/role';
 
 export const useJobs = () => {
-  const listJobs = async (query?: JobsQuery) => {
-    return await $fetch<JobsResponse>('/api/jobs', {
+  const listJobs = async (query?: JobsQueryInput & { role?: Role; scope?: 'mine' | 'all' }) => {
+    return await $fetch<JobsResponseInput>('/api/jobs', {
       params: query
     });
   };
 
   const getJob = async (jobId: string) => {
-    return await $fetch<JobResponse>(`/api/jobs/${jobId}`);
+    return await $fetch<JobResponseInput>(`/api/jobs/${jobId}`);
   };
 
-  const createJob = async (payload: CreateJobPayload) => {
-    return await $fetch<JobResponse>('/api/jobs', {
+  const createJob = async (payload: CreateJobInput) => {
+    return await $fetch<JobResponseInput>('/api/jobs', {
       method: 'POST',
       body: payload
     });
   };
 
-  const updateJob = async (jobId: string, payload: UpdateJobPayload) => {
-    return await $fetch<JobResponse>(`/api/jobs/${jobId}`, {
+  const updateJob = async (jobId: string, payload: UpdateJobInput) => {
+    return await $fetch<JobResponseInput>(`/api/jobs/${jobId}`, {
       method: 'PATCH',
       body: payload
     });
@@ -40,7 +41,7 @@ export const useJobs = () => {
   };
 
   const listCategories = async () => {
-    return await $fetch<CategoriesResponse>('/api/jobs/categories');
+    return await $fetch<CategoriesResponseInput>('/api/jobs/categories');
   };
 
   const findNearbyJobs = async (lat: number, lng: number, distanceKm?: number) => {
@@ -50,7 +51,7 @@ export const useJobs = () => {
       ...(distanceKm ? { distance: distanceKm.toString() } : {})
     };
 
-    return await $fetch<NearJobsResponse>('/api/jobs/near', { params });
+    return await $fetch<NearJobsResponseInput>('/api/jobs/near', { params });
   };
 
   return {

@@ -1,6 +1,6 @@
 import { serverSupabaseClient, serverSupabaseUser } from '#supabase/server';
-import type { CreateJobPayload, JobResponse } from '~/types/job';
-import { validateCreateJobPayload } from '../../utils/jobValidation';
+import type { CreateJobInput, JobResponseInput } from '~/schemas/job';
+import { validateCreateJob, JobResponseSchema } from '~/schemas/job';
 import { ensureAuthenticated, handleSupabaseAuthErrors } from '~/server/utils/api';
 
 export default defineEventHandler(async (event) => {
@@ -10,17 +10,18 @@ export default defineEventHandler(async (event) => {
       'Sign in to create jobs'
     );
 
-    const body = await readBody<CreateJobPayload>(event);
+    const body = await readBody<CreateJobInput>(event);
     
-    const validation = validateCreateJobPayload(body);
-    if (!validation.valid) {
+    // Use Zod validation alongside existing validation for testing
+    const zodValidation = validateCreateJob(body);
+    if (!zodValidation.success) {
       throw createError({ 
         statusCode: 400, 
-        statusMessage: validation.message || 'Validation failed',
-        data: { field: validation.field }
+        statusMessage: 'Validation failed',
+        data: { errors: zodValidation.errors }
       });
     }
-
+    
     const client = await serverSupabaseClient(event);
 
     // Check if user has employer role
@@ -52,7 +53,13 @@ export default defineEventHandler(async (event) => {
       .from('jobs')
       .insert({
         employer_id: user.id,
-        ...body
+        title: body.title,
+        description: body.description,
+        category_id: body.category_id,
+        budget_type: body.budget_type,
+        budget_amount: body.budget_amount,
+        deadline: body.deadline,
+        postcode: body.postcode
       })
       .select(`
         *,
@@ -65,8 +72,15 @@ export default defineEventHandler(async (event) => {
       throw createError({ statusCode: 400, statusMessage: error.message });
     }
 
-    const response: JobResponse = { job: data };
-    return response;
+    const response = { job: data };
+    
+    // Validate response with Zod schema
+    try {
+      return JobResponseSchema.parse(response);
+    } catch (validationError) {
+      console.error('API Response validation failed:', validationError);
+      throw createError({ statusCode: 500, statusMessage: 'Invalid response format' });
+    }
   } catch (error: any) {
     handleSupabaseAuthErrors(error);
     throw error;

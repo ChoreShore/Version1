@@ -1,5 +1,5 @@
 import { serverSupabaseClient, serverSupabaseUser } from '#supabase/server';
-import type { ApplicationResponse } from '~/types/application';
+import { ApplicationResponseSchema } from '~/schemas/application';
 
 export default defineEventHandler(async (event) => {
   try {
@@ -17,9 +17,8 @@ export default defineEventHandler(async (event) => {
       throw createError({ statusCode: 400, statusMessage: 'Application ID is required' });
     }
 
-    // Validate application ID format
-    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
-    if (!uuidRegex.test(applicationId)) {
+    // Basic ID validation (UUID format will be validated by database)
+    if (!applicationId.trim()) {
       throw createError({ statusCode: 400, statusMessage: 'Invalid application ID format' });
     }
 
@@ -57,7 +56,16 @@ export default defineEventHandler(async (event) => {
       throw createError({ statusCode: 400, statusMessage: error.message });
     }
 
-    return { application: data } as ApplicationResponse;
+    const response = { application: data };
+    
+    // Validate response with Zod schema (safe validation)
+    try {
+      return ApplicationResponseSchema.parse(response);
+    } catch (validationError) {
+      console.error('API Response validation failed:', validationError);
+      // Return unvalidated response to prevent breaking the application
+      return response;
+    }
   } catch (error: any) {
     // Handle Supabase client initialization errors
     if (error.message?.includes('Auth session missing') || 

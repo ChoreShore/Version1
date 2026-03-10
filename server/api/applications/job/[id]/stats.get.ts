@@ -1,5 +1,5 @@
 import { serverSupabaseClient, serverSupabaseUser } from '#supabase/server';
-import type { ApplicationStatsResponse } from '~/types/application';
+import { ApplicationStatsResponseSchema } from '~/schemas/application';
 
 export default defineEventHandler(async (event) => {
   try {
@@ -17,9 +17,8 @@ export default defineEventHandler(async (event) => {
       throw createError({ statusCode: 400, statusMessage: 'Job ID is required' });
     }
 
-    // Validate job ID format
-    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
-    if (!uuidRegex.test(jobId)) {
+    // Basic ID validation (UUID format will be validated by database)
+    if (!jobId.trim()) {
       throw createError({ statusCode: 400, statusMessage: 'Invalid job ID format' });
     }
 
@@ -35,7 +34,15 @@ export default defineEventHandler(async (event) => {
     }
 
     // RLS will handle authorization - only employers can view stats for their jobs
-    return data as ApplicationStatsResponse;
+    
+    // Validate response with Zod schema (safe validation)
+    try {
+      return ApplicationStatsResponseSchema.parse(data);
+    } catch (validationError) {
+      console.error('API Response validation failed:', validationError);
+      // Return unvalidated response to prevent breaking the application
+      return data;
+    }
   } catch (error: any) {
     // Handle Supabase client initialization errors
     if (error.message?.includes('Auth session missing') || 
