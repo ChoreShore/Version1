@@ -115,6 +115,29 @@ export const validateSignUp = (data: unknown) => {
   }
 };
 
+export const validatePasswordReset = (data: unknown) => {
+  try {
+    return {
+      success: true,
+      data: PasswordResetSchema.parse(data),
+      errors: null
+    };
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      return {
+        success: false,
+        data: null,
+        errors: error.issues.reduce((acc, err) => {
+          const field = err.path[0] as string;
+          acc[field] = err.message;
+          return acc;
+        }, {} as Record<string, string>)
+      };
+    }
+    throw error;
+  }
+};
+
 export const validateAddRole = (data: unknown) => {
   try {
     return {

@@ -134,7 +134,7 @@ describe('useApplications composable', () => {
     const result = await applicationsComposable.getJobApplications('job-123');
 
     expect(result).toBe(response);
-    expect(mockFetch).toHaveBeenCalledWith('/api/applications/job/job-1');
+    expect(mockFetch).toHaveBeenCalledWith('/api/applications/job/job-123');
   });
 
   it('getJobApplicationStats fetches stats for a job', async () => {

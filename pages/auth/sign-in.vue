@@ -38,7 +38,9 @@
             />
           </FormControl>
           <FormError v-if="passwordState === 'error'">Password must be at least 8 characters.</FormError>
-          <FormHint>Forgot your password? Contact support.</FormHint>
+          <FormHint>
+            <NuxtLink to="/auth/reset-password" class="auth-link">Forgot your password?</NuxtLink>
+          </FormHint>
         </FormField>
 
         <button class="auth-form__submit" type="submit" :disabled="loading || !canSubmit">
@@ -48,6 +50,13 @@
       </form>
 
       <p v-if="errorMessage" class="auth-card__error" role="alert">{{ errorMessage }}</p>
+
+      <footer class="auth-footer">
+        <p>
+          Don't have an account?
+          <NuxtLink to="/auth/sign-up" class="auth-link">Sign up</NuxtLink>
+        </p>
+      </footer>
     </section>
     <div class="auth-visual">
       <h2>Built for busy teams</h2>
@@ -220,6 +229,25 @@ const handleSignIn = async () => {
   display: flex;
   flex-direction: column;
   gap: 0.4rem;
+}
+
+.auth-footer {
+  text-align: center;
+  margin-top: var(--space-6);
+  padding-top: var(--space-6);
+  border-top: 1px solid var(--color-border);
+}
+
+.auth-link {
+  color: var(--color-primary-600);
+  text-decoration: none;
+  font-weight: var(--font-semibold);
+  transition: color 150ms ease-out;
+}
+
+.auth-link:hover {
+  color: var(--color-primary-700);
+  text-decoration: underline;
 }
 
 @media (max-width: 768px) {
