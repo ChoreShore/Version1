@@ -72,6 +72,11 @@
 
 <script setup lang="ts">
 import { computed, ref } from 'vue';
+
+definePageMeta({
+  layout: false,
+  title: 'Sign In - ChoreShore'
+});
 import { useSupabaseClient, useSupabaseUser } from '#imports';
 import { validateSignIn } from '~/schemas/auth';
 import type { SignInInput } from '~/schemas/auth';

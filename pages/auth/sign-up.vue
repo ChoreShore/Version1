@@ -9,122 +9,114 @@
 
         <form @submit.prevent="handleSubmit" class="auth-form" novalidate>
           <!-- Email Field -->
-          <FormField>
-            <FormLabel for="email" required>Email Address</FormLabel>
-            <FormControl
-              id="email"
-              v-model="form.email"
-              type="email"
-              placeholder="Enter your email"
-              :error="errors.email"
-              :disabled="loading"
-              autocomplete="email"
-              aria-describedby="email-error"
-              @blur="validateField('email')"
-            />
-            <FormHint v-if="errors.email" id="email-error" type="error">
-              {{ errors.email }}
-            </FormHint>
+          <FormField id="email" :error="errors.email" :state="errors.email ? 'error' : 'default'">
+            <FormLabel for="email">Email Address</FormLabel>
+            <FormControl>
+              <input
+                id="email"
+                v-model="form.email"
+                type="email"
+                placeholder="Enter your email"
+                :disabled="loading"
+                autocomplete="email"
+                required
+                @blur="validateField('email')"
+              />
+            </FormControl>
+            <FormError v-if="errors.email">{{ errors.email }}</FormError>
           </FormField>
 
           <!-- Password Field -->
-          <FormField>
-            <FormLabel for="password" required>Password</FormLabel>
-            <FormControl
-              id="password"
-              v-model="form.password"
-              type="password"
-              placeholder="Create a strong password"
-              :error="errors.password"
-              :disabled="loading"
-              autocomplete="new-password"
-              aria-describedby="password-error password-hint"
-              @blur="validateField('password')"
-            />
-            <FormHint id="password-hint">
-              Password must be at least 8 characters with uppercase, lowercase, number, and special character
-            </FormHint>
-            <FormHint v-if="errors.password" id="password-error" type="error">
-              {{ errors.password }}
-            </FormHint>
+          <FormField id="password" :error="errors.password" :state="errors.password ? 'error' : 'default'">
+            <FormLabel for="password">Password</FormLabel>
+            <FormControl>
+              <input
+                id="password"
+                v-model="form.password"
+                type="password"
+                placeholder="Create a strong password"
+                :disabled="loading"
+                autocomplete="new-password"
+                required
+                @blur="validateField('password')"
+              />
+            </FormControl>
+            <FormHint>Password must be at least 8 characters with uppercase, lowercase, number, and special character</FormHint>
+            <FormError v-if="errors.password">{{ errors.password }}</FormError>
           </FormField>
 
           <!-- Confirm Password Field -->
-          <FormField>
-            <FormLabel for="confirmPassword" required>Confirm Password</FormLabel>
-            <FormControl
-              id="confirmPassword"
-              v-model="form.confirmPassword"
-              type="password"
-              placeholder="Confirm your password"
-              :error="errors.confirmPassword"
-              :disabled="loading"
-              autocomplete="new-password"
-              aria-describedby="confirm-password-error"
-              @blur="validateField('confirmPassword')"
-            />
-            <FormHint v-if="errors.confirmPassword" id="confirm-password-error" type="error">
-              {{ errors.confirmPassword }}
-            </FormHint>
+          <FormField id="confirmPassword" :error="errors.confirmPassword" :state="errors.confirmPassword ? 'error' : 'default'">
+            <FormLabel for="confirmPassword">Confirm Password</FormLabel>
+            <FormControl>
+              <input
+                id="confirmPassword"
+                v-model="form.confirmPassword"
+                type="password"
+                placeholder="Confirm your password"
+                :disabled="loading"
+                autocomplete="new-password"
+                required
+                @blur="validateField('confirmPassword')"
+              />
+            </FormControl>
+            <FormError v-if="errors.confirmPassword">{{ errors.confirmPassword }}</FormError>
           </FormField>
 
           <!-- First Name Field -->
-          <FormField>
-            <FormLabel for="firstName" required>First Name</FormLabel>
-            <FormControl
-              id="firstName"
-              v-model="form.firstName"
-              type="text"
-              placeholder="Enter your first name"
-              :error="errors.firstName"
-              :disabled="loading"
-              autocomplete="given-name"
-              aria-describedby="first-name-error"
-              @blur="validateField('firstName')"
-            />
-            <FormHint v-if="errors.firstName" id="first-name-error" type="error">
-              {{ errors.firstName }}
-            </FormHint>
+          <FormField id="firstName" :error="errors.firstName" :state="errors.firstName ? 'error' : 'default'">
+            <FormLabel for="firstName">First Name</FormLabel>
+            <FormControl>
+              <input
+                id="firstName"
+                v-model="form.firstName"
+                type="text"
+                placeholder="Enter your first name"
+                :disabled="loading"
+                autocomplete="given-name"
+                required
+                @blur="validateField('firstName')"
+              />
+            </FormControl>
+            <FormError v-if="errors.firstName">{{ errors.firstName }}</FormError>
           </FormField>
 
           <!-- Last Name Field -->
-          <FormField>
-            <FormLabel for="lastName" required>Last Name</FormLabel>
-            <FormControl
-              id="lastName"
-              v-model="form.lastName"
-              type="text"
-              placeholder="Enter your last name"
-              :error="errors.lastName"
-              :disabled="loading"
-              autocomplete="family-name"
-              aria-describedby="last-name-error"
-              @blur="validateField('lastName')"
-            />
-            <FormHint v-if="errors.lastName" id="last-name-error" type="error">
-              {{ errors.lastName }}
-            </FormHint>
+          <FormField id="lastName" :error="errors.lastName" :state="errors.lastName ? 'error' : 'default'">
+            <FormLabel for="lastName">Last Name</FormLabel>
+            <FormControl>
+              <input
+                id="lastName"
+                v-model="form.lastName"
+                type="text"
+                placeholder="Enter your last name"
+                :disabled="loading"
+                autocomplete="family-name"
+                required
+                @blur="validateField('lastName')"
+              />
+            </FormControl>
+            <FormError v-if="errors.lastName">{{ errors.lastName }}</FormError>
           </FormField>
 
           <!-- Role Selection -->
-          <FormField>
-            <FormLabel for="role" required>I want to</FormLabel>
-            <select
-              id="role"
-              v-model="form.role"
-              class="form-select"
-              :class="{ 'error': errors.role }"
-              :disabled="loading"
-              aria-describedby="role-error"
-              @change="validateField('role')"
-            >
-              <option value="">Select your role</option>
-              <option value="worker">Find work opportunities</option>
-              <option value="employer">Hire talented workers</option>
-            </select>
-            <FormHint v-if="errors.role" id="role-error" type="error">
-              {{ errors.role }}
-            </FormHint>
+          <FormField id="role" :error="errors.role" :state="errors.role ? 'error' : 'default'">
+            <FormLabel for="role">I want to</FormLabel>
+            <FormControl>
+              <select
+                id="role"
+                v-model="form.role"
+                class="form-select"
+                :disabled="loading"
+                required
+                @change="validateField('role')"
+              >
+                <option value="">Select your role</option>
+                <option value="worker">Find work opportunities</option>
+                <option value="employer">Hire talented workers</option>
+              </select>
+            </FormControl>
+            <FormError v-if="errors.role">{{ errors.role }}</FormError>
           </FormField>
 
           <!-- Submit Button -->

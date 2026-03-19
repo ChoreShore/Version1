@@ -9,25 +9,22 @@
 
         <form @submit.prevent="handleSubmit" class="auth-form" novalidate>
           <!-- Email Field -->
-          <FormField>
-            <FormLabel for="email" required>Email Address</FormLabel>
-            <FormControl
-              id="email"
-              v-model="form.email"
-              type="email"
-              placeholder="Enter your email address"
-              :error="errors.email"
-              :disabled="loading"
-              autocomplete="email"
-              aria-describedby="email-error email-hint"
-              @blur="validateField('email')"
-            />
-            <FormHint id="email-hint">
-              We'll send you a secure link to reset your password
-            </FormHint>
-            <FormHint v-if="errors.email" id="email-error" type="error">
-              {{ errors.email }}
-            </FormHint>
+          <FormField id="email" :error="errors.email" :state="errors.email ? 'error' : 'default'">
+            <FormLabel for="email">Email Address</FormLabel>
+            <FormControl>
+              <input
+                id="email"
+                v-model="form.email"
+                type="email"
+                placeholder="Enter your email address"
+                :disabled="loading"
+                autocomplete="email"
+                required
+                @blur="validateField('email')"
+              />
+            </FormControl>
+            <FormHint>We'll send you a secure link to reset your password</FormHint>
+            <FormError v-if="errors.email">{{ errors.email }}</FormError>
           </FormField>
 
           <!-- Submit Button -->
