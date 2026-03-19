@@ -362,45 +362,17 @@ const handleSubmit = async () => {
   border-color: var(--color-error-500);
 }
 
-.auth-submit {
-  width: 100%;
-  padding: var(--space-4);
+.auth-form__submit {
+  border: none;
+  border-radius: var(--radius-lg);
   background: var(--color-primary-600);
   color: white;
-  border: none;
-  border-radius: var(--radius-md);
-  font-size: var(--text-base);
-  font-weight: var(--font-semibold);
+  padding: 14px;
+  font-weight: 600;
   cursor: pointer;
-  display: flex;
-  align-items: center;
+  display: inline-flex;
   justify-content: center;
-  gap: var(--space-2);
-  transition: all 200ms var(--ease-out);
-}
-
-.auth-submit:hover:not(:disabled) {
-  background: var(--color-primary-700);
-  transform: translateY(-1px);
-}
-
-.auth-submit:active {
-  transform: translateY(0);
-}
-
-.auth-submit:disabled {
-  background: var(--color-gray-400);
-  cursor: not-allowed;
-  transform: none;
-}
-
-.loading-spinner {
-  width: 16px;
-  height: 16px;
-  border: 2px solid transparent;
-  border-top: 2px solid currentColor;
-  border-radius: 50%;
-  animation: spin 1s linear infinite;
+  align-items: center;
 }
 
 .submit-error {

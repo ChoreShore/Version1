@@ -28,14 +28,9 @@
           </FormField>
 
           <!-- Submit Button -->
-          <button
-            type="submit"
-            class="auth-submit"
-            :disabled="loading || !isFormValid"
-            :aria-describedby="submitError ? 'submit-error' : undefined"
-          >
-            <span v-if="loading" class="loading-spinner" aria-hidden="true"></span>
-            <span>{{ loading ? 'Sending Reset Link...' : 'Send Reset Link' }}</span>
+          <button class="auth-form__submit" type="submit" :disabled="loading || !canSubmit">
+            <LoadingSkeleton v-if="loading" variant="text" width="100%" height="16px" />
+            <span v-else>Send Reset Link</span>
           </button>
 
           <!-- Submit Error -->
@@ -75,7 +70,9 @@ import { ref, computed, reactive } from 'vue';
 import FormField from '~/components/primitives/form/FormField.vue';
 import FormLabel from '~/components/primitives/form/FormLabel.vue';
 import FormControl from '~/components/primitives/form/FormControl.vue';
+import FormError from '~/components/primitives/form/FormError.vue';
 import FormHint from '~/components/primitives/form/FormHint.vue';
+import LoadingSkeleton from '~/components/primitives/LoadingSkeleton.vue';
 import { validatePasswordReset } from '~/schemas/auth';
 import type { PasswordResetInput } from '~/schemas/auth';
 
@@ -123,6 +120,11 @@ const validateForm = () => {
 
 const isFormValid = computed(() => {
   return form.email.trim() !== '' && Object.keys(errors).length === 0;
+});
+
+const canSubmit = computed(() => {
+  return Object.keys(errors).length === 0 && 
+         form.email && form.email.trim() !== '';
 });
 
 // Form submission
@@ -205,46 +207,17 @@ const handleSubmit = async () => {
   gap: var(--space-6);
 }
 
-.auth-submit {
-  width: 100%;
-  padding: var(--space-4);
+.auth-form__submit {
+  border: none;
+  border-radius: var(--radius-lg);
   background: var(--color-primary-600);
   color: white;
-  border: none;
-  border-radius: var(--radius-md);
-  font-size: var(--text-base);
-  font-weight: var(--font-semibold);
+  padding: 14px;
+  font-weight: 600;
   cursor: pointer;
-  display: flex;
-  align-items: center;
+  display: inline-flex;
   justify-content: center;
-  gap: var(--space-2);
-  transition: all 200ms var(--ease-out);
-}
-
-.auth-submit:hover:not(:disabled) {
-  background: var(--color-primary-700);
-  transform: translateY(-1px);
-}
-
-.auth-submit:active {
-  transform: translateY(0) scale(0.98);
-  transition: transform 50ms var(--ease-in);
-}
-
-.auth-submit:disabled {
-  background: var(--color-gray-400);
-  cursor: not-allowed;
-  transform: none;
-}
-
-.loading-spinner {
-  width: 16px;
-  height: 16px;
-  border: 2px solid transparent;
-  border-top: 2px solid currentColor;
-  border-radius: 50%;
-  animation: spin 1s linear infinite;
+  align-items: center;
 }
 
 .submit-error {

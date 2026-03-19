@@ -95,6 +95,33 @@ textarea {
   background-color: transparent;
 }
 
+/* Form input styles for consistency */
+.auth-form input,
+.auth-form select,
+.job-form input,
+.job-form select {
+  width: 100%;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: 12px 14px;
+  background: white;
+  font-size: var(--text-base);
+}
+
+.auth-form select,
+.job-form select {
+  background: white;
+}
+
+.auth-form input:focus,
+.auth-form select:focus,
+.job-form input:focus,
+.job-form select:focus {
+  outline: none;
+  border-color: var(--color-primary-500);
+  box-shadow: 0 0 0 3px var(--color-primary-100);
+}
+
 button {
   cursor: pointer;
 }
