@@ -41,7 +41,7 @@
                 @blur="validateField('password')"
               />
             </FormControl>
-            <FormHint>Password must be at least 8 characters with uppercase, lowercase, number, and special character</FormHint>
+           
             <FormError v-if="errors.password">{{ errors.password }}</FormError>
           </FormField>
 
@@ -64,39 +64,39 @@
           </FormField>
 
           <!-- First Name Field -->
-          <FormField id="firstName" :error="errors.firstName" :state="errors.firstName ? 'error' : 'default'">
-            <FormLabel for="firstName">First Name</FormLabel>
+          <FormField id="first_name" :error="errors.first_name" :state="errors.first_name ? 'error' : 'default'">
+            <FormLabel for="first_name">First Name</FormLabel>
             <FormControl>
               <input
-                id="firstName"
-                v-model="form.firstName"
+                id="first_name"
+                v-model="form.first_name"
                 type="text"
                 placeholder="Enter your first name"
                 :disabled="loading"
                 autocomplete="given-name"
                 required
-                @blur="validateField('firstName')"
+                @blur="validateField('first_name')"
               />
             </FormControl>
-            <FormError v-if="errors.firstName">{{ errors.firstName }}</FormError>
+            <FormError v-if="errors.first_name">{{ errors.first_name }}</FormError>
           </FormField>
 
           <!-- Last Name Field -->
-          <FormField id="lastName" :error="errors.lastName" :state="errors.lastName ? 'error' : 'default'">
-            <FormLabel for="lastName">Last Name</FormLabel>
+          <FormField id="last_name" :error="errors.last_name" :state="errors.last_name ? 'error' : 'default'">
+            <FormLabel for="last_name">Last Name</FormLabel>
             <FormControl>
               <input
-                id="lastName"
-                v-model="form.lastName"
+                id="last_name"
+                v-model="form.last_name"
                 type="text"
                 placeholder="Enter your last name"
                 :disabled="loading"
                 autocomplete="family-name"
                 required
-                @blur="validateField('lastName')"
+                @blur="validateField('last_name')"
               />
             </FormControl>
-            <FormError v-if="errors.lastName">{{ errors.lastName }}</FormError>
+            <FormError v-if="errors.last_name">{{ errors.last_name }}</FormError>
           </FormField>
 
           <!-- Role Selection -->
@@ -120,14 +120,9 @@
           </FormField>
 
           <!-- Submit Button -->
-          <button
-            type="submit"
-            class="auth-submit"
-            :disabled="loading || !isFormValid"
-            :aria-describedby="submitError ? 'submit-error' : undefined"
-          >
-            <span v-if="loading" class="loading-spinner" aria-hidden="true"></span>
-            <span>{{ loading ? 'Creating Account...' : 'Create Account' }}</span>
+          <button class="auth-form__submit" type="submit" :disabled="loading || !canSubmit">
+            <LoadingSkeleton v-if="loading" variant="text" width="100%" height="16px" />
+            <span v-else>Create Account</span>
           </button>
 
           <!-- Submit Error -->
@@ -158,10 +153,11 @@ import { useRouter } from 'vue-router';
 import FormField from '~/components/primitives/form/FormField.vue';
 import FormLabel from '~/components/primitives/form/FormLabel.vue';
 import FormControl from '~/components/primitives/form/FormControl.vue';
-import FormHint from '~/components/primitives/form/FormHint.vue';
+import FormError from '~/components/primitives/form/FormError.vue';
+import LoadingSkeleton from '~/components/primitives/LoadingSkeleton.vue';
 import { useAuth } from '~/composables/useAuth';
-import { validateSignUp } from '~/schemas/auth';
-import type { SignUpInput } from '~/schemas/auth';
+import { validateSignUpForm, validateSignUp } from '~/schemas/auth';
+import type { SignUpFormInput, SignUpInput } from '~/schemas/auth';
 
 definePageMeta({
   layout: false,
@@ -172,12 +168,12 @@ const router = useRouter();
 const auth = useAuth();
 
 // Form state
-const form = reactive<SignUpInput>({
+const form = reactive<SignUpFormInput>({
   email: '',
   password: '',
   confirmPassword: '',
-  firstName: '',
-  lastName: '',
+  first_name: '',
+  last_name: '',
   role: ''
 });
 
@@ -187,7 +183,7 @@ const submitError = ref('');
 const success = ref(false);
 
 // Validation
-const validateField = (field: keyof SignUpInput) => {
+const validateField = (field: keyof SignUpFormInput) => {
   const fieldValue = form[field];
   
   // Clear previous error
@@ -222,27 +218,32 @@ const validateField = (field: keyof SignUpInput) => {
     }
   }
 
-  if (field === 'firstName' || field === 'lastName') {
+  if (field === 'first_name' || field === 'last_name') {
     if ((fieldValue as string).length < 2) {
-      errors[field] = `${field === 'firstName' ? 'First' : 'Last'} name must be at least 2 characters`;
+      errors[field] = `${field === 'first_name' ? 'First' : 'Last'} name must be at least 2 characters`;
     }
   }
 
   if (field === 'role') {
-    if (!['worker', 'employer'].includes(fieldValue as string)) {
-      errors[field] = 'Please select a valid role';
+    if (!fieldValue || !['worker', 'employer'].includes(fieldValue as string)) {
+      errors[field] = 'Please select a role';
     }
   }
 };
 
 const validateForm = () => {
-  Object.keys(form).forEach(field => validateField(field as keyof SignUpInput));
+  Object.keys(form).forEach(field => validateField(field as keyof SignUpFormInput));
   return Object.keys(errors).length === 0;
 };
 
 const isFormValid = computed(() => {
   return Object.values(form).every(value => value.trim() !== '') && 
          Object.keys(errors).length === 0;
+});
+
+const canSubmit = computed(() => {
+  return Object.keys(errors).length === 0 && 
+         Object.values(form).every(value => value && value.trim() !== '');
 });
 
 // Form submission
@@ -254,17 +255,32 @@ const handleSubmit = async () => {
   success.value = false;
 
   try {
-    // Validate with Zod schema
-    const validation = validateSignUp(form);
-    if (!validation.success) {
+    // Validate form with confirmPassword
+    const formValidation = validateSignUpForm(form);
+    if (!formValidation.success) {
       // Map Zod errors to form errors
-      Object.entries(validation.errors || {}).forEach(([field, message]) => {
+      Object.entries(formValidation.errors || {}).forEach(([field, message]) => {
         errors[field] = message;
       });
       return;
     }
 
-    await auth.signup(validation.data);
+    // Prepare data for API (remove confirmPassword and ensure role is valid)
+    if (!form.role || !['employer', 'worker'].includes(form.role)) {
+      errors.role = 'Please select a role';
+      return;
+    }
+
+    const apiData: SignUpInput = {
+      email: form.email,
+      password: form.password,
+      first_name: form.first_name,
+      last_name: form.last_name,
+      role: form.role, // Now safe since we validated it's 'employer' | 'worker'
+      phone: form.phone
+    };
+
+    await auth.signup(apiData);
     success.value = true;
     
     // Redirect after success

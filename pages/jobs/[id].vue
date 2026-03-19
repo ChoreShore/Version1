@@ -74,7 +74,7 @@ import EmptyState from '~/components/primitives/EmptyState.vue';
 import LoadingSkeleton from '~/components/primitives/LoadingSkeleton.vue';
 import ApplicationCard from '~/components/applications/ApplicationCard.vue';
 import type { JobWithDetailsInput } from '~/schemas/job';
-import type { ApplicationStatus } from '~/schemas/application';
+import type { ApplicationStatus, ApplicationWithDetailsInput } from '~/schemas/application';
 import { useJobs } from '~/composables/useJobs';
 import { useApplications } from '~/composables/useApplications';
 
@@ -83,15 +83,7 @@ const jobsApi = useJobs();
 const applicationsApi = useApplications();
 
 const job = ref<JobWithDetailsInput | null>(null);
-const applications = ref<Array<{
-  id: string;
-  worker_id: string;
-  worker_name: string;
-  status: ApplicationStatus;
-  cover_letter: string | null;
-  proposed_rate: number | null;
-  created_at: string;
-}>>([]);
+const applications = ref<ApplicationWithDetailsInput[]>([]);
 const loading = ref(true);
 const error = ref<string | null>(null);
 const applicationsLoading = ref(true);

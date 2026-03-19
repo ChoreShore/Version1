@@ -1,5 +1,5 @@
 import { serverSupabaseClient, serverSupabaseUser } from '#supabase/server';
-import { ApplicationsResponseSchema } from '~/schemas/application';
+import { ApplicationWithDetailsSchema, ApplicationsResponseSchema } from '~/schemas/application';
 
 export default defineEventHandler(async (event) => {
   try {
@@ -33,11 +33,20 @@ export default defineEventHandler(async (event) => {
       throw createError({ statusCode: 400, statusMessage: error.message });
     }
 
-    const response = { applications: data || [] };
+    // Transform data to include missing required fields
+    const applications = (data || []).map(app => ({
+      ...app,
+      job_id: jobId, // Add missing job_id field
+      updated_at: app.created_at // Add missing updated_at field (same as created_at for now)
+    }));
+
+    const response = { applications };
     
-    // Validate response with Zod schema (safe validation)
+    // Validate response with Zod schema
     try {
-      return ApplicationsResponseSchema.parse(response);
+      return ApplicationsResponseSchema.parse({
+        applications: applications.map(app => ApplicationWithDetailsSchema.parse(app))
+      });
     } catch (validationError) {
       console.error('API Response validation failed:', validationError);
       // Return unvalidated response to prevent breaking the application
