@@ -9,7 +9,10 @@
     "preview": "nuxt preview",
     "test": "vitest",
     "test:ui": "vitest --ui",
-    "test:coverage": "vitest --coverage"
+    "test:coverage": "vitest --coverage",
+    "test:e2e": "cypress open",
+    "test:e2e:headless": "cypress run",
+    "test:e2e:ci": "start-server-and-test dev http://localhost:3000 cypress run"
   },
   "dependencies": {
     "@nuxtjs/supabase": "^1.4.0",
@@ -19,10 +22,14 @@
     "zod": "^4.3.6"
   },
   "devDependencies": {
+    "@cypress/vite-dev-server": "^7.2.1",
+    "@cypress/vue": "^6.0.2",
     "@nuxt/devtools": "^1.0.0",
     "@vitest/ui": "^2.1.8",
     "@vue/test-utils": "^2.4.4",
+    "cypress": "^15.12.0",
     "happy-dom": "^13.6.2",
+    "start-server-and-test": "^2.1.5",
     "vitest": "^2.1.8"
   }
 }
