@@ -93,8 +93,8 @@ describe('Test Real Job Creation', () => {
         category_id: '550e8400-e29b-41d4-a716-446655440000', // Use a valid UUID
         budget_type: 'fixed',
         budget_amount: 100,
-        deadline: '2024-12-31',
-        postcode: '12345'
+        deadline: '2026-12-31',
+        postcode: 'BR1 2JT'
       },
       failOnStatusCode: false
     }).then(response => {

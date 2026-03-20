@@ -86,7 +86,8 @@ export default defineEventHandler(async (event) => {
         budget_type: body.budget_type,
         budget_amount: body.budget_amount,
         deadline: body.deadline,
-        postcode: body.postcode
+        postcode: body.postcode,
+        status: 'open'
       })
       .select(`
         *,
