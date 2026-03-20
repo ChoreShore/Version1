@@ -38,10 +38,23 @@ export default defineEventHandler(async (event) => {
       });
     }
 
-    // Check if user has employer role (handle both string and array formats)
-    const hasEmployerRole = Array.isArray(profile.roles) 
-      ? profile.roles.includes('employer')
-      : profile.roles === 'employer';
+    // Check if user has employer role (handle PostgreSQL arrays)
+    let hasEmployerRole = false;
+    
+    if (Array.isArray(profile.roles)) {
+      hasEmployerRole = profile.roles.includes('employer');
+    } else if (profile.roles && typeof profile.roles === 'string') {
+      hasEmployerRole = profile.roles === 'employer';
+    } else if (profile.roles && Array.isArray(profile.roles)) {
+      // Handle PostgreSQL array format
+      hasEmployerRole = profile.roles.some(role => role === 'employer');
+    }
+    
+    console.error('DEBUG - User ID:', user.id);
+    console.error('DEBUG - Profile:', profile);
+    console.error('DEBUG - Roles type:', typeof profile.roles);
+    console.error('DEBUG - Roles value:', profile.roles);
+    console.error('DEBUG - Has employer role:', hasEmployerRole);
 
     if (!hasEmployerRole) {
       console.error('User roles:', profile.roles);
