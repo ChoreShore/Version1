@@ -31,7 +31,21 @@ export default defineEventHandler(async (event) => {
       .eq('id', user.id)
       .single();
 
-    if (!profile || !profile.roles.includes('employer')) {
+    if (!profile) {
+      throw createError({ 
+        statusCode: 403, 
+        statusMessage: 'Profile not found. Please create a profile first.' 
+      });
+    }
+
+    // Check if user has employer role (handle both string and array formats)
+    const hasEmployerRole = Array.isArray(profile.roles) 
+      ? profile.roles.includes('employer')
+      : profile.roles === 'employer';
+
+    if (!hasEmployerRole) {
+      console.error('User roles:', profile.roles);
+      console.error('Has employer role:', hasEmployerRole);
       throw createError({ 
         statusCode: 403, 
         statusMessage: 'Only employers can create jobs. Add employer role to your profile first.' 

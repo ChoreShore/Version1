@@ -16,11 +16,7 @@ export default defineConfig({
     env: {
       // Environment variables for testing
       USE_REAL_SUPABASE: true, // Use real Supabase for deployed app
-      USE_MOCKS: false,
-      // Test credentials from environment variables
-      TEST_EMAIL: process.env.CYPRESS_TEST_EMAIL,
-      TEST_PASSWORD: process.env.CYPRESS_TEST_PASSWORD,
-      TEST_ROLE: process.env.CYPRESS_TEST_ROLE
+      USE_MOCKS: false
     },
     // Retry configuration for flaky tests
     retries: {

@@ -53,9 +53,12 @@ export default defineEventHandler(async (event) => {
         }]);
 
       if (profileError) {
-        // Log the error but don't fail the sign-up
         console.error('Profile creation error:', profileError);
-        // The auth user is still created, so we continue
+        console.error('Profile error details:', JSON.stringify(profileError, null, 2));
+        throw createError({ 
+          statusCode: 400, 
+          statusMessage: `Failed to create user profile: ${profileError.message || 'Unknown error'}` 
+        });
       }
     }
 

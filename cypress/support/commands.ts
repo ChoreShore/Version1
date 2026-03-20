@@ -38,10 +38,13 @@ Cypress.Commands.add('signUp', (email: string, password: string, firstName: stri
 })
 
 // Custom command for signing in
-Cypress.Commands.add('signIn', (email: string, password: string) => {
+Cypress.Commands.add('signIn', (email?: string, password?: string) => {
+  const testEmail = email || Cypress.env('TEST_EMAIL')
+  const testPassword = password || Cypress.env('TEST_PASSWORD')
+  
   cy.visit('/auth/sign-in')
-  cy.get('input[id="email"]').type(email)
-  cy.get('input[id="password"]').type(password)
+  cy.get('input[id="email"]').type(testEmail)
+  cy.get('input[id="password"]').type(testPassword)
   cy.get('button[type="submit"]').click()
 })
 
