@@ -27,7 +27,7 @@ describe('Test Real Job Creation', () => {
     cy.get('select[id="budget_type"]').select('fixed')
     cy.get('input[id="budget_amount"]').type('100')
     cy.get('input[id="deadline"]').type('2026-12-31')
-    cy.get('input[id="postcode"]').type('B1 2JT')
+    cy.get('input[id="postcode"]').type('BR1 2JT')
     
     // Submit the form
     cy.get('button[type="submit"]').click()
