@@ -45,55 +45,14 @@
         </div>
 
         <aside v-if="showApplyPanel" class="job-detail__apply">
-          <div v-if="workerApplication" class="job-detail__apply-card">
-            <p class="job-detail__apply-label">You already applied to this job</p>
-            <p class="job-detail__apply-status">
-              Current status: <strong>{{ workerApplication.status }}</strong>
-            </p>
-            <p class="job-detail__apply-hint">We'll email you when the employer responds.</p>
-          </div>
-          <form v-else @submit.prevent="submitApplication" class="job-detail__apply-card">
-            <header>
-              <p class="job-detail__apply-label">Ready to help?</p>
-              <h3>Apply to this job</h3>
-            </header>
-
-            <label class="job-detail__form-field">
-              <span>Cover letter</span>
-              <textarea
-                v-model="applyForm.cover_letter"
-                rows="5"
-                placeholder="Share why you're a great fit"
-              ></textarea>
-            </label>
-
-            <label class="job-detail__form-field">
-              <span>Proposed rate (optional)</span>
-              <input
-                v-model="applyForm.proposed_rate"
-                type="number"
-                min="0"
-                step="1"
-                placeholder="e.g. 120"
-              />
-            </label>
-
-            <label class="job-detail__form-field">
-              <span>Availability notes (optional)</span>
-              <input
-                v-model="applyForm.availability_notes"
-                type="text"
-                placeholder="Let the employer know your timing"
-              />
-            </label>
-
-            <p v-if="applyError" class="job-detail__apply-error">{{ applyError }}</p>
-            <p v-if="applySuccess" class="job-detail__apply-success">{{ applySuccess }}</p>
-
-            <button type="submit" class="job-detail__apply-button" :disabled="applySubmitting">
-              {{ applySubmitting ? 'Submitting...' : 'Submit application' }}
-            </button>
-          </form>
+          <ApplicationForm
+            :job-id="jobId"
+            :worker-application="workerApplication"
+            :submitting="applySubmitting"
+            :error="applyError"
+            :success="applySuccess"
+            @submit="submitApplication"
+          />
         </aside>
       </div>
 
@@ -110,32 +69,12 @@
           <li v-for="application in applications" :key="application.id">
             <ApplicationCard :application="application" perspective="employer">
               <template #actions>
-                <div v-if="isEmployerOwner" class="job-detail__actions">
-                  <button
-                    type="button"
-                    class="job-detail__action-button"
-                    :disabled="applicationUpdating[application.id] || application.status === 'pending'"
-                    @click="() => updateApplicationStatus(application.id, 'pending')"
-                  >
-                    Move to pending
-                  </button>
-                  <button
-                    type="button"
-                    class="job-detail__action-button job-detail__action-button--success"
-                    :disabled="applicationUpdating[application.id] || application.status === 'accepted'"
-                    @click="() => updateApplicationStatus(application.id, 'accepted')"
-                  >
-                    Accept
-                  </button>
-                  <button
-                    type="button"
-                    class="job-detail__action-button job-detail__action-button--danger"
-                    :disabled="applicationUpdating[application.id] || application.status === 'rejected'"
-                    @click="() => updateApplicationStatus(application.id, 'rejected')"
-                  >
-                    Reject
-                  </button>
-                </div>
+                <ApplicationActions
+                  v-if="isEmployerOwner"
+                  :application="application"
+                  :disabled="applicationUpdating[application.id]"
+                  @action="updateApplicationStatus"
+                />
               </template>
             </ApplicationCard>
           </li>
@@ -156,6 +95,8 @@ import DataList from '~/components/primitives/DataList.vue';
 import EmptyState from '~/components/primitives/EmptyState.vue';
 import LoadingSkeleton from '~/components/primitives/LoadingSkeleton.vue';
 import ApplicationCard from '~/components/applications/ApplicationCard.vue';
+import ApplicationForm from '~/components/applications/ApplicationForm.vue';
+import ApplicationActions from '~/components/applications/ApplicationActions.vue';
 import type { JobWithDetailsInput } from '~/schemas/job';
 import type { ApplicationStatus, ApplicationWithDetailsInput } from '~/schemas/application';
 import { useJobs } from '~/composables/useJobs';
@@ -175,11 +116,6 @@ const error = ref<string | null>(null);
 const applicationsLoading = ref(true);
 const applicationUpdating = ref<Record<string, boolean>>({});
 
-const applyForm = ref({
-  cover_letter: '',
-  proposed_rate: '',
-  availability_notes: ''
-});
 const applySubmitting = ref(false);
 const applyError = ref<string | null>(null);
 const applySuccess = ref<string | null>(null);
@@ -230,12 +166,12 @@ const fetchApplications = async () => {
   }
 };
 
-const submitApplication = async () => {
+const submitApplication = async (formData: { cover_letter: string; proposed_rate?: number; availability_notes?: string }) => {
   if (!canApply.value || !jobId.value) return;
   applyError.value = null;
   applySuccess.value = null;
 
-  if (!applyForm.value.cover_letter || applyForm.value.cover_letter.trim().length < 10) {
+  if (!formData.cover_letter || formData.cover_letter.length < 10) {
     applyError.value = 'Please add at least 10 characters to your cover letter.';
     return;
   }
@@ -244,12 +180,11 @@ const submitApplication = async () => {
   try {
     await applicationsApi.createApplication({
       job_id: jobId.value,
-      cover_letter: applyForm.value.cover_letter.trim(),
-      proposed_rate: applyForm.value.proposed_rate ? Number(applyForm.value.proposed_rate) : undefined,
-      availability_notes: applyForm.value.availability_notes?.trim() || undefined
+      cover_letter: formData.cover_letter,
+      proposed_rate: formData.proposed_rate,
+      availability_notes: formData.availability_notes
     });
     applySuccess.value = "Application submitted. We'll notify the employer.";
-    applyForm.value = { cover_letter: '', proposed_rate: '', availability_notes: '' };
     await fetchApplications();
   } catch (err: any) {
     applyError.value = err?.data?.statusMessage || 'Unable to submit application.';
