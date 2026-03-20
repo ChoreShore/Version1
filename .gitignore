@@ -22,3 +22,7 @@ logs
 .env.*
 !.env.example
 .env.test
+
+# Cypress secrets
+cypress.env.json
+cypress.env.*.json
