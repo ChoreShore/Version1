@@ -14,7 +14,7 @@
     </div>
 
     <EmptyState
-      v-else-if="!jobs.length"
+      v-else-if="!filteredJobs.length"
       title="No jobs yet"
       description="Post your first job to see it here."
     >
@@ -24,7 +24,7 @@
     </EmptyState>
 
     <div v-else class="jobs-page__grid">
-      <JobCard v-for="job in jobs" :key="job.id" :job="job" />
+      <JobCard v-for="job in filteredJobs" :key="job.id" :job="job" />
     </div>
   </section>
 </template>
@@ -33,16 +33,25 @@
 definePageMeta({
   layout: 'default'
 });
-import { onMounted, ref, watch } from 'vue';
+import { onMounted, ref, watch, computed } from 'vue';
 import JobCard from '~/components/jobs/JobCard.vue';
 import EmptyState from '~/components/primitives/EmptyState.vue';
 import LoadingSkeleton from '~/components/primitives/LoadingSkeleton.vue';
 import { useJobs } from '~/composables/useJobs';
 import { useActiveRole } from '~/composables/useActiveRole';
+import { useSupabaseUser } from '#imports';
 
 const { role } = useActiveRole();
+const user = useSupabaseUser();
 const jobs = ref<any[]>([]);
 const jobsLoading = ref(true);
+
+const filteredJobs = computed(() => {
+  if (role.value === 'worker' && user.value?.id) {
+    return jobs.value.filter((job) => job.employer_id !== user.value?.id);
+  }
+  return jobs.value;
+});
 
 const loadJobs = async () => {
   jobsLoading.value = true;

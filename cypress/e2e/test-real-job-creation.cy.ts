@@ -15,11 +15,19 @@ describe('Test Real Job Creation', () => {
     const timestamp = Date.now()
     cy.get('input[id="title"]').type(`Test Job ${timestamp}`)
     cy.get('textarea[id="description"]').type('Test job description created at ' + new Date().toISOString())
-    cy.get('select[id="category"]').select('cleaning') // Try cleaning first
+    cy.get('select[id="category"]').then(($select) => {
+      const options = $select.find('option')
+      // pick the first non-empty option value
+      const firstValidOption = Array.from(options).find((opt) => opt.getAttribute('value')) as HTMLOptionElement | undefined
+
+      expect(firstValidOption, 'available category option').to.exist
+
+      cy.wrap($select).select(firstValidOption!.value)
+    })
     cy.get('select[id="budget_type"]').select('fixed')
     cy.get('input[id="budget_amount"]').type('100')
-    cy.get('input[id="deadline"]').type('2024-12-31')
-    cy.get('input[id="postcode"]').type('12345')
+    cy.get('input[id="deadline"]').type('2026-12-31')
+    cy.get('input[id="postcode"]').type('B1 2JT')
     
     // Submit the form
     cy.get('button[type="submit"]').click()

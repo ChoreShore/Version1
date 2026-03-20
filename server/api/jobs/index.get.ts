@@ -30,8 +30,10 @@ export default defineEventHandler(async (event) => {
       // Show only jobs posted by this employer
       builder = builder.eq('employer_id', user.id);
     } else if (query.role === 'worker') {
-      // Show only open jobs for workers
-      builder = builder.eq('status', 'open');
+      // Show only open jobs from other employers for workers
+      builder = builder
+        .eq('status', 'open')
+        .neq('employer_id', user.id);
     } else {
       // Default: show open jobs
       builder = builder.eq('status', 'open');
