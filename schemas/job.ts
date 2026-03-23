@@ -99,12 +99,12 @@ export const JobsQuerySchema = z.object({
 });
 
 export const JobsResponseSchema = z.object({
-  jobs: z.union([JobSchema.array(), JobPreviewSchema.array()]),
+  jobs: z.union([JobSchema.passthrough().array(), JobPreviewSchema.array()]),
   preview_mode: z.boolean()
 });
 
 export const JobResponseSchema = z.object({
-  job: z.union([JobSchema, JobWithDetailsSchema])
+  job: z.union([JobSchema.passthrough(), JobWithDetailsSchema.passthrough()])
 });
 
 export const CategoriesResponseSchema = z.object({

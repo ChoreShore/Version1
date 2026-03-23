@@ -68,7 +68,7 @@ export const ApplicationWithDetailsSchema = ApplicationSchema.extend({
 
 // API response schemas (lenient for database responses)
 export const ApplicationsResponseSchema = z.object({
-  applications: ApplicationSchema.array()
+  applications: ApplicationSchema.passthrough().array()
 });
 
 export const ApplicationResponseSchema = z.object({

@@ -9,6 +9,18 @@ describe('Worker Application Flow', () => {
     cy.signIn(Cypress.env('TEST_EMAIL'), Cypress.env('TEST_PASSWORD'));
     cy.wait(1500);
     cy.log('✅ Step 1: Logged in');
+    
+    // Ensure user has worker role
+    cy.request({
+      method: 'POST',
+      url: '/api/auth/add-role',
+      body: { role: 'worker' },
+      failOnStatusCode: false
+    }).then((response) => {
+      cy.log('Add worker role response:', response.status);
+    });
+    
+    cy.wait(1000);
 
     // Step 2: Switch to worker mode
     cy.visit('/jobs');
@@ -35,7 +47,7 @@ describe('Worker Application Flow', () => {
     cy.get('body').then(($body) => {
       // Find job cards that do NOT have an "Applied" badge
       const jobCards = $body.find('[class*="job-card"]');
-      let unappliedJobLink = null;
+      let unappliedJobLink: JQuery<HTMLElement> | null = null;
       
       jobCards.each((index, card) => {
         const $card = Cypress.$(card);
@@ -60,9 +72,24 @@ describe('Worker Application Flow', () => {
     
     cy.wait(2000);
     cy.url().should('include', '/jobs/');
+    
+    // Debug: Check what's on the page
+    cy.get('body').invoke('text').then((text) => {
+      cy.log('Page content preview:', text.substring(0, 200));
+      
+      if (text.toLowerCase().includes('already applied')) {
+        cy.log('⚠️ Already applied to this job - test cannot proceed');
+        throw new Error('Already applied to this job. Please apply to a different job or reset test data.');
+      }
+      
+      if (text.toLowerCase().includes('worker role')) {
+        cy.log('❌ Worker role issue');
+        throw new Error('Worker role not set properly');
+      }
+    });
 
     // Step 4: Fill in the application form
-    cy.get('textarea[id="cover_letter"], textarea[name="cover_letter"]').should('be.visible').then(($textarea) => {
+    cy.get('textarea[id="cover_letter"], textarea[name="cover_letter"]', { timeout: 10000 }).should('be.visible').then(($textarea) => {
       cy.wrap($textarea).clear().type(
         'I am very interested in this position and believe I would be a great fit. I have extensive experience and am available to start immediately.'
       );

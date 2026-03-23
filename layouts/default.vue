@@ -14,7 +14,7 @@
         </template>
         <template #actions>
           <NuxtLink v-if="currentRole === 'employer'" to="/jobs/new" class="topbar__action">Post a job</NuxtLink>
-          <button type="button" class="topbar__action topbar__action--primary">New message</button>
+          <NuxtLink to="/messages" class="topbar__action topbar__action--primary">New message</NuxtLink>
         </template>
       </TopBar>
     </template>

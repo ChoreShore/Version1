@@ -38,10 +38,21 @@ export default defineEventHandler(async (event) => {
       error = result.error;
     } else {
       // Default: get applications submitted by this worker
-      const result = await client.rpc('get_worker_applications', {
-        worker_uuid: user.id
-      });
-      data = result.data;
+      const result = await client
+        .from('applications')
+        .select(`
+          *,
+          job:jobs!inner(title, employer_id),
+          employer:profiles!jobs.employer_id(first_name, last_name)
+        `)
+        .eq('worker_id', user.id)
+        .order('created_at', { ascending: false });
+      
+      data = result.data?.map(app => ({
+        ...app,
+        job_title: app.job?.title,
+        employer_name: app.employer ? `${app.employer.first_name} ${app.employer.last_name}` : null
+      }));
       error = result.error;
     }
 
