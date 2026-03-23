@@ -9,22 +9,10 @@ describe('Worker Application Flow', () => {
     cy.signIn(Cypress.env('TEST_EMAIL'), Cypress.env('TEST_PASSWORD'));
     cy.wait(1500);
     cy.log('✅ Step 1: Logged in');
-    
-    // Ensure user has worker role
-    cy.request({
-      method: 'POST',
-      url: '/api/auth/add-role',
-      body: { role: 'worker' },
-      failOnStatusCode: false
-    }).then((response) => {
-      cy.log('Add worker role response:', response.status);
-    });
-    
-    cy.wait(1000);
 
     // Step 2: Switch to worker mode
     cy.visit('/jobs');
-    cy.wait(1000);
+    cy.wait(2000);
     
     cy.get('body').then(($body) => {
       const roleSwitcher = $body.find('[class*="role"], select, button').filter((i, el) => {
@@ -70,12 +58,16 @@ describe('Worker Application Flow', () => {
       }
     });
     
-    cy.wait(2000);
+    cy.wait(3000);
     cy.url().should('include', '/jobs/');
+    
+    // Wait for job detail page to fully load
+    cy.contains('Job info').should('be.visible');
+    cy.wait(1000);
     
     // Debug: Check what's on the page
     cy.get('body').invoke('text').then((text) => {
-      cy.log('Page content preview:', text.substring(0, 200));
+      cy.log('Page content preview:', text.substring(0, 300));
       
       if (text.toLowerCase().includes('already applied')) {
         cy.log('⚠️ Already applied to this job - test cannot proceed');
@@ -85,6 +77,10 @@ describe('Worker Application Flow', () => {
       if (text.toLowerCase().includes('worker role')) {
         cy.log('❌ Worker role issue');
         throw new Error('Worker role not set properly');
+      }
+      
+      if (!text.toLowerCase().includes('apply')) {
+        cy.log('⚠️ No application form found on page');
       }
     });
 

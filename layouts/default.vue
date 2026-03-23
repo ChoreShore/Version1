@@ -112,4 +112,8 @@ const pageTitle = computed(() => {
   color: white;
   border-color: transparent;
 }
+
+.topbar__action--primary:hover {
+  background: var(--color-primary-700);
+}
 </style>
