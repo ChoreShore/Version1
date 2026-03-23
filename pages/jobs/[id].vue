@@ -166,7 +166,7 @@ const fetchApplications = async () => {
   }
 };
 
-const submitApplication = async (formData: { cover_letter: string; proposed_rate?: number; availability_notes?: string }) => {
+const submitApplication = async (formData: { cover_letter: string; proposed_rate?: number }) => {
   if (!canApply.value || !jobId.value) return;
   applyError.value = null;
   applySuccess.value = null;
@@ -181,8 +181,7 @@ const submitApplication = async (formData: { cover_letter: string; proposed_rate
     await applicationsApi.createApplication({
       job_id: jobId.value,
       cover_letter: formData.cover_letter,
-      proposed_rate: formData.proposed_rate,
-      availability_notes: formData.availability_notes
+      proposed_rate: formData.proposed_rate
     });
     applySuccess.value = "Application submitted. We'll notify the employer.";
     await fetchApplications();
