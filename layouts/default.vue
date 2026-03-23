@@ -47,7 +47,8 @@ const navItems = computed(() => {
     { label: 'Dashboard', to: '/dashboard' },
     { label: 'Applications', to: '/applications' },
     { label: 'Messages', to: '/messages' },
-    { label: 'Reviews', to: '/reviews' }
+    { label: 'Reviews', to: '/reviews' },
+    { label: 'Settings', to: '/settings' }
   ];
   
   // Only show Jobs for employers
@@ -63,7 +64,8 @@ const titleMap: Record<string, string> = {
   '/jobs': 'Jobs',
   '/applications': 'Applications',
   '/messages': 'Messages',
-  '/reviews': 'Reviews'
+  '/reviews': 'Reviews',
+  '/settings': 'Settings'
 };
 
 const pageTitle = computed(() => {
