@@ -7,6 +7,10 @@
 
     <div class="settings-page__content">
       <section class="settings-section">
+        <RoleManagement />
+      </section>
+
+      <section class="settings-section">
         <UpdatePasswordForm />
       </section>
 
@@ -18,6 +22,7 @@
 </template>
 
 <script setup lang="ts">
+import RoleManagement from '~/components/profile/RoleManagement.vue';
 import UpdatePasswordForm from '~/components/profile/UpdatePasswordForm.vue';
 import DeleteAccountForm from '~/components/profile/DeleteAccountForm.vue';
 
