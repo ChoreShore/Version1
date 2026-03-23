@@ -242,13 +242,15 @@ watch(() => props.success, (newSuccess) => {
 
 .application-form__button {
   padding: var(--space-3) var(--space-4);
-  background: var(--color-primary);
-  color: white;
+  background: var(--color-primary) !important;
+  color: white !important;
   border: none;
   border-radius: var(--radius-md);
   font-weight: 600;
   cursor: pointer;
   transition: background-color 0.2s;
+  display: block;
+  width: 100%;
 }
 
 .application-form__button:hover:not(:disabled) {
