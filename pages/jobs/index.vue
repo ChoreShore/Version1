@@ -38,6 +38,7 @@ import JobCard from '~/components/jobs/JobCard.vue';
 import EmptyState from '~/components/primitives/EmptyState.vue';
 import LoadingSkeleton from '~/components/primitives/LoadingSkeleton.vue';
 import { useJobs } from '~/composables/useJobs';
+import { useApplications } from '~/composables/useApplications';
 import { useActiveRole } from '~/composables/useActiveRole';
 import { useSupabaseUser } from '#imports';
 
@@ -45,13 +46,38 @@ const { role } = useActiveRole();
 const user = useSupabaseUser();
 const jobs = ref<any[]>([]);
 const jobsLoading = ref(true);
+const myApplications = ref<any[]>([]);
+
+const appliedJobIds = computed(() => {
+  return new Set(myApplications.value.map(app => app.job_id));
+});
 
 const filteredJobs = computed(() => {
+  let filtered = jobs.value;
+  
   if (role.value === 'worker' && user.value?.id) {
-    return jobs.value.filter((job) => job.employer_id !== user.value?.id);
+    filtered = filtered.filter((job) => job.employer_id !== user.value?.id);
   }
-  return jobs.value;
+  
+  return filtered.map(job => ({
+    ...job,
+    has_applied: appliedJobIds.value.has(job.id)
+  }));
 });
+
+const loadApplications = async () => {
+  if (role.value === 'worker' && user.value) {
+    try {
+      const response = await useApplications().listMyApplications('worker');
+      myApplications.value = response.applications ?? [];
+    } catch (error) {
+      console.error('Failed to load applications:', error);
+      myApplications.value = [];
+    }
+  } else {
+    myApplications.value = [];
+  }
+};
 
 const loadJobs = async () => {
   jobsLoading.value = true;
@@ -59,6 +85,8 @@ const loadJobs = async () => {
     const query = role.value === 'employer' ? { scope: 'mine' as const, role: role.value } : { role: role.value };
     const response = await useJobs().listJobs(query);
     jobs.value = (response.jobs ?? []) as any[];
+    
+    await loadApplications();
   } finally {
     jobsLoading.value = false;
   }

@@ -7,7 +7,10 @@
           <NuxtLink :to="`/jobs/${job.id}`">{{ job.title }}</NuxtLink>
         </h3>
       </div>
-      <StatusPill :label="statusLabel" :variant="statusVariant" />
+      <div class="job-card__status-group">
+        <StatusPill v-if="job.has_applied" label="Applied" variant="success" />
+        <StatusPill :label="statusLabel" :variant="statusVariant" />
+      </div>
     </header>
 
     <p class="job-card__description">{{ job.description.slice(0, 180) }}…</p>
@@ -42,7 +45,7 @@ import type { JobWithDetailsInput } from '~/schemas/job';
 import InfoBadge from '~/components/primitives/InfoBadge.vue';
 import StatusPill from '~/components/primitives/StatusPill.vue';
 
-const props = defineProps<{ job: JobWithDetailsInput & { application_count?: number } }>();
+const props = defineProps<{ job: JobWithDetailsInput & { application_count?: number; has_applied?: boolean } }>();
 
 const statusVariantMap: Record<string, 'neutral' | 'info' | 'success' | 'warning'> = {
   open: 'info',
@@ -82,6 +85,13 @@ const deadlineDisplay = computed(() => new Date(props.job.deadline).toLocaleDate
   justify-content: space-between;
   gap: var(--space-3);
   align-items: flex-start;
+}
+
+.job-card__status-group {
+  display: flex;
+  gap: var(--space-2);
+  align-items: center;
+  flex-wrap: wrap;
 }
 
 .job-card__category {
