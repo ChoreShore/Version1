@@ -3,7 +3,7 @@
     <button
       type="button"
       class="application-actions__button application-actions__button--pending"
-      :disabled="disabled || application.status === 'pending'"
+      :disabled="disabled || application?.status === 'pending'"
       @click="handleAction('pending')"
     >
       Move to pending
@@ -11,7 +11,7 @@
     <button
       type="button"
       class="application-actions__button application-actions__button--success"
-      :disabled="disabled || application.status === 'accepted'"
+      :disabled="disabled || application?.status === 'accepted'"
       @click="handleAction('accepted')"
     >
       Accept
@@ -19,7 +19,7 @@
     <button
       type="button"
       class="application-actions__button application-actions__button--danger"
-      :disabled="disabled || application.status === 'rejected'"
+      :disabled="disabled || application?.status === 'rejected'"
       @click="handleAction('rejected')"
     >
       Reject
@@ -40,6 +40,7 @@ const emit = defineEmits<{
 }>();
 
 const handleAction = (status: ApplicationStatus) => {
+  if (!props.application?.id) return;
   emit('action', props.application.id, status);
 };
 </script>

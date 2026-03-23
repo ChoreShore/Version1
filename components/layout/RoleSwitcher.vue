@@ -18,6 +18,8 @@
 </template>
 
 <script setup lang="ts">
+import { computed } from 'vue';
+
 type RoleOption = {
   label: string;
   value: string;
@@ -43,7 +45,14 @@ const emit = defineEmits<{ (e: 'update:modelValue', value: string): void; (e: 'c
 
 const normalizedOptions = computed(() => props.options);
 const currentValue = computed({
-  get: () => props.modelValue ?? props.options[0]?.value,
+  get: () => {
+    // If modelValue is provided and exists in options, use it
+    if (props.modelValue && props.options.some(opt => opt.value === props.modelValue)) {
+      return props.modelValue;
+    }
+    // Otherwise fall back to first option
+    return props.options[0]?.value;
+  },
   set: (value: string) => {
     emit('update:modelValue', value);
     emit('change', value);

@@ -56,7 +56,7 @@
         </aside>
       </div>
 
-      <DataList title="Applications" description="Applicants for this job">
+      <DataList v-if="isEmployerOwner" title="Applications" description="Applicants for this job">
         <template v-if="applicationsLoading">
           <li v-for="n in 3" :key="`job-app-${n}`"><LoadingSkeleton variant="block" height="140px" /></li>
         </template>

@@ -37,6 +37,7 @@
 </template>
 
 <script setup lang="ts">
+import { computed } from 'vue';
 import type { JobWithDetailsInput } from '~/schemas/job';
 import InfoBadge from '~/components/primitives/InfoBadge.vue';
 import StatusPill from '~/components/primitives/StatusPill.vue';

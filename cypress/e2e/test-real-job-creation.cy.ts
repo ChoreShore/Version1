@@ -2,7 +2,7 @@ describe('Test Real Job Creation', () => {
   beforeEach(() => {
     cy.clearCookies()
     cy.clearLocalStorage()
-    cy.signIn()
+    cy.signIn(Cypress.env('TEST_EMAIL'), Cypress.env('TEST_PASSWORD'))
   })
 
   it('should actually create a job and verify success', () => {
