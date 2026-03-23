@@ -84,15 +84,15 @@ describe('Worker Application Flow', () => {
     // Step 4: Fill in the application form
     // Scroll down the page to ensure form is visible
     cy.scrollTo('bottom', { duration: 1000 });
-    cy.wait(500);
+    cy.wait(1000);
     
-    cy.get('textarea[id="cover_letter"], textarea[name="cover_letter"]', { timeout: 10000 })
+    // Find textarea by placeholder text since it has no id/name
+    cy.get('textarea[placeholder*="great fit"]', { timeout: 10000 })
       .scrollIntoView({ duration: 500 })
-      .wait(500)
-      .should('exist')
-      .click({ force: true })
-      .clear({ force: true })
-      .type('I am very interested in this position and believe I would be a great fit. I have extensive experience and am available to start immediately.', { force: true });
+      .should('be.visible')
+      .focus()
+      .clear()
+      .type('I am very interested in this position and believe I would be a great fit. I have extensive experience and am available to start immediately.', { delay: 10 });
     
     cy.log('✅ Step 4: Filled in cover letter');
     

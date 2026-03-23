@@ -32,12 +32,31 @@ export default defineEventHandler(async (event) => {
       .from('applications')
       .select(`
         *,
-        job:jobs(id, title, description),
-        worker:profiles(id, first_name, last_name),
-        employer:profiles!jobs_employer_id_fkey(id, first_name, last_name)
+        job:jobs(id, title, description, employer_id)
       `)
       .eq('id', applicationId)
       .single();
+    
+    if (!error && data) {
+      // Fetch worker details
+      const { data: worker } = await client
+        .from('profiles')
+        .select('id, first_name, last_name')
+        .eq('id', data.worker_id)
+        .single();
+      
+      // Fetch employer details
+      const { data: employer } = await client
+        .from('profiles')
+        .select('id, first_name, last_name')
+        .eq('id', data.job.employer_id)
+        .single();
+      
+      // Add formatted names to the response
+      data.job_title = data.job?.title;
+      data.worker_name = worker ? `${worker.first_name} ${worker.last_name}` : null;
+      data.employer_name = employer ? `${employer.first_name} ${employer.last_name}` : null;
+    }
 
     if (error) {
       // Check if it's a "not found" error

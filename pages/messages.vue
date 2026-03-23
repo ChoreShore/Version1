@@ -192,9 +192,12 @@ const fetchApplicationForNewConversation = async (applicationId: string) => {
     if (response.application) {
       newConversationApplication.value = response.application;
       selectedConversationId.value = applicationId;
+    } else {
+      conversationsError.value = 'Could not load application details';
     }
-  } catch (err) {
+  } catch (err: any) {
     console.error('Failed to fetch application:', err);
+    conversationsError.value = err?.data?.statusMessage || 'Could not load application details';
   }
 };
 
