@@ -1,59 +1,66 @@
 <template>
-  <div v-if="workerApplication" class="application-form__status">
-    <p class="application-form__label">You already applied to this job</p>
-    <p class="application-form__status-text">
-      Current status: <strong>{{ workerApplication.status }}</strong>
-    </p>
-    <p class="application-form__hint">We'll email you when the employer responds.</p>
-  </div>
-  <form v-else @submit.prevent="handleSubmit" class="application-form">
-    <header>
-      <p class="application-form__label">Ready to help?</p>
-      <h3>Apply to this job</h3>
-    </header>
-
-    <label class="application-form__field">
-      <span>Cover letter</span>
-      <textarea
-        v-model="form.cover_letter"
-        rows="5"
-        placeholder="Share why you're a great fit"
-        :class="{ 'application-form__input--error': fieldErrors.cover_letter }"
-      ></textarea>
-      <p v-if="fieldErrors.cover_letter" class="application-form__field-error">
-        {{ fieldErrors.cover_letter }}
+  <FormErrorBoundary 
+    form-name="application-form"
+    @form-error="handleFormError"
+    @reset="handleFormReset"
+  >
+    <div v-if="workerApplication" class="application-form__status">
+      <p class="application-form__label">You already applied to this job</p>
+      <p class="application-form__status-text">
+        Current status: <strong>{{ workerApplication.status }}</strong>
       </p>
-    </label>
+      <p class="application-form__hint">We'll email you when the employer responds.</p>
+    </div>
+    <form v-else @submit.prevent="handleSubmit" class="application-form">
+      <header>
+        <p class="application-form__label">Ready to help?</p>
+        <h3>Apply to this job</h3>
+      </header>
 
-    <label class="application-form__field">
-      <span>Proposed rate (optional)</span>
-      <input
-        v-model="form.proposed_rate"
-        type="number"
-        min="0"
-        step="1"
-        placeholder="e.g. 120"
-        :class="{ 'application-form__input--error': fieldErrors.proposed_rate }"
-      />
-      <p v-if="fieldErrors.proposed_rate" class="application-form__field-error">
-        {{ fieldErrors.proposed_rate }}
-      </p>
-    </label>
+      <label class="application-form__field">
+        <span>Cover letter</span>
+        <textarea
+          v-model="form.cover_letter"
+          rows="5"
+          placeholder="Share why you're a great fit"
+          :class="{ 'application-form__input--error': fieldErrors.cover_letter }"
+        ></textarea>
+        <p v-if="fieldErrors.cover_letter" class="application-form__field-error">
+          {{ fieldErrors.cover_letter }}
+        </p>
+      </label>
 
-    
-    <p v-if="error" class="application-form__error">{{ error }}</p>
-    <p v-if="success" class="application-form__success">{{ success }}</p>
+      <label class="application-form__field">
+        <span>Proposed rate (optional)</span>
+        <input
+          v-model="form.proposed_rate"
+          type="number"
+          min="0"
+          step="1"
+          placeholder="e.g. 120"
+          :class="{ 'application-form__input--error': fieldErrors.proposed_rate }"
+        />
+        <p v-if="fieldErrors.proposed_rate" class="application-form__field-error">
+          {{ fieldErrors.proposed_rate }}
+        </p>
+      </label>
 
-    <button type="submit" class="application-form__button" :disabled="submitting || !isFormValid">
-      {{ submitting ? 'Submitting...' : 'Submit application' }}
-    </button>
-  </form>
+      
+      <p v-if="error" class="application-form__error">{{ error }}</p>
+      <p v-if="success" class="application-form__success">{{ success }}</p>
+
+      <button type="submit" class="application-form__button" :disabled="submitting || !isFormValid">
+        {{ submitting ? 'Submitting...' : 'Submit application' }}
+      </button>
+    </form>
+  </FormErrorBoundary>
 </template>
 
 <script setup lang="ts">
 import { ref, watch, computed } from 'vue';
 import { z } from 'zod';
 import type { ApplicationWithDetails } from '~/schemas/application';
+import FormErrorBoundary from '~/components/primitives/FormErrorBoundary.vue';
 
 // Form validation schema using Zod
 const applicationFormSchema = z.object({
@@ -134,6 +141,17 @@ watch(() => props.success, (newSuccess) => {
     form.value = { cover_letter: '', proposed_rate: '' };
   }
 });
+
+// Error boundary handlers
+const handleFormError = (error: Error, formName?: string) => {
+  console.error(`Form error in ${formName}:`, error);
+  // You could also send this to your error monitoring service
+};
+
+const handleFormReset = () => {
+  // Reset form data when error boundary reset is triggered
+  form.value = { cover_letter: '', proposed_rate: '' };
+};
 </script>
 
 <style scoped>

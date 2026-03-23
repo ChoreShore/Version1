@@ -7,47 +7,53 @@
         <p class="auth-card__description">Continue managing jobs, applications, and conversations.</p>
       </header>
 
-      <form class="auth-form" @submit.prevent="handleSignIn" novalidate>
-        <FormField id="email" :error="errors.email" :state="emailState">
-          <FormLabel for="email">Email</FormLabel>
-          <FormControl>
-            <input
-              id="email"
-              v-model="email"
-              type="email"
-              autocomplete="email"
-              placeholder="you@example.com"
-              :disabled="loading"
-              required
-            />
-          </FormControl>
-          <FormError v-if="emailState === 'error'">Enter a valid email address.</FormError>
-        </FormField>
+      <FormErrorBoundary 
+        form-name="sign-in-form"
+        @form-error="handleFormError"
+        @reset="handleFormReset"
+      >
+        <form class="auth-form" @submit.prevent="handleSignIn" novalidate>
+          <FormField id="email" :error="errors.email" :state="emailState">
+            <FormLabel for="email">Email</FormLabel>
+            <FormControl>
+              <input
+                id="email"
+                v-model="email"
+                type="email"
+                autocomplete="email"
+                placeholder="you@example.com"
+                :disabled="loading"
+                required
+              />
+            </FormControl>
+            <FormError v-if="emailState === 'error'">Enter a valid email address.</FormError>
+          </FormField>
 
-        <FormField id="password" :error="errors.password" :state="passwordState">
-          <FormLabel for="password">Password</FormLabel>
-          <FormControl>
-            <input
-              id="password"
-              v-model="password"
-              type="password"
-              autocomplete="current-password"
-              placeholder="••••••••"
-              :disabled="loading"
-              required
-            />
-          </FormControl>
-          <FormError v-if="passwordState === 'error'">Password must be at least 8 characters.</FormError>
-          <FormHint>
-            <NuxtLink to="/auth/reset-password" class="auth-link">Forgot your password?</NuxtLink>
-          </FormHint>
-        </FormField>
+          <FormField id="password" :error="errors.password" :state="passwordState">
+            <FormLabel for="password">Password</FormLabel>
+            <FormControl>
+              <input
+                id="password"
+                v-model="password"
+                type="password"
+                autocomplete="current-password"
+                placeholder="••••••••"
+                :disabled="loading"
+                required
+              />
+            </FormControl>
+            <FormError v-if="passwordState === 'error'">Password must be at least 8 characters.</FormError>
+            <FormHint>
+              <NuxtLink to="/auth/reset-password" class="auth-link">Forgot your password?</NuxtLink>
+            </FormHint>
+          </FormField>
 
-        <button class="auth-form__submit" type="submit" :disabled="loading || !canSubmit">
-          <LoadingSkeleton v-if="loading" variant="text" width="100%" height="16px" />
-          <span v-else>Sign in</span>
-        </button>
-      </form>
+          <button class="auth-form__submit" type="submit" :disabled="loading || !canSubmit">
+            <LoadingSkeleton v-if="loading" variant="text" width="100%" height="16px" />
+            <span v-else>Sign in</span>
+          </button>
+        </form>
+      </FormErrorBoundary>
 
       <p v-if="errorMessage" class="auth-card__error" role="alert">{{ errorMessage }}</p>
 
@@ -86,6 +92,7 @@ import FormControl from '~/components/primitives/form/FormControl.vue';
 import FormError from '~/components/primitives/form/FormError.vue';
 import FormHint from '~/components/primitives/form/FormHint.vue';
 import LoadingSkeleton from '~/components/primitives/LoadingSkeleton.vue';
+import FormErrorBoundary from '~/components/primitives/FormErrorBoundary.vue';
 
 const supabase = useSupabaseClient();
 const user = useSupabaseUser();
@@ -145,6 +152,20 @@ const handleSignIn = async () => {
     await supabase.auth.getSession();
     navigateTo('/dashboard');
   }
+};
+
+// Error boundary handlers
+const handleFormError = (error: Error, formName?: string) => {
+  console.error(`Form error in ${formName}:`, error);
+  // You could also send this to your error monitoring service
+};
+
+const handleFormReset = () => {
+  // Reset form data when error boundary reset is triggered
+  email.value = '';
+  password.value = '';
+  errorMessage.value = '';
+  errors.value = {};
 };
 </script>
 

@@ -7,134 +7,140 @@
           <p class="auth-subtitle">Join ChoreShore to find work or hire talent</p>
         </header>
 
-        <form @submit.prevent="handleSubmit" class="auth-form" novalidate>
-          <!-- Email Field -->
-          <FormField id="email" :error="errors.email" :state="errors.email ? 'error' : 'default'">
-            <FormLabel for="email">Email Address</FormLabel>
-            <FormControl>
-              <input
-                id="email"
-                v-model="form.email"
-                type="email"
-                placeholder="Enter your email"
-                :disabled="loading"
-                autocomplete="email"
-                required
-                @blur="validateField('email')"
-              />
-            </FormControl>
-            <FormError v-if="errors.email">{{ errors.email }}</FormError>
-          </FormField>
+        <FormErrorBoundary 
+          form-name="sign-up-form"
+          @form-error="handleFormError"
+          @reset="handleFormReset"
+        >
+          <form @submit.prevent="handleSubmit" class="auth-form" novalidate>
+            <!-- Email Field -->
+            <FormField id="email" :error="errors.email" :state="errors.email ? 'error' : 'default'">
+              <FormLabel for="email">Email Address</FormLabel>
+              <FormControl>
+                <input
+                  id="email"
+                  v-model="form.email"
+                  type="email"
+                  placeholder="Enter your email"
+                  :disabled="loading"
+                  autocomplete="email"
+                  required
+                  @blur="validateField('email')"
+                />
+              </FormControl>
+              <FormError v-if="errors.email">{{ errors.email }}</FormError>
+            </FormField>
 
-          <!-- Password Field -->
-          <FormField id="password" :error="errors.password" :state="errors.password ? 'error' : 'default'">
-            <FormLabel for="password">Password</FormLabel>
-            <FormControl>
-              <input
-                id="password"
-                v-model="form.password"
-                type="password"
-                placeholder="Create a strong password"
-                :disabled="loading"
-                autocomplete="new-password"
-                required
-                @blur="validateField('password')"
-              />
-            </FormControl>
-           
-            <FormError v-if="errors.password">{{ errors.password }}</FormError>
-          </FormField>
+            <!-- Password Field -->
+            <FormField id="password" :error="errors.password" :state="errors.password ? 'error' : 'default'">
+              <FormLabel for="password">Password</FormLabel>
+              <FormControl>
+                <input
+                  id="password"
+                  v-model="form.password"
+                  type="password"
+                  placeholder="Create a strong password"
+                  :disabled="loading"
+                  autocomplete="new-password"
+                  required
+                  @blur="validateField('password')"
+                />
+              </FormControl>
+             
+              <FormError v-if="errors.password">{{ errors.password }}</FormError>
+            </FormField>
 
-          <!-- Confirm Password Field -->
-          <FormField id="confirmPassword" :error="errors.confirmPassword" :state="errors.confirmPassword ? 'error' : 'default'">
-            <FormLabel for="confirmPassword">Confirm Password</FormLabel>
-            <FormControl>
-              <input
-                id="confirmPassword"
-                v-model="form.confirmPassword"
-                type="password"
-                placeholder="Confirm your password"
-                :disabled="loading"
-                autocomplete="new-password"
-                required
-                @blur="validateField('confirmPassword')"
-              />
-            </FormControl>
-            <FormError v-if="errors.confirmPassword">{{ errors.confirmPassword }}</FormError>
-          </FormField>
+            <!-- Confirm Password Field -->
+            <FormField id="confirmPassword" :error="errors.confirmPassword" :state="errors.confirmPassword ? 'error' : 'default'">
+              <FormLabel for="confirmPassword">Confirm Password</FormLabel>
+              <FormControl>
+                <input
+                  id="confirmPassword"
+                  v-model="form.confirmPassword"
+                  type="password"
+                  placeholder="Confirm your password"
+                  :disabled="loading"
+                  autocomplete="new-password"
+                  required
+                  @blur="validateField('confirmPassword')"
+                />
+              </FormControl>
+              <FormError v-if="errors.confirmPassword">{{ errors.confirmPassword }}</FormError>
+            </FormField>
 
-          <!-- First Name Field -->
-          <FormField id="first_name" :error="errors.first_name" :state="errors.first_name ? 'error' : 'default'">
-            <FormLabel for="first_name">First Name</FormLabel>
-            <FormControl>
-              <input
-                id="first_name"
-                v-model="form.first_name"
-                type="text"
-                placeholder="Enter your first name"
-                :disabled="loading"
-                autocomplete="given-name"
-                required
-                @blur="validateField('first_name')"
-              />
-            </FormControl>
-            <FormError v-if="errors.first_name">{{ errors.first_name }}</FormError>
-          </FormField>
+            <!-- First Name Field -->
+            <FormField id="first_name" :error="errors.first_name" :state="errors.first_name ? 'error' : 'default'">
+              <FormLabel for="first_name">First Name</FormLabel>
+              <FormControl>
+                <input
+                  id="first_name"
+                  v-model="form.first_name"
+                  type="text"
+                  placeholder="Enter your first name"
+                  :disabled="loading"
+                  autocomplete="given-name"
+                  required
+                  @blur="validateField('first_name')"
+                />
+              </FormControl>
+              <FormError v-if="errors.first_name">{{ errors.first_name }}</FormError>
+            </FormField>
 
-          <!-- Last Name Field -->
-          <FormField id="last_name" :error="errors.last_name" :state="errors.last_name ? 'error' : 'default'">
-            <FormLabel for="last_name">Last Name</FormLabel>
-            <FormControl>
-              <input
-                id="last_name"
-                v-model="form.last_name"
-                type="text"
-                placeholder="Enter your last name"
-                :disabled="loading"
-                autocomplete="family-name"
-                required
-                @blur="validateField('last_name')"
-              />
-            </FormControl>
-            <FormError v-if="errors.last_name">{{ errors.last_name }}</FormError>
-          </FormField>
+            <!-- Last Name Field -->
+            <FormField id="last_name" :error="errors.last_name" :state="errors.last_name ? 'error' : 'default'">
+              <FormLabel for="last_name">Last Name</FormLabel>
+              <FormControl>
+                <input
+                  id="last_name"
+                  v-model="form.last_name"
+                  type="text"
+                  placeholder="Enter your last name"
+                  :disabled="loading"
+                  autocomplete="family-name"
+                  required
+                  @blur="validateField('last_name')"
+                />
+              </FormControl>
+              <FormError v-if="errors.last_name">{{ errors.last_name }}</FormError>
+            </FormField>
 
-          <!-- Role Selection -->
-          <FormField id="role" :error="errors.role" :state="errors.role ? 'error' : 'default'">
-            <FormLabel for="role">I want to</FormLabel>
-            <FormControl>
-              <select
-                id="role"
-                v-model="form.role"
-                class="form-select"
-                :disabled="loading"
-                required
-                @change="validateField('role')"
-              >
-                <option value="">Select your role</option>
-                <option value="worker">Find work opportunities</option>
-                <option value="employer">Hire talented workers</option>
-              </select>
-            </FormControl>
-            <FormError v-if="errors.role">{{ errors.role }}</FormError>
-          </FormField>
+            <!-- Role Selection -->
+            <FormField id="role" :error="errors.role" :state="errors.role ? 'error' : 'default'">
+              <FormLabel for="role">I want to</FormLabel>
+              <FormControl>
+                <select
+                  id="role"
+                  v-model="form.role"
+                  class="form-select"
+                  :disabled="loading"
+                  required
+                  @change="validateField('role')"
+                >
+                  <option value="">Select your role</option>
+                  <option value="worker">Find work opportunities</option>
+                  <option value="employer">Hire talented workers</option>
+                </select>
+              </FormControl>
+              <FormError v-if="errors.role">{{ errors.role }}</FormError>
+            </FormField>
 
-          <!-- Submit Button -->
-          <button class="auth-form__submit" type="submit" :disabled="loading || !canSubmit">
-            <LoadingSkeleton v-if="loading" variant="text" width="100%" height="16px" />
-            <span v-else>Create Account</span>
-          </button>
+            <!-- Submit Button -->
+            <button class="auth-form__submit" type="submit" :disabled="loading || !canSubmit">
+              <LoadingSkeleton v-if="loading" variant="text" width="100%" height="16px" />
+              <span v-else>Create Account</span>
+            </button>
 
-          <!-- Submit Error -->
-          <div v-if="submitError" role="alert" id="submit-error" class="submit-error">
-            {{ submitError }}
-          </div>
+            <!-- Submit Error -->
+            <div v-if="submitError" role="alert" id="submit-error" class="submit-error">
+              {{ submitError }}
+            </div>
 
-          <!-- Success Message -->
-          <div v-if="success" role="status" class="success-message">
-            Account created successfully! Please check your email to verify your account.
-          </div>
-        </form>
+            <!-- Success Message -->
+            <div v-if="success" role="status" class="success-message">
+              Account created successfully! Please check your email to verify your account.
+            </div>
+          </form>
+        </FormErrorBoundary>
 
         <footer class="auth-footer">
           <p>
@@ -155,6 +161,7 @@ import FormLabel from '~/components/primitives/form/FormLabel.vue';
 import FormControl from '~/components/primitives/form/FormControl.vue';
 import FormError from '~/components/primitives/form/FormError.vue';
 import LoadingSkeleton from '~/components/primitives/LoadingSkeleton.vue';
+import FormErrorBoundary from '~/components/primitives/FormErrorBoundary.vue';
 import { useAuth } from '~/composables/useAuth';
 import { validateSignUpForm, validateSignUp } from '~/schemas/auth';
 import type { SignUpFormInput, SignUpInput } from '~/schemas/auth';
@@ -293,6 +300,27 @@ const handleSubmit = async () => {
   } finally {
     loading.value = false;
   }
+};
+
+// Error boundary handlers
+const handleFormError = (error: Error, formName?: string) => {
+  console.error(`Form error in ${formName}:`, error);
+  // You could also send this to your error monitoring service
+};
+
+const handleFormReset = () => {
+  // Reset form data when error boundary reset is triggered
+  Object.assign(form, {
+    email: '',
+    password: '',
+    confirmPassword: '',
+    first_name: '',
+    last_name: '',
+    role: ''
+  });
+  Object.keys(errors).forEach(key => delete errors[key]);
+  submitError.value = '';
+  success.value = false;
 };
 </script>
 

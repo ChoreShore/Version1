@@ -1,34 +1,40 @@
 <template>
-  <div class="application-actions">
-    <button
-      type="button"
-      class="application-actions__button application-actions__button--pending"
-      :disabled="disabled || application?.status === 'pending'"
-      @click="handleAction('pending')"
-    >
-      Move to pending
-    </button>
-    <button
-      type="button"
-      class="application-actions__button application-actions__button--success"
-      :disabled="disabled || application?.status === 'accepted'"
-      @click="handleAction('accepted')"
-    >
-      Accept
-    </button>
-    <button
-      type="button"
-      class="application-actions__button application-actions__button--danger"
-      :disabled="disabled || application?.status === 'rejected'"
-      @click="handleAction('rejected')"
-    >
-      Reject
-    </button>
-  </div>
+  <FormErrorBoundary 
+    form-name="application-actions"
+    @form-error="handleFormError"
+  >
+    <div class="application-actions">
+      <button
+        type="button"
+        class="application-actions__button application-actions__button--pending"
+        :disabled="disabled || application?.status === 'pending'"
+        @click="handleAction('pending')"
+      >
+        Move to pending
+      </button>
+      <button
+        type="button"
+        class="application-actions__button application-actions__button--success"
+        :disabled="disabled || application?.status === 'accepted'"
+        @click="handleAction('accepted')"
+      >
+        Accept
+      </button>
+      <button
+        type="button"
+        class="application-actions__button application-actions__button--danger"
+        :disabled="disabled || application?.status === 'rejected'"
+        @click="handleAction('rejected')"
+      >
+        Reject
+      </button>
+    </div>
+  </FormErrorBoundary>
 </template>
 
 <script setup lang="ts">
 import type { ApplicationStatus, ApplicationWithDetails } from '~/schemas/application';
+import FormErrorBoundary from '~/components/primitives/FormErrorBoundary.vue';
 
 const props = defineProps<{
   application: ApplicationWithDetails;
@@ -42,6 +48,12 @@ const emit = defineEmits<{
 const handleAction = (status: ApplicationStatus) => {
   if (!props.application?.id) return;
   emit('action', props.application.id, status);
+};
+
+// Error boundary handler
+const handleFormError = (error: Error, formName?: string) => {
+  console.error(`Form error in ${formName}:`, error);
+  // You could also send this to your error monitoring service
 };
 </script>
 
