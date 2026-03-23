@@ -225,7 +225,7 @@ const activeConversation = computed(() => {
       job_id: app.job_id,
       job_title: app.job_title || 'Job',
       application_id: app.id,
-      other_user_id: isEmployer ? app.worker_id : app.job?.employer_id,
+      other_user_id: isEmployer ? app.worker_id : app.employer_id,
       other_participant_name: isEmployer ? app.worker_name : app.employer_name,
       last_message_preview: 'Start a conversation',
       last_message_at: new Date().toISOString(),

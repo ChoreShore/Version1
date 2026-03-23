@@ -96,16 +96,24 @@ describe('Worker Application Flow', () => {
     
     cy.log('✅ Step 4: Filled in cover letter');
     
-    // Fill proposed rate if visible
-    cy.get('input[id="proposed_rate"], input[name="proposed_rate"]').then(($rate) => {
-      if ($rate.length > 0 && $rate.is(':visible')) {
-        cy.wrap($rate).clear().type('100');
+    // Fill proposed rate if visible (optional field)
+    cy.get('body').then(($body) => {
+      const $rate = $body.find('input[placeholder*="120"], input[type="number"]').filter(':visible');
+      if ($rate.length > 0) {
+        cy.wrap($rate).first().clear().type('100');
         cy.log('Filled in proposed rate');
+      } else {
+        cy.log('Proposed rate field not found - skipping (optional)');
       }
     });
 
     // Step 5: Submit the application
-    cy.get('button[type="submit"]').contains(/apply|submit/i).click();
+    cy.wait(500); // Wait for form validation to complete
+    cy.get('button[type="submit"]').contains(/submit application/i)
+      .scrollIntoView()
+      .should('be.visible')
+      .should('not.be.disabled')
+      .click();
     cy.wait(2000);
     cy.log('✅ Step 5: Submitted application');
     

@@ -52,8 +52,9 @@ export default defineEventHandler(async (event) => {
         .eq('id', data.job.employer_id)
         .single();
       
-      // Add formatted names to the response
+      // Add formatted names and IDs to the response
       data.job_title = data.job?.title;
+      data.employer_id = data.job?.employer_id;
       data.worker_name = worker ? `${worker.first_name} ${worker.last_name}` : null;
       data.employer_name = employer ? `${employer.first_name} ${employer.last_name}` : null;
     }
