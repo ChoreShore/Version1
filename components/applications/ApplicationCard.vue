@@ -30,6 +30,13 @@
     <footer class="application-card__footer">
       <InfoBadge v-if="application.availability_notes" :label="application.availability_notes" />
       <div class="application-card__actions">
+        <NuxtLink 
+          v-if="application.status === 'accepted'" 
+          :to="`/messages?application=${application.id}`"
+          class="application-card__message-btn"
+        >
+          Message {{ perspective === 'employer' ? 'worker' : 'employer' }}
+        </NuxtLink>
         <slot name="actions" />
       </div>
     </footer>
@@ -141,5 +148,22 @@ const submittedAt = computed(() => new Date(props.application.created_at).toLoca
 .application-card__actions {
   display: inline-flex;
   gap: var(--space-2);
+}
+
+.application-card__message-btn {
+  padding: 8px 16px;
+  border: 1px solid var(--color-primary-600);
+  background: var(--color-primary-600);
+  color: white;
+  border-radius: var(--radius-md);
+  text-decoration: none;
+  font-size: var(--text-sm);
+  font-weight: 600;
+  transition: background 150ms ease;
+}
+
+.application-card__message-btn:hover {
+  background: var(--color-primary-700);
+  border-color: var(--color-primary-700);
 }
 </style>

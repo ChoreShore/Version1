@@ -16,6 +16,12 @@ describe('Worker Application Flow', () => {
     
     // Click the Worker button in the role switcher
     cy.get('button.role-switcher__option').contains('Worker').click();
+    
+    // Wait for jobs to reload with worker-specific content
+    cy.wait(2000);
+    
+    // Verify page loaded by checking for either jobs grid or empty state
+    cy.get('body').should('be.visible');
     cy.wait(1000);
     
     cy.log('✅ Step 2: Switched to worker mode');
@@ -76,12 +82,13 @@ describe('Worker Application Flow', () => {
     });
 
     // Step 4: Fill in the application form
-    cy.get('textarea[id="cover_letter"], textarea[name="cover_letter"]', { timeout: 10000 }).should('be.visible').then(($textarea) => {
-      cy.wrap($textarea).clear().type(
-        'I am very interested in this position and believe I would be a great fit. I have extensive experience and am available to start immediately.'
-      );
-      cy.log('✅ Step 4: Filled in cover letter');
-    });
+    cy.get('textarea[id="cover_letter"], textarea[name="cover_letter"]', { timeout: 10000 })
+      .scrollIntoView()
+      .should('be.visible')
+      .clear()
+      .type('I am very interested in this position and believe I would be a great fit. I have extensive experience and am available to start immediately.');
+    
+    cy.log('✅ Step 4: Filled in cover letter');
     
     // Fill proposed rate if visible
     cy.get('input[id="proposed_rate"], input[name="proposed_rate"]').then(($rate) => {

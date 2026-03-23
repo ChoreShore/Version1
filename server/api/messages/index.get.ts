@@ -16,8 +16,8 @@ export default defineEventHandler(async (event) => {
     const role = query.role as string;
     const client = await serverSupabaseClient(event);
 
-    // Get message conversations by grouping messages by application
-    const { data, error } = await client
+    // Get all messages for this user
+    const { data: messages, error } = await client
       .from('messages')
       .select(`
         *,
@@ -33,7 +33,31 @@ export default defineEventHandler(async (event) => {
       throw createError({ statusCode: 400, statusMessage: error.message });
     }
 
-    const response = { conversations: data || [] };
+    // Group messages by application_id to create conversations
+    const conversationsMap = new Map();
+    
+    (messages || []).forEach((message: any) => {
+      const appId = message.application_id;
+      
+      if (!conversationsMap.has(appId)) {
+        const otherUserId = message.sender_id === user.id ? message.receiver_id : message.sender_id;
+        const otherUser = message.sender_id === user.id ? message.receiver : message.sender;
+        
+        conversationsMap.set(appId, {
+          id: appId,
+          job_id: message.job_id,
+          job_title: message.job?.title,
+          application_id: appId,
+          other_user_id: otherUserId,
+          other_participant_name: otherUser ? `${otherUser.first_name} ${otherUser.last_name}` : 'User',
+          last_message_preview: message.body,
+          last_message_at: message.sent_at,
+          unread_count: 0
+        });
+      }
+    });
+
+    const response = { conversations: Array.from(conversationsMap.values()) };
     
     // Validate response with Zod schema (safe validation)
     try {

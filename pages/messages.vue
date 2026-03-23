@@ -126,12 +126,14 @@ import type { ConversationSummary, MessageWithProfiles } from '~/schemas/message
 const messagesApi = useMessages();
 const user = useSupabaseUser();
 const { role } = useActiveRole();
+const route = useRoute();
 
 const conversations = ref<ConversationSummary[]>([]);
 const conversationsLoading = ref(true);
 const conversationsError = ref<string | null>(null);
 const selectedConversationId = ref<string | null>(null);
 const searchQuery = ref('');
+const newConversationApplication = ref<any>(null);
 
 const thread = ref<MessageWithProfiles[]>([]);
 const messagesLoading = ref(false);
@@ -162,13 +164,57 @@ const fetchConversations = async () => {
     const response = await messagesApi.listConversations(role.value);
     const normalized = (response.conversations ?? []).map((conv: any) => normalizeConversation(conv));
     conversations.value = normalized;
-    if (!selectedConversationId.value && normalized.length) {
+    
+    // Check if application query param is present
+    const applicationId = route.query.application as string;
+    if (applicationId) {
+      // Try to find existing conversation for this application
+      const existingConv = normalized.find((conv: any) => conv.application_id === applicationId || conv.id === applicationId);
+      if (existingConv) {
+        selectedConversationId.value = existingConv.id ?? null;
+      } else {
+        // Fetch application details to enable first message
+        await fetchApplicationForNewConversation(applicationId);
+      }
+    } else if (!selectedConversationId.value && normalized.length) {
       selectedConversationId.value = normalized[0].id ?? null;
     }
   } catch (err: any) {
     conversationsError.value = err?.data?.statusMessage || 'We were not able to fetch conversations.';
   } finally {
     conversationsLoading.value = false;
+  }
+};
+ {
+constst existing = con fetchApplicationForNewConversation = async (applicationId: string) => {;
+  if (existing) return existing;
+  
+  // If no existing conversation but we have a new application, create a temporary conversation object
+  if (newConversationApplication.value && selectedConversationId.value === newConversationApplication.value.id) {
+    const app = newConversationApplication.value;
+    const isEmployer = role.value === 'employer';
+    return {
+      id: app.id,
+     job_id: app.job_id,
+      job_title: app.job_title 'Job',
+      applicatio_id: app.id,
+      other_ser_id: isEmpoyer ? app.worker_id : app.job?.empoyer_id,
+      other_participant_name: isEmployer ? app.worker_name : app.employer_name,
+      last_message_preview: 'Start a conversation',
+      last_message_at: new Date().toISOString(),
+      unread_count: 0
+    };
+  }
+  
+  return null;
+}  try {
+    const response = await $fetch(`/api/applications/${applicationId}`);
+    if (response.application) {
+      newConversationApplication.value = response.application;
+      selectedConversationId.value = applicationId;
+    }
+  } catch (err) {
+    console.error('Failed to fetch application:', err);
   }
 };
 
