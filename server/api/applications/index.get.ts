@@ -30,11 +30,14 @@ export default defineEventHandler(async (event) => {
         .eq('jobs.employer_id', user.id)
         .order('created_at', { ascending: false });
       
-      data = result.data?.map(app => ({
-        ...app,
-        job_title: app.job?.title,
-        worker_name: app.worker ? `${app.worker.first_name} ${app.worker.last_name}` : null
-      }));
+      data = result.data?.map(app => {
+        const { job, worker, ...appData } = app;
+        return {
+          ...appData,
+          job_title: job?.title,
+          worker_name: worker ? `${worker.first_name} ${worker.last_name}` : null
+        };
+      });
       error = result.error;
     } else {
       // Default: get applications submitted by this worker
@@ -42,17 +45,19 @@ export default defineEventHandler(async (event) => {
         .from('applications')
         .select(`
           *,
-          job:jobs!inner(title, employer_id),
-          employer:profiles!jobs.employer_id(first_name, last_name)
+          job:jobs(title, employer_id, employer:profiles!jobs_employer_id_fkey(first_name, last_name))
         `)
         .eq('worker_id', user.id)
         .order('created_at', { ascending: false });
       
-      data = result.data?.map(app => ({
-        ...app,
-        job_title: app.job?.title,
-        employer_name: app.employer ? `${app.employer.first_name} ${app.employer.last_name}` : null
-      }));
+      data = result.data?.map(app => {
+        const { job, ...appData } = app;
+        return {
+          ...appData,
+          job_title: job?.title,
+          employer_name: job?.employer ? `${job.employer.first_name} ${job.employer.last_name}` : null
+        };
+      });
       error = result.error;
     }
 

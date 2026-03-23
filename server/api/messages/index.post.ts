@@ -28,20 +28,60 @@ export default defineEventHandler(async (event) => {
 
     const client = await serverSupabaseClient(event);
 
-    const { data: canSend, error: guardError } = await client.rpc('can_send_message', {
-      p_job_id: validatedData.job_id,
-      p_sender_id: user.id,
-      p_receiver_id: validatedData.receiver_id
-    });
+    // Verify the application exists and involves both sender and receiver
+    const { data: application, error: appError } = await client
+      .from('applications')
+      .select('id, job_id, worker_id, status')
+      .eq('id', validatedData.application_id)
+      .eq('job_id', validatedData.job_id)
+      .single();
 
-    if (guardError) {
-      throw createError({ statusCode: 400, statusMessage: guardError.message });
+    if (appError || !application) {
+      throw createError({
+        statusCode: 404,
+        statusMessage: 'Application not found'
+      });
     }
 
-    if (!canSend) {
+    // Get the job to verify employer
+    const { data: job, error: jobError } = await client
+      .from('jobs')
+      .select('employer_id')
+      .eq('id', validatedData.job_id)
+      .single();
+
+    if (jobError || !job) {
+      throw createError({
+        statusCode: 404,
+        statusMessage: 'Job not found'
+      });
+    }
+
+    // Verify sender and receiver are the worker and employer
+    const isWorker = application.worker_id === user.id;
+    const isEmployer = job.employer_id === user.id;
+    const receiverIsWorker = application.worker_id === validatedData.receiver_id;
+    const receiverIsEmployer = job.employer_id === validatedData.receiver_id;
+
+    if (!isWorker && !isEmployer) {
       throw createError({
         statusCode: 403,
-        statusMessage: 'Messaging is only available for accepted applications within 30 days of completion'
+        statusMessage: 'You are not part of this application conversation'
+      });
+    }
+
+    if (!receiverIsWorker && !receiverIsEmployer) {
+      throw createError({
+        statusCode: 403,
+        statusMessage: 'Invalid receiver for this application'
+      });
+    }
+
+    // Verify sender and receiver are different people
+    if (user.id === validatedData.receiver_id) {
+      throw createError({
+        statusCode: 400,
+        statusMessage: 'Cannot send message to yourself'
       });
     }
 

@@ -24,24 +24,31 @@ export default defineEventHandler(async (event) => {
 
     const client = await serverSupabaseClient(event);
 
-    // Use your existing get_job_application_stats function
-    const { data, error } = await client.rpc('get_job_application_stats', {
-      job_uuid: jobId
-    });
+    // Get application counts by status
+    const { data: applications, error } = await client
+      .from('applications')
+      .select('status')
+      .eq('job_id', jobId);
 
     if (error) {
       throw createError({ statusCode: 400, statusMessage: error.message });
     }
 
-    // RLS will handle authorization - only employers can view stats for their jobs
-    
+    // Calculate stats
+    const stats = {
+      total: applications?.length ?? 0,
+      pending: applications?.filter(app => app.status === 'pending').length ?? 0,
+      accepted: applications?.filter(app => app.status === 'accepted').length ?? 0,
+      rejected: applications?.filter(app => app.status === 'rejected').length ?? 0
+    };
+
     // Validate response with Zod schema (safe validation)
     try {
-      return ApplicationStatsResponseSchema.parse(data);
+      return ApplicationStatsResponseSchema.parse(stats);
     } catch (validationError) {
       console.error('API Response validation failed:', validationError);
       // Return unvalidated response to prevent breaking the application
-      return data;
+      return stats;
     }
   } catch (error: any) {
     // Handle Supabase client initialization errors

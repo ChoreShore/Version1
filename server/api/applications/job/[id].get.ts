@@ -24,10 +24,15 @@ export default defineEventHandler(async (event) => {
 
     const client = await serverSupabaseClient(event);
 
-    // Use your existing get_job_applications function
-    const { data, error } = await client.rpc('get_job_applications', {
-      job_uuid: jobId
-    });
+    // Get applications for this job with worker details
+    const { data, error } = await client
+      .from('applications')
+      .select(`
+        *,
+        worker:profiles!worker_id(first_name, last_name, phone)
+      `)
+      .eq('job_id', jobId)
+      .order('created_at', { ascending: false });
 
     if (error) {
       throw createError({ statusCode: 400, statusMessage: error.message });

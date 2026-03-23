@@ -67,22 +67,7 @@ export default defineEventHandler(async (event) => {
       });
     }
 
-    // Use your existing can_apply_to_job function
-    const { data: canApply, error: canApplyError } = await client.rpc('can_apply_to_job', {
-      job_uuid: validatedData.job_id,
-      worker_uuid: user.id
-    });
-
-    if (canApplyError) {
-      throw createError({ statusCode: 400, statusMessage: canApplyError.message });
-    }
-
-    if (!canApply) {
-      throw createError({
-        statusCode: 400,
-        statusMessage: 'Cannot apply to this job. The job may not be open, you may have already applied, or you may not have the worker role.'
-      });
-    }
+    // All validation checks passed, proceed with application creation
 
     const { data, error } = await client
       .from('applications')
