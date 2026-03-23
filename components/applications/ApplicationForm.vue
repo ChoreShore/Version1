@@ -260,7 +260,7 @@ const handleFormReset = () => {
 
 .application-form__button {
   padding: var(--space-3) var(--space-4);
-  background: var(--color-primary) !important;
+  background: var(--color-primary-500) !important;
   color: white !important;
   border: none;
   border-radius: var(--radius-md);
@@ -272,7 +272,7 @@ const handleFormReset = () => {
 }
 
 .application-form__button:hover:not(:disabled) {
-  background: var(--color-primary-dark);
+  background: var(--color-primary-600);
 }
 
 .application-form__button:disabled {
