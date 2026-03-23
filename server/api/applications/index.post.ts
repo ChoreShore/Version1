@@ -26,6 +26,47 @@ export default defineEventHandler(async (event) => {
     const validatedData = validation.data;
     const client = await serverSupabaseClient(event);
 
+    // Debug: Check job details
+    const { data: jobData } = await client
+      .from('jobs')
+      .select('id, status, employer_id')
+      .eq('id', validatedData.job_id)
+      .single();
+
+    // Debug: Check user profile
+    const { data: profileData } = await client
+      .from('profiles')
+      .select('id, roles')
+      .eq('id', user.id)
+      .single();
+
+    // Debug: Check existing application
+    const { data: existingApp } = await client
+      .from('applications')
+      .select('id')
+      .eq('job_id', validatedData.job_id)
+      .eq('worker_id', user.id)
+      .maybeSingle();
+
+    // Build detailed error message
+    let debugInfo = [];
+    if (!jobData) debugInfo.push('Job not found');
+    else if (jobData.status !== 'open') debugInfo.push(`Job status is '${jobData.status}', not 'open'`);
+    else if (jobData.employer_id === user.id) debugInfo.push('You cannot apply to your own job');
+    
+    if (existingApp) debugInfo.push('You have already applied to this job');
+    
+    if (!profileData?.roles?.includes('worker')) {
+      debugInfo.push(`Your roles: [${profileData?.roles?.join(', ') || 'none'}]. Need 'worker' role.`);
+    }
+
+    if (debugInfo.length > 0) {
+      throw createError({
+        statusCode: 400,
+        statusMessage: `Cannot apply: ${debugInfo.join('; ')}`
+      });
+    }
+
     // Use your existing can_apply_to_job function
     const { data: canApply, error: canApplyError } = await client.rpc('can_apply_to_job', {
       job_uuid: validatedData.job_id,
