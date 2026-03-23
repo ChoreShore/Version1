@@ -185,29 +185,9 @@ const fetchConversations = async () => {
     conversationsLoading.value = false;
   }
 };
- {
-constst existing = con fetchApplicationForNewConversation = async (applicationId: string) => {;
-  if (existing) return existing;
-  
-  // If no existing conversation but we have a new application, create a temporary conversation object
-  if (newConversationApplication.value && selectedConversationId.value === newConversationApplication.value.id) {
-    const app = newConversationApplication.value;
-    const isEmployer = role.value === 'employer';
-    return {
-      id: app.id,
-     job_id: app.job_id,
-      job_title: app.job_title 'Job',
-      applicatio_id: app.id,
-      other_ser_id: isEmpoyer ? app.worker_id : app.job?.empoyer_id,
-      other_participant_name: isEmployer ? app.worker_name : app.employer_name,
-      last_message_preview: 'Start a conversation',
-      last_message_at: new Date().toISOString(),
-      unread_count: 0
-    };
-  }
-  
-  return null;
-}  try {
+
+const fetchApplicationForNewConversation = async (applicationId: string) => {
+  try {
     const response = await $fetch(`/api/applications/${applicationId}`);
     if (response.application) {
       newConversationApplication.value = response.application;
@@ -229,9 +209,29 @@ const filteredConversations = computed(() => {
   });
 });
 
-const activeConversation = computed(() =>
-  conversations.value.find((conversation) => conversation.id === selectedConversationId.value) || null
-);
+const activeConversation = computed(() => {
+  const existing = conversations.value.find((conversation) => conversation.id === selectedConversationId.value);
+  if (existing) return existing;
+  
+  // If no existing conversation but we have a new application, create a temporary conversation object
+  if (newConversationApplication.value && selectedConversationId.value === newConversationApplication.value.id) {
+    const app = newConversationApplication.value;
+    const isEmployer = role.value === 'employer';
+    return {
+      id: app.id,
+      job_id: app.job_id,
+      job_title: app.job_title || 'Job',
+      application_id: app.id,
+      other_user_id: isEmployer ? app.worker_id : app.job?.employer_id,
+      other_participant_name: isEmployer ? app.worker_name : app.employer_name,
+      last_message_preview: 'Start a conversation',
+      last_message_at: new Date().toISOString(),
+      unread_count: 0
+    };
+  }
+  
+  return null;
+});
 
 const formatConversationForItem = (conversation: ConversationSummary) => ({
   id: conversation.id ?? conversation.job_id,
@@ -285,11 +285,7 @@ const selectConversation = (conversationId: string) => {
 const handleSend = async () => {
   if (!activeConversation.value || !composer.value.trim() || sending.value) return;
 
-  const receiverId =
-    activeConversation.value.other_participant_id ||
-    activeConversation.value.other_user_id ||
-    activeConversation.value.other_participant_name ||
-    null;
+  const receiverId = activeConversation.value.other_user_id;
 
   if (!receiverId || !activeConversation.value.application_id) {
     messagesError.value = 'Cannot determine conversation participants.';
