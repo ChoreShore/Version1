@@ -12,8 +12,11 @@
 
   /* Semantic colors */
   --color-success: #0f9d58;
+  --color-success-light: #d1f4e0;
   --color-warning: #f59e0b;
+  --color-warning-light: #fef3c7;
   --color-danger: #d93025;
+  --color-danger-light: #fecaca;
 
   /* Surfaces & content */
   --color-bg: #f5f6f8;

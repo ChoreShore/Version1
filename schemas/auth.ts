@@ -102,6 +102,39 @@ export const AddRoleSchema = z.object({
   })
 });
 
+// Update password schema (for authenticated users)
+export const UpdatePasswordSchema = z.object({
+  currentPassword: z.string()
+    .min(1, 'Current password is required'),
+  
+  newPassword: z.string()
+    .min(8, 'Password must be at least 8 characters')
+    .max(128, 'Password must be less than 128 characters')
+    .regex(/[A-Z]/, 'Password must contain at least one uppercase letter')
+    .regex(/[a-z]/, 'Password must contain at least one lowercase letter')
+    .regex(/[0-9]/, 'Password must contain at least one number'),
+  
+  confirmPassword: z.string()
+    .min(1, 'Please confirm your new password')
+}).refine((data) => data.newPassword === data.confirmPassword, {
+  message: "Passwords don't match",
+  path: ["confirmPassword"]
+}).refine((data) => data.currentPassword !== data.newPassword, {
+  message: "New password must be different from current password",
+  path: ["newPassword"]
+});
+
+// Delete account schema (requires confirmation)
+export const DeleteAccountSchema = z.object({
+  confirmation: z.string()
+    .refine((val) => val === 'DELETE', {
+      message: 'Please type DELETE to confirm'
+    }),
+  
+  password: z.string()
+    .min(1, 'Password is required to delete your account')
+});
+
 // Re-export Role type for convenience
 export { RoleSchema, type Role } from './role';
 
@@ -111,6 +144,8 @@ export type SignUpInput = z.infer<typeof SignUpSchema>;
 export type SignUpFormInput = z.infer<typeof SignUpFormSchema>;
 export type PasswordResetInput = z.infer<typeof PasswordResetSchema>;
 export type AddRoleInput = z.infer<typeof AddRoleSchema>;
+export type UpdatePasswordInput = z.infer<typeof UpdatePasswordSchema>;
+export type DeleteAccountInput = z.infer<typeof DeleteAccountSchema>;
 
 // Validation helper functions
 export const validateSignIn = (data: unknown) => {

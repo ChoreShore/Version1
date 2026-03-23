@@ -1,4 +1,4 @@
-import type { SignUpInput, SignInInput, Role } from '~/schemas/auth';
+import type { SignUpInput, SignInInput, Role, UpdatePasswordInput, DeleteAccountInput } from '~/schemas/auth';
 
 export const useAuth = () => {
   const user = useSupabaseUser();
@@ -26,9 +26,25 @@ export const useAuth = () => {
     });
   };
 
+  const updatePassword = async (payload: UpdatePasswordInput) => {
+    const data = await $fetch<{ success: boolean; message: string }>(
+      '/api/auth/update-password',
+      { method: 'POST', body: payload }
+    );
+    return data;
+  };
+
+  const deleteAccount = async (payload: DeleteAccountInput) => {
+    const data = await $fetch<{ success: boolean; message: string }>(
+      '/api/auth/delete-account',
+      { method: 'DELETE', body: payload }
+    );
+    return data;
+  };
+
   const signout = async () => {
     await $fetch('/api/auth/signout', { method: 'POST' });
   };
 
-  return { user, signup, signin, addRole, resetPassword, signout };
+  return { user, signup, signin, addRole, resetPassword, updatePassword, deleteAccount, signout };
 };
