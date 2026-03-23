@@ -28,7 +28,7 @@
     </dl>
 
     <footer class="job-card__footer">
-      <InfoBadge :label="`${job.application_count ?? 0} applications`" />
+      <InfoBadge :label="`${applicationCount} applications`" />
       <div class="job-card__actions">
         <slot name="actions" />
       </div>
@@ -53,6 +53,8 @@ const statusVariantMap: Record<string, 'neutral' | 'info' | 'success' | 'warning
 
 const statusVariant = computed(() => statusVariantMap[props.job.status] ?? 'neutral');
 const statusLabel = computed(() => props.job.status.replace('_', ' '));
+
+const applicationCount = computed(() => props.job.application_count ?? 0);
 
 const budgetDisplay = computed(() =>
   props.job.budget_type === 'hourly'

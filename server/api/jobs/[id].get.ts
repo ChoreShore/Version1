@@ -38,7 +38,13 @@ export default defineEventHandler(async (event) => {
       throw createError({ statusCode: 400, statusMessage: error.message });
     }
 
-    const response = { job: data };
+    // Fetch application count for this job
+    const { count } = await client
+      .from('applications')
+      .select('*', { count: 'exact', head: true })
+      .eq('job_id', jobId);
+
+    const response = { job: { ...data, application_count: count ?? 0 } };
     
     // Validate response with Zod schema
     try {
