@@ -2,9 +2,9 @@
   <section class="jobs-page">
     <header class="jobs-page__header">
       <div>
-        <p class="jobs-page__eyebrow">Manage work</p>
+        <p class="jobs-page__eyebrow">{{ role === 'employer' ? 'Manage work' : 'Find work' }}</p>
         <h1>Jobs</h1>
-        <p>Track and manage every job you've posted.</p>
+        <p>{{ role === 'employer' ? 'Track and manage every job you\'ve posted.' : 'Browse and apply to available jobs.' }}</p>
       </div>
       <NuxtLink v-if="role === 'employer'" to="/jobs/new" class="jobs-page__cta">Post a job</NuxtLink>
     </header>
@@ -15,8 +15,8 @@
 
     <EmptyState
       v-else-if="!filteredJobs.length"
-      title="No jobs yet"
-      description="Post your first job to see it here."
+      :title="role === 'employer' ? 'No jobs yet' : 'No jobs available'"
+      :description="role === 'employer' ? 'Post your first job to see it here.' : 'Check back later for new job opportunities.'"
     >
       <template #actions>
         <NuxtLink v-if="role === 'employer'" to="/jobs/new" class="jobs-page__cta">Post a job</NuxtLink>
@@ -81,14 +81,19 @@ const loadApplications = async () => {
 
 const loadJobs = async () => {
   jobsLoading.value = true;
+  myApplications.value = [];
+  
   try {
     const query = role.value === 'employer' ? { scope: 'mine' as const, role: role.value } : { role: role.value };
     const response = await useJobs().listJobs(query);
     jobs.value = (response.jobs ?? []) as any[];
-    
-    await loadApplications();
   } finally {
     jobsLoading.value = false;
+  }
+  
+  // Load applications after jobs are loaded and rendered
+  if (role.value === 'worker') {
+    await loadApplications();
   }
 };
 

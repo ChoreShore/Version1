@@ -14,18 +14,9 @@ describe('Worker Application Flow', () => {
     cy.visit('/jobs');
     cy.wait(2000);
     
-    cy.get('body').then(($body) => {
-      const roleSwitcher = $body.find('[class*="role"], select, button').filter((i, el) => {
-        const text = Cypress.$(el).text().toLowerCase();
-        return text.includes('worker') || text.includes('employer');
-      });
-      
-      if (roleSwitcher.length > 0) {
-        cy.log('Role switcher found, attempting to switch to worker');
-        cy.wrap(roleSwitcher).first().click();
-        cy.wait(500);
-      }
-    });
+    // Click the Worker button in the role switcher
+    cy.get('button.role-switcher__option').contains('Worker').click();
+    cy.wait(1000);
     
     cy.log('✅ Step 2: Switched to worker mode');
 
