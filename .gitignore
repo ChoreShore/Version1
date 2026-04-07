@@ -26,3 +26,7 @@ logs
 # Cypress secrets
 cypress.env.json
 cypress.env.*.json
+
+# Cypress run artefacts
+cypress/screenshots
+cypress/videos

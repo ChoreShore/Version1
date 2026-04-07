@@ -18,8 +18,8 @@ export default defineConfig({
       USE_REAL_SUPABASE: true,
       USE_MOCKS: false,
       // Test account credentials — fill these in before running e2e
-      TEST_EMAIL: 'developertestingemail6@gmail.com',
-      TEST_PASSWORD: 'Ac89hgiy?',
+      TEST_EMAIL: '',
+      TEST_PASSWORD: '',
       // Unverified worker account (rtw_status = 'unverified')
       // Falls back to TEST_EMAIL/TEST_PASSWORD if not set
       TEST_WORKER_UNVERIFIED_EMAIL: '',
