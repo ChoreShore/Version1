@@ -1,7 +1,13 @@
 <template>
   <AppShell>
     <template #sidebar>
-      <NavSidebar :logo="logo" :items="navItems" />
+      <NavSidebar :logo="logo" :items="navItems">
+        <template #footer>
+          <div class="sidebar-footer">
+            <button class="sidebar-footer__signout" type="button" @click="handleSignOut">Sign out</button>
+          </div>
+        </template>
+      </NavSidebar>
     </template>
 
     <template #topbar>
@@ -32,9 +38,16 @@ import NavSidebar from '~/components/layout/NavSidebar.vue';
 import TopBar from '~/components/layout/TopBar.vue';
 import RoleSwitcher from '~/components/layout/RoleSwitcher.vue';
 import { useActiveRole } from '~/composables/useActiveRole';
+import { useAuth } from '~/composables/useAuth';
 
 const route = useRoute();
 const { role: currentRole } = useActiveRole();
+const { signout } = useAuth();
+
+const handleSignOut = async () => {
+  await signout();
+  await navigateTo('/auth/sign-in');
+};
 
 const logo = {
   label: 'ChoreShore',
@@ -115,5 +128,32 @@ const pageTitle = computed(() => {
 
 .topbar__action--primary:hover {
   background: var(--color-primary-700);
+}
+
+.sidebar-footer {
+  margin-top: auto;
+  padding-top: var(--space-4);
+  border-top: 1px solid var(--color-border);
+}
+
+.sidebar-footer__signout {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: var(--radius-md);
+  border: none;
+  background: none;
+  color: var(--color-text-muted);
+  font-weight: 500;
+  font-size: inherit;
+  cursor: pointer;
+  text-align: left;
+  transition: background 120ms ease, color 120ms ease;
+}
+
+.sidebar-footer__signout:hover {
+  background-color: var(--color-surface-muted);
+  color: var(--color-text);
 }
 </style>
