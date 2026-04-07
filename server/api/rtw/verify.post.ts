@@ -1,4 +1,4 @@
-import { serverSupabaseClient, serverSupabaseUser } from '#supabase/server';
+import { serverSupabaseServiceRole, serverSupabaseUser } from '#supabase/server';
 import { validateRtwVerify, RtwApiResponseSchema } from '~/schemas/rtw';
 
 function parseApiDate(dateStr: string | undefined): string | null {
@@ -67,12 +67,10 @@ export default defineEventHandler(async (event) => {
 
     const { outcome, name, expiry_date } = parsed.data.status;
 
-    const client = await serverSupabaseClient(event);
-
     if (outcome === 'ACCEPTED') {
       const expiryIso = parseApiDate(expiry_date);
 
-      const { error: updateError } = await client
+      const { error: updateError } = await serverSupabaseServiceRole(event)
         .from('profiles')
         .update({
           rtw_status: 'verified',
@@ -104,7 +102,6 @@ export default defineEventHandler(async (event) => {
     if (
       error.message?.includes('Auth session missing') ||
       error.message?.includes('session') ||
-      error.statusCode === 500 ||
       error.statusCode === 401
     ) {
       if (error.statusCode === 401) throw error;

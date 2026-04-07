@@ -94,7 +94,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed, onMounted, watch } from 'vue';
 import { useRtw } from '~/composables/useRtw';
 import { RtwVerifySchema } from '~/schemas/rtw';
 import type { RtwVerifyInput } from '~/schemas/rtw';
@@ -125,13 +125,16 @@ const expiryDisplay = computed(() => {
   return `${day}/${month}/${year}`;
 });
 
-onMounted(() => {
-  if (user.value) {
+const prefillFromUser = () => {
+  if (user.value && !form.value.forename && !form.value.surname) {
     const meta = user.value.user_metadata ?? {};
     form.value.forename = meta.first_name ?? '';
     form.value.surname = meta.last_name ?? '';
   }
-});
+};
+
+onMounted(prefillFromUser);
+watch(user, prefillFromUser);
 
 const validate = (): boolean => {
   const result = RtwVerifySchema.safeParse(form.value);
