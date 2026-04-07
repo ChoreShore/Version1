@@ -28,6 +28,23 @@
         </template>
       </DataList>
 
+      <DataList
+        v-if="contracts.length || contractsLoading"
+        title="Active Contracts"
+        description="Contracts awaiting payment or in progress"
+      >
+        <template v-if="contractsLoading">
+          <li v-for="n in 2" :key="`contract-skeleton-${n}`">
+            <LoadingSkeleton variant="block" height="120px" />
+          </li>
+        </template>
+        <template v-else>
+          <li v-for="contract in contracts" :key="contract.id">
+            <ContractCard :contract="contract" />
+          </li>
+        </template>
+      </DataList>
+
       <DataList title="Applications" description="Latest applications">
         <template v-if="applicationsLoading">
           <li v-for="n in 3" :key="`app-skeleton-${n}`">
@@ -68,6 +85,7 @@ import { useApplications } from '~/composables/useApplications';
 import { useActiveRole } from '~/composables/useActiveRole';
 import { useRtw } from '~/composables/useRtw';
 import RtwVerificationModal from '~/components/profile/RtwVerificationModal.vue';
+import ContractCard from '~/components/contracts/ContractCard.vue';
 
 const { role } = useActiveRole();
 const { isRtwRequired, fetchRtwStatus } = useRtw();
@@ -79,8 +97,13 @@ watch(isRtwRequired, (required) => {
 
 const jobs = ref<any[]>([]);
 const applications = ref<any[]>([]);
+const contracts = ref<any[]>([]);
 const jobsLoading = ref(true);
 const applicationsLoading = ref(true);
+const contractsLoading = ref(false);
+
+const user = useSupabaseUser();
+const supabase = useSupabaseClient() as any;
 
 const stats = computed(() => {
   if (role.value === 'employer') {
@@ -125,9 +148,30 @@ const loadApplications = async () => {
   }
 };
 
+const loadContracts = async () => {
+  if (!user.value) return;
+  contractsLoading.value = true;
+  try {
+    const { data } = await supabase
+      .from('contracts')
+      .select('*, escrow_payment:escrow_payments(*), job:jobs(title, budget_amount)')
+      .or(`employer_id.eq.${user.value.id},worker_id.eq.${user.value.id}`)
+      .in('status', ['pending', 'active'])
+      .order('created_at', { ascending: false });
+    contracts.value = (data ?? []).map((c: any) => ({
+      ...c,
+      job_title: c.job?.title,
+      job_budget_amount: c.job?.budget_amount
+    }));
+  } finally {
+    contractsLoading.value = false;
+  }
+};
+
 const loadData = () => {
   loadJobs();
   loadApplications();
+  loadContracts();
 };
 
 watch(role, () => {

@@ -1,5 +1,6 @@
 import { serverSupabaseClient, serverSupabaseUser } from '#supabase/server';
 import { validateUpdateApplication, ApplicationResponseSchema } from '~/schemas/application';
+import { calculateEscrowFees } from '~/server/utils/fees';
 
 export default defineEventHandler(async (event) => {
   try {
@@ -68,6 +69,35 @@ export default defineEventHandler(async (event) => {
       }
       
       throw createError({ statusCode: 400, statusMessage: error.message });
+    }
+
+    // When an application is accepted, auto-create a contract record
+    if (validatedData.status === 'accepted' && data) {
+      const { data: job } = await client
+        .from('jobs')
+        .select('employer_id, budget_amount')
+        .eq('id', data.job_id)
+        .single();
+
+      if (job) {
+        const fees = calculateEscrowFees(job.budget_amount ?? 0);
+
+        const { data: existingContract } = await client
+          .from('contracts')
+          .select('id')
+          .eq('application_id', applicationId)
+          .maybeSingle();
+
+        if (!existingContract) {
+          await client.from('contracts').insert({
+            application_id: applicationId,
+            employer_id: job.employer_id,
+            worker_id: data.worker_id,
+            job_id: data.job_id,
+            status: 'pending'
+          });
+        }
+      }
     }
 
     const response = { application: data };

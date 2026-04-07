@@ -66,6 +66,11 @@
         </aside>
       </div>
 
+      <div v-if="pendingContractId" class="job-detail__pay-banner">
+        <span>✅ Application accepted. <strong>Escrow payment required</strong> to activate the contract.</span>
+        <NuxtLink :to="`/contracts/${pendingContractId}`" class="job-detail__pay-link">Pay to Activate →</NuxtLink>
+      </div>
+
       <DataList v-if="isEmployerOwner" title="Applications" description="Applicants for this job">
         <template v-if="applicationsLoading">
           <li v-for="n in 3" :key="`job-app-${n}`"><LoadingSkeleton variant="block" height="140px" /></li>
@@ -119,6 +124,7 @@ const route = useRoute();
 const jobsApi = useJobs();
 const applicationsApi = useApplications();
 const user = useSupabaseUser();
+const supabase = useSupabaseClient() as any;
 const { role } = useActiveRole();
 const { isRtwRequired, fetchRtwStatus } = useRtw();
 const showRtwModal = ref(false);
@@ -206,11 +212,23 @@ const submitApplication = async (formData: { cover_letter: string; proposed_rate
   }
 };
 
+const pendingContractId = ref<string | null>(null);
+
 const updateApplicationStatus = async (applicationId: string, status: ApplicationStatus) => {
   applicationUpdating.value = { ...applicationUpdating.value, [applicationId]: true };
+  pendingContractId.value = null;
   try {
     await applicationsApi.updateApplication(applicationId, { status });
     await fetchApplications();
+
+    if (status === 'accepted') {
+      const { data } = await supabase
+        .from('contracts')
+        .select('id')
+        .eq('application_id', applicationId)
+        .maybeSingle();
+      if (data?.id) pendingContractId.value = data.id;
+    }
   } catch (err) {
     console.error(err);
   } finally {
