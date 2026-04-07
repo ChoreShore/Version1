@@ -2,7 +2,7 @@
   <div class="rtw-overlay" role="dialog" aria-modal="true" aria-labelledby="rtw-title">
     <div class="rtw-modal">
       <header class="rtw-modal__header">
-        <button class="rtw-modal__close" type="button" aria-label="Close" @click="emit('close')">&#x2715;</button>
+        <button class="rtw-modal__close" type="button" aria-label="Close" @click="state === 'success' ? emit('verified') : emit('close')">&#x2715;</button>
         <div class="rtw-modal__icon">🪪</div>
         <h2 id="rtw-title" class="rtw-modal__title">Verify your right to work</h2>
         <p class="rtw-modal__subtitle">
@@ -162,7 +162,6 @@ const handleSubmit = async () => {
       verifiedName.value = result.name ?? form.value.forename;
       verifiedExpiry.value = result.expiry_date ?? null;
       state.value = 'success';
-      setTimeout(() => emit('verified'), 2000);
     } else {
       apiError.value = result.message ?? 'Verification failed. Please try again.';
       state.value = 'idle';
