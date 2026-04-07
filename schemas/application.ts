@@ -17,10 +17,14 @@ export const CreateApplicationSchema = z.object({
     .trim()
     .optional(),
   proposed_rate: z.number()
-    .positive('Proposed rate must be positive')
-    .max(10000, 'Proposed rate too high')
+    .min(20, 'Proposed rate must be at least £20')
+    .max(30, 'Proposed rate must be no more than £30')
     .optional()
 });
+
+// Withdrawal reason enum
+export const WithdrawalReasonSchema = z.enum(['found_another_job', 'personal_reasons']);
+export type WithdrawalReason = z.infer<typeof WithdrawalReasonSchema>;
 
 // Application update schema (strict for input validation)
 export const UpdateApplicationSchema = z.object({
@@ -31,9 +35,10 @@ export const UpdateApplicationSchema = z.object({
     .trim()
     .optional(),
   proposed_rate: z.number()
-    .positive('Proposed rate must be positive')
-    .max(10000, 'Proposed rate too high')
-    .optional()
+    .min(20, 'Proposed rate must be at least £20')
+    .max(30, 'Proposed rate must be no more than £30')
+    .optional(),
+  withdrawal_reason: WithdrawalReasonSchema.optional()
 });
 
 // Full application schema (lenient for database responses)
@@ -44,6 +49,7 @@ export const ApplicationSchema = z.object({
   cover_letter: z.string().nullable().optional(),
   proposed_rate: z.number().nullable().optional(),
   status: ApplicationStatusSchema,
+  withdrawal_reason: z.string().nullable().optional(),
   created_at: z.string(),
   updated_at: z.string()
 });

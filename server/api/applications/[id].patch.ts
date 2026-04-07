@@ -46,7 +46,8 @@ export default defineEventHandler(async (event) => {
       .update({
         status: validatedData.status,
         cover_letter: validatedData.cover_letter,
-        proposed_rate: validatedData.proposed_rate
+        proposed_rate: validatedData.proposed_rate,
+        withdrawal_reason: validatedData.withdrawal_reason ?? null
       })
       .eq('id', applicationId)
       .select()

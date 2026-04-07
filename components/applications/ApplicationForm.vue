@@ -18,7 +18,7 @@
       </header>
 
       <label class="application-form__field">
-        <span>Cover letter</span>
+        <span>Cover letter (optional)</span>
         <textarea
           v-model="form.cover_letter"
           rows="5"
@@ -35,9 +35,10 @@
         <input
           v-model="form.proposed_rate"
           type="number"
-          min="0"
+          min="20"
+          max="30"
           step="1"
-          placeholder="e.g. 120"
+          placeholder="e.g. 25"
           :class="{ 'application-form__input--error': fieldErrors.proposed_rate }"
         />
         <p v-if="fieldErrors.proposed_rate" class="application-form__field-error">
@@ -67,10 +68,11 @@ const applicationFormSchema = z.object({
   cover_letter: z.string()
     .min(10, 'Cover letter must be at least 10 characters')
     .max(1000, 'Cover letter must be less than 1000 characters')
-    .trim(),
+    .trim()
+    .optional(),
   proposed_rate: z.number()
-    .positive('Rate must be positive')
-    .max(10000, 'Rate too high')
+    .min(20, 'Rate must be at least £20')
+    .max(30, 'Rate must be no more than £30')
     .optional()
 });
 
@@ -84,7 +86,7 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   submit: [data: {
-    cover_letter: string;
+    cover_letter?: string;
     proposed_rate?: number;
   }];
 }>();
@@ -114,7 +116,7 @@ const fieldErrors = computed(() => {
 
 // Check if form is valid
 const isFormValid = computed(() => {
-  return Object.keys(fieldErrors.value).length === 0 && form.value.cover_letter.trim().length >= 10;
+  return Object.keys(fieldErrors.value).length === 0;
 });
 
 const handleSubmit = () => {
@@ -130,7 +132,7 @@ const handleSubmit = () => {
   }
 
   emit('submit', {
-    cover_letter: form.value.cover_letter.trim(),
+    cover_letter: form.value.cover_letter.trim() || undefined,
     proposed_rate: form.value.proposed_rate ? Number(form.value.proposed_rate) : undefined
   });
 };

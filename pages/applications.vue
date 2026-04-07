@@ -51,11 +51,17 @@
 
       <template v-else>
         <li v-for="application in filteredApplications" :key="application.id">
-          <ApplicationCard :application="application" :perspective="role" />
+          <ApplicationCard :application="application" :perspective="role" @withdraw="handleWithdraw" />
         </li>
       </template>
     </DataList>
   </section>
+  <WithdrawModal
+    v-if="withdrawTarget"
+    :requires-reason="withdrawTarget.status === 'accepted'"
+    @confirm="handleWithdrawConfirm"
+    @cancel="withdrawTarget = null"
+  />
 </template>
 
 <script setup lang="ts">
@@ -67,9 +73,10 @@ import DataList from '~/components/primitives/DataList.vue';
 import EmptyState from '~/components/primitives/EmptyState.vue';
 import LoadingSkeleton from '~/components/primitives/LoadingSkeleton.vue';
 import ApplicationCard from '~/components/applications/ApplicationCard.vue';
+import WithdrawModal from '~/components/applications/WithdrawModal.vue';
 import { useApplications } from '~/composables/useApplications';
 import { useActiveRole } from '~/composables/useActiveRole';
-import type { ApplicationStatus, ApplicationWithDetails } from '~/schemas/application';
+import type { ApplicationStatus, ApplicationWithDetails, WithdrawalReason } from '~/schemas/application';
 
 const applicationsApi = useApplications();
 const { role } = useActiveRole();
@@ -116,6 +123,36 @@ const filteredApplications = computed(() => {
   if (statusFilter.value === 'all') return applications.value;
   return applications.value.filter((application) => application.status === statusFilter.value);
 });
+
+const withdrawTarget = ref<ApplicationWithDetails | null>(null);
+
+const handleWithdraw = (applicationId: string) => {
+  const app = applications.value.find(a => a.id === applicationId);
+  if (!app) return;
+  if (app.status === 'accepted') {
+    withdrawTarget.value = app;
+  } else {
+    doWithdraw(applicationId);
+  }
+};
+
+const handleWithdrawConfirm = async (reason?: WithdrawalReason) => {
+  if (!withdrawTarget.value) return;
+  await doWithdraw(withdrawTarget.value.id, reason);
+  withdrawTarget.value = null;
+};
+
+const doWithdraw = async (applicationId: string, reason?: WithdrawalReason) => {
+  try {
+    await applicationsApi.updateApplication(applicationId, {
+      status: 'withdrawn',
+      ...(reason ? { withdrawal_reason: reason } : {})
+    });
+    await fetchApplications();
+  } catch (err: any) {
+    error.value = err?.data?.statusMessage || 'Could not withdraw application.';
+  }
+};
 
 const fetchApplications = async () => {
   loading.value = true;

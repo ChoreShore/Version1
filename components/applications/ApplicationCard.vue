@@ -25,6 +25,10 @@
         <dt>Status</dt>
         <dd>{{ statusLabel }}</dd>
       </div>
+      <div v-if="perspective === 'employer' && application.status === 'withdrawn' && application.withdrawal_reason">
+        <dt>Withdrawal reason</dt>
+        <dd>{{ withdrawalReasonLabel }}</dd>
+      </div>
     </dl>
 
     <footer class="application-card__footer">
@@ -37,6 +41,14 @@
         >
           Message {{ perspective === 'employer' ? 'worker' : 'employer' }}
         </NuxtLink>
+        <button
+          v-if="perspective === 'worker' && application.status !== 'withdrawn'"
+          type="button"
+          class="application-card__withdraw-btn"
+          @click="emit('withdraw', application.id)"
+        >
+          Withdraw
+        </button>
         <slot name="actions" />
       </div>
     </footer>
@@ -44,6 +56,7 @@
 </template>
 
 <script setup lang="ts">
+import { computed } from 'vue';
 import type { ApplicationWithDetails } from '~/schemas/application';
 import StatusPill from '~/components/primitives/StatusPill.vue';
 import InfoBadge from '~/components/primitives/InfoBadge.vue';
@@ -57,6 +70,10 @@ const props = withDefaults(
     perspective: 'employer'
   }
 );
+
+const emit = defineEmits<{
+  withdraw: [applicationId: string];
+}>();
 
 const statusVariantMap: Record<string, 'neutral' | 'info' | 'success' | 'warning' | 'danger'> = {
   pending: 'info',
@@ -81,6 +98,16 @@ const proposedRate = computed(() => {
 });
 
 const submittedAt = computed(() => new Date(props.application.created_at).toLocaleString());
+
+const withdrawalReasonLabels: Record<string, string> = {
+  found_another_job: 'Found another job',
+  personal_reasons: 'Personal reasons'
+};
+
+const withdrawalReasonLabel = computed(() => {
+  const reason = props.application.withdrawal_reason;
+  return reason ? (withdrawalReasonLabels[reason] ?? reason) : '';
+});
 </script>
 
 <style scoped>
@@ -165,5 +192,22 @@ const submittedAt = computed(() => new Date(props.application.created_at).toLoca
 .application-card__message-btn:hover {
   background: var(--color-primary-700);
   border-color: var(--color-primary-700);
+}
+
+.application-card__withdraw-btn {
+  padding: 8px 16px;
+  border: 1px solid var(--color-danger);
+  background: transparent;
+  color: var(--color-danger);
+  border-radius: var(--radius-md);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 150ms ease, color 150ms ease;
+}
+
+.application-card__withdraw-btn:hover {
+  background: var(--color-danger);
+  color: white;
 }
 </style>
