@@ -23,7 +23,7 @@ const mocks = vi.hoisted(() => {
 
 vi.mock('#supabase/server', () => ({
   serverSupabaseUser: mocks.mockUser,
-  serverSupabaseServiceRole: vi.fn(() => ({ from: mocks.mockFrom })),
+  serverSupabaseClient: vi.fn(async () => ({ from: mocks.mockFrom })),
 }));
 
 import handler from '~/server/api/rtw/verify.post';

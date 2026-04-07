@@ -1,4 +1,4 @@
-import { serverSupabaseServiceRole, serverSupabaseUser } from '#supabase/server';
+import { serverSupabaseClient, serverSupabaseUser } from '#supabase/server';
 import { validateRtwVerify, RtwApiResponseSchema } from '~/schemas/rtw';
 
 function parseApiDate(dateStr: string | undefined): string | null {
@@ -69,8 +69,9 @@ export default defineEventHandler(async (event) => {
 
     if (outcome === 'ACCEPTED') {
       const expiryIso = parseApiDate(expiry_date);
+      const client = await serverSupabaseClient(event);
 
-      const { error: updateError } = await serverSupabaseServiceRole(event)
+      const { error: updateError } = await client
         .from('profiles')
         .update({
           rtw_status: 'verified',
