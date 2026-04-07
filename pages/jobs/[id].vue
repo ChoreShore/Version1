@@ -52,7 +52,7 @@
             <button type="button" class="rtw-gate__button" @click="showRtwModal = true">
               Verify now
             </button>
-            <RtwVerificationModal v-if="showRtwModal" @verified="onRtwVerified" />
+            <RtwVerificationModal v-if="showRtwModal" @verified="onRtwVerified" @close="showRtwModal = false" />
           </div>
           <ApplicationForm
             v-else

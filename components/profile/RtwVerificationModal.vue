@@ -2,6 +2,7 @@
   <div class="rtw-overlay" role="dialog" aria-modal="true" aria-labelledby="rtw-title">
     <div class="rtw-modal">
       <header class="rtw-modal__header">
+        <button class="rtw-modal__close" type="button" aria-label="Close" @click="emit('close')">&#x2715;</button>
         <div class="rtw-modal__icon">🪪</div>
         <h2 id="rtw-title" class="rtw-modal__title">Verify your right to work</h2>
         <p class="rtw-modal__subtitle">
@@ -99,7 +100,7 @@ import { useRtw } from '~/composables/useRtw';
 import { RtwVerifySchema } from '~/schemas/rtw';
 import type { RtwVerifyInput } from '~/schemas/rtw';
 
-const emit = defineEmits<{ (e: 'verified'): void }>();
+const emit = defineEmits<{ (e: 'verified'): void; (e: 'close'): void }>();
 
 const { verify } = useRtw();
 const user = useSupabaseUser();
@@ -201,10 +202,31 @@ const handleSubmit = async () => {
 }
 
 .rtw-modal__header {
+  position: relative;
   display: flex;
   flex-direction: column;
   gap: var(--space-2);
   text-align: center;
+}
+
+.rtw-modal__close {
+  position: absolute;
+  top: 0;
+  right: 0;
+  background: none;
+  border: none;
+  font-size: 1.25rem;
+  line-height: 1;
+  color: var(--color-text-muted);
+  cursor: pointer;
+  padding: var(--space-1);
+  border-radius: var(--radius-sm);
+  transition: color 150ms ease, background 150ms ease;
+}
+
+.rtw-modal__close:hover {
+  color: var(--color-text);
+  background: var(--color-surface-2);
 }
 
 .rtw-modal__icon {

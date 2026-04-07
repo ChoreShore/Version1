@@ -1,6 +1,6 @@
 <template>
   <section class="dashboard-page">
-    <RtwVerificationModal v-if="isRtwRequired" @verified="onRtwVerified" />
+    <RtwVerificationModal v-if="showRtwModal" @verified="onRtwVerified" @close="showRtwModal = false" />
     <OverviewStats :stats="stats" />
 
     <div class="dashboard-page__grid">
@@ -71,6 +71,11 @@ import RtwVerificationModal from '~/components/profile/RtwVerificationModal.vue'
 
 const { role } = useActiveRole();
 const { isRtwRequired, fetchRtwStatus } = useRtw();
+const showRtwModal = ref(false);
+
+watch(isRtwRequired, (required) => {
+  if (required) showRtwModal.value = true;
+}, { immediate: true });
 
 const jobs = ref<any[]>([]);
 const applications = ref<any[]>([]);
@@ -135,6 +140,7 @@ onMounted(() => {
 });
 
 const onRtwVerified = () => {
+  showRtwModal.value = false;
   loadData();
 };
 
