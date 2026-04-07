@@ -37,30 +37,6 @@ export default defineEventHandler(async (event) => {
       throw createError({ statusCode: 400, statusMessage: error.message });
     }
 
-    // Create profile record with automatic role assignment
-    if (data.user) {
-      const { error: profileError } = await client
-        .from('profiles')
-        .insert([{
-          id: data.user.id,
-          first_name: validatedData.first_name,
-          last_name: validatedData.last_name,
-          phone: validatedData.phone ?? null,
-          roles: [validatedData.role], // Auto-assign role based on sign-up choice
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString()
-        }]);
-
-      if (profileError) {
-        console.error('Profile creation error:', profileError);
-        console.error('Profile error details:', JSON.stringify(profileError, null, 2));
-        throw createError({ 
-          statusCode: 400, 
-          statusMessage: `Failed to create user profile: ${profileError.message || 'Unknown error'}` 
-        });
-      }
-    }
-
     return { user: data.user };
   } catch (error: any) {
     // Handle Supabase client initialization errors
