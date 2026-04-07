@@ -43,7 +43,6 @@ export default defineEventHandler(async (event) => {
         .from('profiles')
         .insert([{
           id: data.user.id,
-          email: validatedData.email,
           first_name: validatedData.first_name,
           last_name: validatedData.last_name,
           phone: validatedData.phone ?? null,

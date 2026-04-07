@@ -1,5 +1,6 @@
 <template>
   <section class="dashboard-page">
+    <RtwVerificationModal v-if="isRtwRequired" @verified="onRtwVerified" />
     <OverviewStats :stats="stats" />
 
     <div class="dashboard-page__grid">
@@ -65,8 +66,11 @@ import LoadingSkeleton from '~/components/primitives/LoadingSkeleton.vue';
 import { useJobs } from '~/composables/useJobs';
 import { useApplications } from '~/composables/useApplications';
 import { useActiveRole } from '~/composables/useActiveRole';
+import { useRtw } from '~/composables/useRtw';
+import RtwVerificationModal from '~/components/profile/RtwVerificationModal.vue';
 
 const { role } = useActiveRole();
+const { isRtwRequired, fetchRtwStatus } = useRtw();
 
 const jobs = ref<any[]>([]);
 const applications = ref<any[]>([]);
@@ -126,8 +130,13 @@ watch(role, () => {
 });
 
 onMounted(() => {
+  fetchRtwStatus();
   loadData();
 });
+
+const onRtwVerified = () => {
+  loadData();
+};
 
 // Refresh data when navigating back to dashboard
 onActivated(() => {

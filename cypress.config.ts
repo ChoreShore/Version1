@@ -15,8 +15,19 @@ export default defineConfig({
     responseTimeout: 10000,
     env: {
       // Environment variables for testing
-      USE_REAL_SUPABASE: true, // Use real Supabase for deployed app
-      USE_MOCKS: false
+      USE_REAL_SUPABASE: true,
+      USE_MOCKS: false,
+      // Test account credentials — fill these in before running e2e
+      TEST_EMAIL: 'developertestingemail6@gmail.com',
+      TEST_PASSWORD: 'Ac89hgiy?',
+      // Unverified worker account (rtw_status = 'unverified')
+      // Falls back to TEST_EMAIL/TEST_PASSWORD if not set
+      TEST_WORKER_UNVERIFIED_EMAIL: '',
+      TEST_WORKER_UNVERIFIED_PASSWORD: '',
+      // Verified worker account (rtw_status = 'verified', not expired)
+      // Falls back to TEST_EMAIL/TEST_PASSWORD if not set
+      TEST_WORKER_VERIFIED_EMAIL: '',
+      TEST_WORKER_VERIFIED_PASSWORD: ''
     },
     // Retry configuration for flaky tests
     retries: {

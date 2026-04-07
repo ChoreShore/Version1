@@ -19,8 +19,10 @@ declare global {
   namespace Cypress {
     interface Chainable {
       signUp(email: string, password: string, firstName: string, lastName: string, role: string): any
-      signIn(email: string, password: string): any
+      signIn(email?: string, password?: string): any
       createJob(jobData: JobData): any
+      switchToWorker(): Chainable<void>
+      fillRtwForm(code: string, dob: string, forename: string, surname: string): Chainable<void>
     }
   }
 }
@@ -41,11 +43,32 @@ Cypress.Commands.add('signUp', (email: string, password: string, firstName: stri
 Cypress.Commands.add('signIn', (email?: string, password?: string) => {
   const testEmail = email || Cypress.env('TEST_EMAIL')
   const testPassword = password || Cypress.env('TEST_PASSWORD')
-  
+
+  if (!testEmail || !testPassword) {
+    throw new Error(
+      'signIn: credentials are missing. Set TEST_EMAIL and TEST_PASSWORD in cypress.config.ts env block.'
+    )
+  }
+
   cy.visit('/auth/sign-in')
   cy.get('input[id="email"]').type(testEmail)
   cy.get('input[id="password"]').type(testPassword)
   cy.get('button[type="submit"]').click()
+})
+
+// Custom command to switch role switcher to Worker
+Cypress.Commands.add('switchToWorker', () => {
+  cy.get('button.role-switcher__option').contains('Worker').click()
+  cy.wait(1500)
+})
+
+// Custom command to fill and submit the RTW verification modal
+Cypress.Commands.add('fillRtwForm', (code: string, dob: string, forename: string, surname: string) => {
+  cy.get('#rtw-code', { timeout: 10000 }).should('be.visible').clear().type(code)
+  cy.get('#rtw-dob').clear().type(dob)
+  cy.get('#rtw-forename').clear().type(forename)
+  cy.get('#rtw-surname').clear().type(surname)
+  cy.get('button.rtw-modal__submit').click()
 })
 
 // Custom command for creating a test job

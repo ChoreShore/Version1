@@ -1,26 +1,6 @@
 import type { Role } from './role';
-import type { 
-  Job, 
-  JobPreview, 
-  JobWithDetails, 
-  CreateJobPayload, 
-  UpdateJobPayload,
-  BudgetType,
-  JobStatus,
-  JobCategory
-} from './job';
 
 export type { Role };
-export type { 
-  Job, 
-  JobPreview, 
-  JobWithDetails, 
-  CreateJobPayload, 
-  UpdateJobPayload,
-  BudgetType,
-  JobStatus,
-  JobCategory
-};
 
 // Existing auth types...
 export interface SignUpPayload {
@@ -45,6 +25,10 @@ export interface Profile {
   roles: Role[];
   created_at: string;
   updated_at: string;
+  rtw_status: 'unverified' | 'verified' | 'rejected';
+  rtw_expiry_date: string | null;
+  rtw_verified_at: string | null;
+  rtw_full_name: string | null;
 }
 
 export interface AddRolePayload {
