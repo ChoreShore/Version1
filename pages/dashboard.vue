@@ -1,6 +1,29 @@
 <template>
   <section class="dashboard-page">
     <RtwVerificationModal v-if="showRtwModal" @verified="onRtwVerified" @close="showRtwModal = false" />
+    
+    <!-- Temporary fix button for contracts with missing worker_id -->
+    <div v-if="showFixButton" class="dashboard-page__fix-banner">
+      <button 
+        type="button" 
+        class="dashboard-page__fix-button"
+        :disabled="fixingContracts"
+        @click="fixContractWorkerIds"
+      >
+        {{ fixingContracts ? 'Fixing...' : 'Fix Contracts (Admin)' }}
+      </button>
+      <button 
+        type="button" 
+        class="dashboard-page__dismiss-button"
+        @click="showFixButton = false"
+      >
+        ✕
+      </button>
+      <p v-if="fixResult" class="dashboard-page__fix-result">
+        {{ fixResult }}
+      </p>
+    </div>
+    
     <OverviewStats :stats="stats" />
 
     <div class="dashboard-page__grid">
@@ -94,6 +117,9 @@ import ContractCard from '~/components/contracts/ContractCard.vue';
 const { role } = useActiveRole();
 const { isRtwRequired, fetchRtwStatus } = useRtw();
 const showRtwModal = ref(false);
+const showFixButton = ref(true);
+const fixingContracts = ref(false);
+const fixResult = ref<string | null>(null);
 
 watch(isRtwRequired, (required) => {
   if (required) showRtwModal.value = true;
@@ -197,6 +223,24 @@ const onRtwVerified = () => {
   loadData();
 };
 
+const fixContractWorkerIds = async () => {
+  fixingContracts.value = true;
+  fixResult.value = null;
+  try {
+    const result = await $fetch<{ success: boolean; message: string; fixed: number; total: number; errors?: string[] }>('/api/contracts/fix-worker-ids', {
+      method: 'POST'
+    });
+    fixResult.value = result.message;
+    if (result.fixed > 0) {
+      await loadContracts(); // Reload contracts to show the fixed ones
+    }
+  } catch (err: any) {
+    fixResult.value = `Error: ${err?.data?.statusMessage || err.message || 'Failed to fix contracts'}`;
+  } finally {
+    fixingContracts.value = false;
+  }
+};
+
 // Refresh data when navigating back to dashboard
 onActivated(() => {
   loadData();
@@ -214,5 +258,55 @@ onActivated(() => {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
   gap: var(--space-5);
+}
+
+.dashboard-page__fix-banner {
+  background: rgba(245, 158, 11, 0.1);
+  border: 1px solid rgba(245, 158, 11, 0.3);
+  border-radius: var(--radius-md);
+  padding: var(--space-3);
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+}
+
+.dashboard-page__fix-button {
+  background: var(--color-warning);
+  color: white;
+  border: none;
+  border-radius: var(--radius-md);
+  padding: var(--space-2) var(--space-4);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.dashboard-page__fix-button:hover:not(:disabled) {
+  opacity: 0.9;
+}
+
+.dashboard-page__fix-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.dashboard-page__dismiss-button {
+  background: transparent;
+  border: none;
+  color: var(--color-text-subtle);
+  cursor: pointer;
+  padding: var(--space-1);
+  font-size: var(--text-lg);
+}
+
+.dashboard-page__dismiss-button:hover {
+  color: var(--color-text);
+}
+
+.dashboard-page__fix-result {
+  margin: 0;
+  font-size: var(--text-sm);
+  color: var(--color-text);
+  font-weight: 500;
 }
 </style>

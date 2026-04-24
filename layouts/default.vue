@@ -13,13 +13,13 @@
     <template #topbar>
       <TopBar>
         <template #leading>
-          <RoleSwitcher v-model="currentRole" />
+          <RoleSwitcher v-model="role" />
         </template>
         <template #center>
           <p class="topbar__context">{{ pageTitle }}</p>
         </template>
         <template #actions>
-          <NuxtLink v-if="currentRole === 'employer'" to="/jobs/new" class="topbar__action">Post a job</NuxtLink>
+          <NuxtLink v-if="role === 'employer'" to="/jobs/new" class="topbar__action">Post a job</NuxtLink>
           <NuxtLink to="/messages" class="topbar__action topbar__action--primary">New message</NuxtLink>
         </template>
       </TopBar>
@@ -41,7 +41,7 @@ import { useActiveRole } from '~/composables/useActiveRole';
 import { useAuth } from '~/composables/useAuth';
 
 const route = useRoute();
-const { role: currentRole } = useActiveRole();
+const { role } = useActiveRole();
 const { signout } = useAuth();
 
 const handleSignOut = async () => {
@@ -65,7 +65,7 @@ const navItems = computed(() => {
   ];
   
   // Only show Jobs for employers
-  if (currentRole.value === 'employer') {
+  if (role.value === 'employer') {
     baseItems.splice(1, 0, { label: 'Jobs', to: '/jobs' });
   }
   

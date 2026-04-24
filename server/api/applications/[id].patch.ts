@@ -51,7 +51,7 @@ export default defineEventHandler(async (event) => {
         withdrawal_reason: validatedData.withdrawal_reason ?? null
       })
       .eq('id', applicationId)
-      .select()
+      .select('id, job_id, worker_id, status, cover_letter, proposed_rate, withdrawal_reason, created_at, updated_at')
       .single();
 
     if (error) {
@@ -73,29 +73,33 @@ export default defineEventHandler(async (event) => {
 
     // When an application is accepted, auto-create a contract record
     if (validatedData.status === 'accepted' && data) {
-      const { data: job } = await client
-        .from('jobs')
-        .select('employer_id, budget_amount')
-        .eq('id', data.job_id)
-        .single();
+      if (!data.worker_id) {
+        console.error('Cannot create contract: worker_id is missing from application', applicationId);
+      } else {
+        const { data: job } = await client
+          .from('jobs')
+          .select('employer_id, budget_amount')
+          .eq('id', data.job_id)
+          .single();
 
-      if (job) {
-        const fees = calculateEscrowFees(job.budget_amount ?? 0);
+        if (job) {
+          const fees = calculateEscrowFees(job.budget_amount ?? 0);
 
-        const { data: existingContract } = await client
-          .from('contracts')
-          .select('id')
-          .eq('application_id', applicationId)
-          .maybeSingle();
+          const { data: existingContract } = await client
+            .from('contracts')
+            .select('id')
+            .eq('application_id', applicationId)
+            .maybeSingle();
 
-        if (!existingContract) {
-          await client.from('contracts').insert({
-            application_id: applicationId,
-            employer_id: job.employer_id,
-            worker_id: data.worker_id,
-            job_id: data.job_id,
-            status: 'pending'
-          });
+          if (!existingContract) {
+            await client.from('contracts').insert({
+              application_id: applicationId,
+              employer_id: job.employer_id,
+              worker_id: data.worker_id,
+              job_id: data.job_id,
+              status: 'pending'
+            });
+          }
         }
       }
     }
