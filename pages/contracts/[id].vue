@@ -107,6 +107,58 @@
         </button>
       </div>
 
+      <details v-if="isEmployer" class="contract-detail__test-panel">
+        <summary>Payment Test Panel</summary>
+        <p class="contract-detail__test-help">
+          Run mock payment endpoints for this contract without using browser console.
+        </p>
+
+        <div class="contract-detail__test-actions">
+          <button
+            type="button"
+            class="contract-detail__btn contract-detail__btn--primary"
+            :disabled="testLoading"
+            @click="runCreateEscrow"
+          >
+            {{ testLoading ? 'Running...' : '1) Create Escrow' }}
+          </button>
+
+          <button
+            type="button"
+            class="contract-detail__btn contract-detail__btn--primary"
+            :disabled="testLoading || !lastPaymentIntentId"
+            @click="runConfirmEscrow"
+          >
+            {{ testLoading ? 'Running...' : '2) Confirm Escrow' }}
+          </button>
+
+          <button
+            type="button"
+            class="contract-detail__btn contract-detail__btn--success"
+            :disabled="testLoading"
+            @click="runReleaseFunds"
+          >
+            {{ testLoading ? 'Running...' : '3A) Release Funds' }}
+          </button>
+
+          <button
+            type="button"
+            class="contract-detail__btn contract-detail__btn--danger"
+            :disabled="testLoading"
+            @click="runRefundEscrow"
+          >
+            {{ testLoading ? 'Running...' : '3B) Refund Escrow' }}
+          </button>
+        </div>
+
+        <p class="contract-detail__test-meta">
+          Payment intent for confirm: <strong>{{ lastPaymentIntentId ?? 'Create escrow first' }}</strong>
+        </p>
+
+        <div v-if="testError" class="contract-detail__error">{{ testError }}</div>
+        <pre v-if="testResult" class="contract-detail__test-result">{{ testResult }}</pre>
+      </details>
+
       <div v-if="actionError" class="contract-detail__error">{{ actionError }}</div>
     </template>
 
@@ -160,6 +212,10 @@ const error = ref<string | null>(null);
 const actionLoading = ref(false);
 const actionError = ref<string | null>(null);
 const showPayModal = ref(false);
+const testLoading = ref(false);
+const testError = ref<string | null>(null);
+const testResult = ref<string | null>(null);
+const lastPaymentIntentId = ref<string | null>(null);
 
 const contractId = computed(() => route.params.id as string);
 const isEmployer = computed(() => user.value?.id === contract.value?.employer_id);
@@ -228,6 +284,76 @@ const fetchContract = async () => {
     error.value = err?.data?.statusMessage || 'Could not load contract.';
   } finally {
     loading.value = false;
+  }
+};
+
+const setTestResult = (result: unknown) => {
+  testResult.value = JSON.stringify(result, null, 2);
+};
+
+const runCreateEscrow = async () => {
+  testLoading.value = true;
+  testError.value = null;
+  try {
+    const result = await paymentsApi.createEscrow(contractId.value);
+    lastPaymentIntentId.value = result.payment_intent.id;
+    setTestResult(result);
+    await fetchContract();
+  } catch (err: any) {
+    testError.value = err?.data?.statusMessage || 'Create escrow failed.';
+    setTestResult(err?.data ?? err);
+  } finally {
+    testLoading.value = false;
+  }
+};
+
+const runConfirmEscrow = async () => {
+  if (!lastPaymentIntentId.value) {
+    testError.value = 'Create escrow first to get a payment_intent_id.';
+    return;
+  }
+
+  testLoading.value = true;
+  testError.value = null;
+  try {
+    const result = await paymentsApi.confirmEscrow(contractId.value, lastPaymentIntentId.value);
+    setTestResult(result);
+    await fetchContract();
+  } catch (err: any) {
+    testError.value = err?.data?.statusMessage || 'Confirm escrow failed.';
+    setTestResult(err?.data ?? err);
+  } finally {
+    testLoading.value = false;
+  }
+};
+
+const runReleaseFunds = async () => {
+  testLoading.value = true;
+  testError.value = null;
+  try {
+    const result = await paymentsApi.releaseFunds(contractId.value);
+    setTestResult(result);
+    await fetchContract();
+  } catch (err: any) {
+    testError.value = err?.data?.statusMessage || 'Release funds failed.';
+    setTestResult(err?.data ?? err);
+  } finally {
+    testLoading.value = false;
+  }
+};
+
+const runRefundEscrow = async () => {
+  testLoading.value = true;
+  testError.value = null;
+  try {
+    const result = await paymentsApi.refundEscrow(contractId.value);
+    setTestResult(result);
+    await fetchContract();
+  } catch (err: any) {
+    testError.value = err?.data?.statusMessage || 'Refund escrow failed.';
+    setTestResult(err?.data ?? err);
+  } finally {
+    testLoading.value = false;
   }
 };
 
@@ -399,5 +525,44 @@ onMounted(() => {
   border-radius: var(--radius-md);
   padding: var(--space-3);
   font-size: var(--text-sm);
+}
+
+.contract-detail__test-panel {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: var(--space-3);
+  background: var(--color-surface-muted);
+}
+
+.contract-detail__test-panel summary {
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.contract-detail__test-help {
+  margin: var(--space-2) 0 var(--space-3);
+  color: var(--color-text-subtle);
+  font-size: var(--text-sm);
+}
+
+.contract-detail__test-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.contract-detail__test-meta {
+  margin: var(--space-3) 0;
+  font-size: var(--text-sm);
+}
+
+.contract-detail__test-result {
+  margin: 0;
+  padding: var(--space-3);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+  font-size: var(--text-xs);
+  overflow-x: auto;
 }
 </style>

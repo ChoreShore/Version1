@@ -28,14 +28,18 @@
         </template>
       </DataList>
 
-      <DataList
-        v-if="contracts.length || contractsLoading"
-        title="Active Contracts"
-        description="Contracts awaiting payment or in progress"
-      >
+      <DataList title="Active Contracts" description="Contracts awaiting payment or in progress">
         <template v-if="contractsLoading">
           <li v-for="n in 2" :key="`contract-skeleton-${n}`">
             <LoadingSkeleton variant="block" height="120px" />
+          </li>
+        </template>
+        <template v-else-if="!contracts.length">
+          <li>
+            <EmptyState 
+              title="No active contracts" 
+              description="Contracts will appear here when an employer accepts your application." 
+            />
           </li>
         </template>
         <template v-else>
@@ -152,17 +156,22 @@ const loadContracts = async () => {
   if (!user.value) return;
   contractsLoading.value = true;
   try {
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from('contracts')
       .select('*, escrow_payment:escrow_payments(*), job:jobs(title, budget_amount)')
       .or(`employer_id.eq.${user.value.id},worker_id.eq.${user.value.id}`)
       .in('status', ['pending', 'active'])
       .order('created_at', { ascending: false });
+    if (error) {
+      console.error('Error loading contracts:', error);
+    }
     contracts.value = (data ?? []).map((c: any) => ({
       ...c,
       job_title: c.job?.title,
       job_budget_amount: c.job?.budget_amount
     }));
+  } catch (err) {
+    console.error('Exception in loadContracts:', err);
   } finally {
     contractsLoading.value = false;
   }
