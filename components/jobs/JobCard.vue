@@ -48,10 +48,10 @@ import StatusPill from '~/components/primitives/StatusPill.vue';
 const props = defineProps<{ job: JobWithDetailsInput & { application_count?: number; has_applied?: boolean } }>();
 
 const statusVariantMap: Record<string, 'neutral' | 'info' | 'success' | 'warning'> = {
+  draft: 'neutral',
   open: 'info',
-  in_progress: 'warning',
-  completed: 'success',
-  cancelled: 'neutral'
+  closed: 'warning',
+  completed: 'success'
 };
 
 const statusVariant = computed(() => statusVariantMap[props.job.status] ?? 'neutral');

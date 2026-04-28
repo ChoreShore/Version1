@@ -4,6 +4,16 @@ import { JobsResponseSchema, JobsQuerySchema } from '~/schemas/job';
 import { fetchPreviewJobs } from '~/server/utils/preview';
 import { handleSupabaseAuthErrors } from '~/server/utils/api';
 
+function hasEmployerRole(roles: unknown): boolean {
+  if (Array.isArray(roles)) {
+    return roles.includes('employer');
+  }
+  if (typeof roles === 'string') {
+    return roles === 'employer' || roles.split(',').map(r => r.trim()).includes('employer');
+  }
+  return false;
+}
+
 export default defineEventHandler(async (event) => {
   try {
     const user = await serverSupabaseUser(event);
@@ -13,6 +23,15 @@ export default defineEventHandler(async (event) => {
     if (!user) {
       return await fetchPreviewJobs(client, query);
     }
+
+    // Resolve actual role from the user's profile — never trust query.role for authorization
+    const { data: profile } = await client
+      .from('profiles')
+      .select('roles')
+      .eq('id', user.id)
+      .single();
+
+    const isEmployer = hasEmployerRole(profile?.roles);
 
     const limit = query.limit ? parseInt(query.limit, 10) : 20;
     let builder = client
@@ -25,18 +44,15 @@ export default defineEventHandler(async (event) => {
       .order('created_at', { ascending: false })
       .limit(limit);
 
-    // Role-based filtering
-    if (query.role === 'employer' && query.scope === 'mine') {
+    // Role-based filtering — based on server-resolved role, not client-supplied query.role
+    if (isEmployer && query.scope === 'mine') {
       // Show only jobs posted by this employer
       builder = builder.eq('employer_id', user.id);
-    } else if (query.role === 'worker') {
-      // Show only open jobs from other employers for workers
+    } else {
+      // For authenticated workers or employers in "browse" mode: show open jobs from other users
       builder = builder
         .eq('status', 'open')
         .neq('employer_id', user.id);
-    } else {
-      // Default: show open jobs
-      builder = builder.eq('status', 'open');
     }
 
     if (query.category) {
@@ -77,7 +93,6 @@ export default defineEventHandler(async (event) => {
     try {
       return JobsResponseSchema.parse(response);
     } catch (validationError) {
-      console.error('API Response validation failed:', validationError);
       throw createError({ statusCode: 500, statusMessage: 'Invalid response format' });
     }
   } catch (error: any) {

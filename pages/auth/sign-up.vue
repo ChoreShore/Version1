@@ -145,11 +145,21 @@
         <footer class="auth-footer">
           <p>
             Already have an account?
-            <NuxtLink to="/auth/sign-in" class="auth-link">Sign in</NuxtLink>
+            <a href="#" @click.prevent="handleSignInClick" class="auth-link">Sign in</a>
           </p>
         </footer>
       </div>
     </div>
+
+    <ConfirmDialog
+      :is-open="showConfirmDialog"
+      title="Unsaved Changes"
+      message="You have unsaved changes. Are you sure you want to leave without creating your account?"
+      confirm-text="Leave"
+      cancel-text="Stay"
+      @confirm="handleDialogConfirm"
+      @cancel="handleDialogCancel"
+    />
   </div>
 </template>
 
@@ -162,7 +172,9 @@ import FormControl from '~/components/primitives/form/FormControl.vue';
 import FormError from '~/components/primitives/form/FormError.vue';
 import LoadingSkeleton from '~/components/primitives/LoadingSkeleton.vue';
 import FormErrorBoundary from '~/components/primitives/FormErrorBoundary.vue';
+import ConfirmDialog from '~/components/primitives/ConfirmDialog.vue';
 import { useAuth } from '~/composables/useAuth';
+import { useDirtyForm } from '~/composables/useDirtyForm';
 import { validateSignUpForm, validateSignUp } from '~/schemas/auth';
 import type { SignUpFormInput, SignUpInput } from '~/schemas/auth';
 
@@ -188,6 +200,14 @@ const errors = reactive<Record<string, string>>({});
 const loading = ref(false);
 const submitError = ref('');
 const success = ref(false);
+const showConfirmDialog = ref(false);
+
+// Use dirty form composable
+const { isDirty, resetDirty } = useDirtyForm({
+  formData: form,
+  message: 'You have unsaved changes. Are you sure you want to leave without creating your account?',
+  enableBeforeUnload: true
+});
 
 // Validation
 const validateField = (field: keyof SignUpFormInput) => {
@@ -289,7 +309,8 @@ const handleSubmit = async () => {
 
     await auth.signup(apiData);
     success.value = true;
-    
+    resetDirty();
+
     // Redirect after success
     setTimeout(() => {
       router.push('/auth/sign-in?message=Please check your email to verify your account');
@@ -321,6 +342,24 @@ const handleFormReset = () => {
   Object.keys(errors).forEach(key => delete errors[key]);
   submitError.value = '';
   success.value = false;
+  resetDirty();
+};
+
+const handleSignInClick = () => {
+  if (isDirty.value) {
+    showConfirmDialog.value = true;
+  } else {
+    router.push('/auth/sign-in');
+  }
+};
+
+const handleDialogConfirm = () => {
+  showConfirmDialog.value = false;
+  router.push('/auth/sign-in');
+};
+
+const handleDialogCancel = () => {
+  showConfirmDialog.value = false;
 };
 </script>
 

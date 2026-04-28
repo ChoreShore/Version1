@@ -90,11 +90,17 @@
               <textarea
                 v-model="composer"
                 rows="3"
+                maxlength="2000"
                 placeholder="Write your update"
                 :disabled="sending"
               ></textarea>
             </FormControl>
-            <FormHint>Shift + Enter for a new line</FormHint>
+            <div class="messages-page__composer-hint">
+              <FormHint>Shift + Enter for a new line</FormHint>
+              <span class="char-count" :class="{ 'is-over': composer.length > 2000 }">
+                {{ composer.length }}/2000
+              </span>
+            </div>
           </FormField>
           <button type="submit" :disabled="sending || !composer.trim()" class="messages-page__send">
             {{ sending ? 'Sending...' : 'Send message' }}
@@ -140,6 +146,8 @@ const messagesLoading = ref(false);
 const messagesError = ref<string | null>(null);
 const composer = ref('');
 const sending = ref(false);
+const abortController = ref<AbortController | null>(null);
+let pollingInterval: ReturnType<typeof setInterval> | null = null;
 
 const normalizeConversation = (conversation: any): ConversationSummary => {
   const fullName =
@@ -247,12 +255,19 @@ const formatConversationForItem = (conversation: ConversationSummary) => ({
 
 const loadMessages = async (conversation: ConversationSummary) => {
   if (!conversation?.job_id) return;
+  
+  // Abort any in-flight request before starting a new one
+  abortController.value?.abort();
+  abortController.value = new AbortController();
+  
   messagesLoading.value = true;
   messagesError.value = null;
   try {
-    const response = await messagesApi.getJobMessages(conversation.job_id);
+    const response = await messagesApi.getJobMessages(conversation.job_id, { signal: abortController.value.signal });
     thread.value = response.messages ?? [];
   } catch (err: any) {
+    // Ignore errors from aborted requests
+    if (err.name === 'AbortError' || err.message?.includes('abort')) return;
     messagesError.value = err?.data?.statusMessage || 'Unable to load this thread.';
   } finally {
     messagesLoading.value = false;
@@ -286,7 +301,8 @@ const selectConversation = (conversationId: string) => {
 };
 
 const handleSend = async () => {
-  if (!activeConversation.value || !composer.value.trim() || sending.value) return;
+  // Synchronous guard to prevent double-submit before any async operations
+  if (sending.value || !composer.value.trim() || !activeConversation.value) return;
 
   const receiverId = activeConversation.value.other_user_id;
 
@@ -299,16 +315,28 @@ const handleSend = async () => {
   messagesError.value = null;
 
   try {
+    const clientMessageId = crypto.randomUUID?.() || `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
     const response = await messagesApi.sendMessage({
       job_id: activeConversation.value.job_id,
       application_id: activeConversation.value.application_id,
       receiver_id: receiverId as string,
-      body: composer.value.trim()
+      body: composer.value.trim(),
+      client_message_id: clientMessageId
     });
 
     if (response.message) {
       thread.value = [...thread.value, response.message];
       composer.value = '';
+
+      // Update the conversation in the sidebar to reflect the new message
+      if (activeConversation.value) {
+        const conv = conversations.value.find(c => c.id === activeConversation.value.id);
+        if (conv) {
+          conv.last_message_preview = response.message.body;
+          conv.last_message_at = new Date().toISOString();
+          conv.unread_count = 0;
+        }
+      }
     }
   } catch (err: any) {
     messagesError.value = err?.data?.statusMessage || 'Unable to send message.';
@@ -317,12 +345,32 @@ const handleSend = async () => {
   }
 };
 
-watch(role, () => {
-  fetchConversations();
+watch(role, (newRole, oldRole) => {
+  if (oldRole !== undefined && newRole !== oldRole) {
+    fetchConversations();
+  }
 });
 
 onMounted(() => {
   fetchConversations();
+  
+  // Set up polling for real-time message updates
+  pollingInterval = setInterval(() => {
+    if (activeConversation.value) {
+      const conversation = conversations.value.find((item) => item.id === selectedConversationId.value);
+      if (conversation) {
+        loadMessages(conversation);
+      }
+    }
+    // Also refresh conversations periodically to update unread counts
+    fetchConversations();
+  }, 15000); // Poll every 15 seconds
+});
+
+onUnmounted(() => {
+  if (pollingInterval) {
+    clearInterval(pollingInterval);
+  }
 });
 </script>
 
@@ -443,6 +491,21 @@ onMounted(() => {
 .messages-page__send:disabled {
   opacity: 0.5;
   cursor: not-allowed;
+}
+
+.messages-page__composer-hint {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.char-count {
+  font-size: var(--text-xs);
+  color: var(--color-text-subtle);
+}
+
+.char-count.is-over {
+  color: var(--color-error);
 }
 
 @media (max-width: 900px) {

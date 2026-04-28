@@ -60,6 +60,7 @@ const navItems = computed(() => {
     { label: 'Dashboard', to: '/dashboard' },
     { label: 'Applications', to: '/applications' },
     { label: 'Messages', to: '/messages' },
+    { label: 'Payments', to: '/payments' },
     { label: 'Reviews', to: '/reviews' },
     { label: 'Settings', to: '/settings' }
   ];
@@ -77,6 +78,7 @@ const titleMap: Record<string, string> = {
   '/jobs': 'Jobs',
   '/applications': 'Applications',
   '/messages': 'Messages',
+  '/payments': 'Payments',
   '/reviews': 'Reviews',
   '/settings': 'Settings'
 };

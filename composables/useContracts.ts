@@ -17,8 +17,20 @@ export const useContracts = () => {
     });
   };
 
+  const getContractByJob = async (jobId: string) => {
+    return await $fetch<ContractResponseInput>(`/api/contracts/job/${jobId}`);
+  };
+
+  const listMyContracts = async (userId: string) => {
+    return await $fetch<ContractsResponseInput>('/api/contracts', {
+      params: { user_id: userId }
+    });
+  };
+
   return {
     getContract,
-    createContract
+    createContract,
+    getContractByJob,
+    listMyContracts
   };
 };

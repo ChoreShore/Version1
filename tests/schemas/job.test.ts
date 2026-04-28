@@ -168,14 +168,14 @@ describe('CreateJobSchema', () => {
       expect(CreateJobSchema.safeParse({ ...validJob(), budget_amount: -100 }).success).toBe(false);
     });
 
-    it('rejects an amount over 1,000,000', () => {
-      const result = CreateJobSchema.safeParse({ ...validJob(), budget_amount: 1_000_001 });
+    it('rejects an amount over 10,000', () => {
+      const result = CreateJobSchema.safeParse({ ...validJob(), budget_amount: 10_001 });
       expect(result.success).toBe(false);
       if (!result.success) expect(result.error.issues[0].message).toMatch(/too large/i);
     });
 
-    it('accepts exactly 1,000,000', () => {
-      expect(CreateJobSchema.safeParse({ ...validJob(), budget_amount: 1_000_000 }).success).toBe(true);
+    it('accepts exactly 10,000', () => {
+      expect(CreateJobSchema.safeParse({ ...validJob(), budget_amount: 10_000 }).success).toBe(true);
     });
   });
 

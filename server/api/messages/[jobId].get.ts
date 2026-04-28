@@ -1,18 +1,15 @@
 import { serverSupabaseClient, serverSupabaseUser } from '#supabase/server';
 import { MessagesResponseSchema } from '~/schemas/message';
+import { handleSupabaseAuthErrors, ensureAuthenticated, ensureMessageParticipant } from '~/server/utils/api';
 
 export default defineEventHandler(async (event) => {
   try {
-    const user = await serverSupabaseUser(event);
+    const user = ensureAuthenticated(
+      await serverSupabaseUser(event),
+      'Sign in to view messages'
+    );
 
-    if (!user) {
-      throw createError({
-        statusCode: 401,
-        statusMessage: 'Sign in to view messages'
-      });
-    }
-
-    const jobId = getRouterParam(event, 'jobId');
+    const jobId = getRouterParam(event, 'id');
 
     if (!jobId) {
       throw createError({ statusCode: 400, statusMessage: 'Job ID is required' });
@@ -25,6 +22,14 @@ export default defineEventHandler(async (event) => {
 
     const client = await serverSupabaseClient(event);
 
+    // Authorization check: ensure user is a participant in this job
+    await ensureMessageParticipant(client, jobId, user.id);
+
+    // Get pagination parameters
+    const query = getQuery(event);
+    const limit = Math.min(Number(query.limit) || 50, 100); // Default 50, max 100
+    const offset = Number(query.offset) || 0;
+
     const { data, error } = await client
       .from('messages')
       .select(`
@@ -34,13 +39,14 @@ export default defineEventHandler(async (event) => {
       `)
       .eq('job_id', jobId)
       .or(`sender_id.eq.${user.id},receiver_id.eq.${user.id}`)
-      .order('sent_at', { ascending: true });
+      .order('sent_at', { ascending: true })
+      .range(offset, offset + limit - 1);
 
     if (error) {
       throw createError({ statusCode: 400, statusMessage: error.message });
     }
 
-    const response = { messages: data || [] };
+    const response = { messages: data || [], pagination: { offset, limit, hasMore: (data?.length || 0) === limit } };
     
     // Validate response with Zod schema (safe validation)
     try {
@@ -51,17 +57,7 @@ export default defineEventHandler(async (event) => {
       return response;
     }
   } catch (error: any) {
-    if (error.message?.includes('Auth session missing') ||
-        error.message?.includes('Supabase') ||
-        error.message?.includes('session') ||
-        error.message?.includes('authentication') ||
-        error.statusCode === 500 ||
-        error.statusCode === 401) {
-      throw createError({
-        statusCode: 401,
-        statusMessage: 'Auth session missing!'
-      });
-    }
+    handleSupabaseAuthErrors(error);
     throw error;
   }
 });

@@ -28,7 +28,7 @@ export const CreateJobSchema = z.object({
   
   budget_amount: z.number()
     .positive('Budget amount must be positive')
-    .max(1000000, 'Budget amount too large'),
+    .max(10000, 'Budget amount too large'),
   
   deadline: z.string()
     .min(1, 'Deadline is required')
@@ -41,8 +41,10 @@ export const CreateJobSchema = z.object({
     })
 });
 
-// Job update schema - all fields optional
-export const UpdateJobSchema = CreateJobSchema.partial();
+// Job update schema - all fields optional plus status
+export const UpdateJobSchema = CreateJobSchema.partial().extend({
+  status: JobStatusSchema.optional()
+});
 
 // Full job schema - includes database fields (lenient for API responses)
 export const JobSchema = z.object({
@@ -67,7 +69,8 @@ export const JobCategorySchema = z.object({
   id: z.string(),
   name: z.string(),
   description: z.string().nullable(),
-  created_at: z.string()
+  created_at: z.string(),
+  is_active: z.boolean().optional().nullable()
 });
 
 export const JobPreviewSchema = z.object({
@@ -123,6 +126,7 @@ export const NearJobsResponseSchema = z.object({
 export type CreateJobInput = z.infer<typeof CreateJobSchema>;
 export type UpdateJobInput = z.infer<typeof UpdateJobSchema>;
 export type JobInput = z.infer<typeof JobSchema>;
+export type JobStatus = z.infer<typeof JobStatusSchema>;
 export type JobCategoryInput = z.infer<typeof JobCategorySchema>;
 export type JobPreviewInput = z.infer<typeof JobPreviewSchema>;
 export type JobWithDetailsInput = z.infer<typeof JobWithDetailsSchema>;

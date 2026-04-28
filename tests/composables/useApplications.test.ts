@@ -152,4 +152,66 @@ describe('useApplications composable', () => {
     expect(result).toBe(response);
     expect(mockFetch).toHaveBeenCalledWith('/api/applications/job/job-1/stats');
   });
+
+  it('updateApplication handles invalid status transition error', async () => {
+    const error = {
+      statusCode: 400,
+      statusMessage: 'Cannot change application status from "accepted" to "pending"'
+    };
+
+    mockFetch.mockRejectedValue(error);
+
+    await expect(
+      applicationsComposable.updateApplication('app-1', { status: 'pending' as const })
+    ).rejects.toMatchObject(error);
+
+    expect(mockFetch).toHaveBeenCalledWith('/api/applications/app-1', {
+      method: 'PATCH',
+      body: { status: 'pending' }
+    });
+  });
+
+  it('createApplication handles expired job deadline error', async () => {
+    const error = {
+      statusCode: 400,
+      statusMessage: 'Cannot apply: Job deadline has passed'
+    };
+
+    mockFetch.mockRejectedValue(error);
+
+    const payload = {
+      job_id: 'job-1',
+      cover_letter: 'Cover letter',
+      proposed_rate: 25
+    };
+
+    await expect(applicationsComposable.createApplication(payload)).rejects.toMatchObject(error);
+
+    expect(mockFetch).toHaveBeenCalledWith('/api/applications', {
+      method: 'POST',
+      body: payload
+    });
+  });
+
+  it('createApplication handles 409 conflict for duplicate application', async () => {
+    const error = {
+      statusCode: 409,
+      statusMessage: 'You have already applied to this job'
+    };
+
+    mockFetch.mockRejectedValue(error);
+
+    const payload = {
+      job_id: 'job-1',
+      cover_letter: 'Cover letter',
+      proposed_rate: 25
+    };
+
+    await expect(applicationsComposable.createApplication(payload)).rejects.toMatchObject(error);
+
+    expect(mockFetch).toHaveBeenCalledWith('/api/applications', {
+      method: 'POST',
+      body: payload
+    });
+  });
 });

@@ -9,10 +9,12 @@
 </template>
 
 <script setup lang="ts">
+import { computed } from 'vue';
+
 const props = defineProps<{
   message: {
     body: string;
-    created_at: string;
+    created_at?: string;
     sender_name?: string;
     is_mine?: boolean;
   };
@@ -20,7 +22,12 @@ const props = defineProps<{
 
 const variant = computed(() => (props.message.is_mine ? 'outbound' : 'inbound'));
 const senderLabel = computed(() => props.message.sender_name ?? (props.message.is_mine ? 'You' : 'Participant'));
-const timestamp = computed(() => new Date(props.message.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }));
+const timestamp = computed(() => {
+  const d = props.message.created_at ? new Date(props.message.created_at) : null;
+  return d && !isNaN(d.getTime())
+    ? d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+    : '';
+});
 </script>
 
 <style scoped>

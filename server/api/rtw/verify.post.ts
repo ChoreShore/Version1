@@ -100,14 +100,6 @@ export default defineEventHandler(async (event) => {
       message: OUTCOME_MESSAGES[outcome] ?? 'Verification failed. Please try again.'
     };
   } catch (error: any) {
-    if (
-      error.message?.includes('Auth session missing') ||
-      error.message?.includes('session') ||
-      error.statusCode === 401
-    ) {
-      if (error.statusCode === 401) throw error;
-      throw createError({ statusCode: 401, statusMessage: 'Auth session missing!' });
-    }
     throw error;
   }
 });

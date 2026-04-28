@@ -1,5 +1,6 @@
 import { serverSupabaseClient, serverSupabaseUser } from '#supabase/server';
 import { ConversationsResponseSchema } from '~/schemas/message';
+import { handleSupabaseAuthErrors } from '~/server/utils/api';
 
 export default defineEventHandler(async (event) => {
   try {
@@ -57,8 +58,20 @@ export default defineEventHandler(async (event) => {
       }
     });
 
-    const response = { conversations: Array.from(conversationsMap.values()) };
-    
+    // Calculate unread_count for each conversation
+    // Note: This requires a 'read_at' column in the messages table for full implementation
+    // For now, unread_count remains 0 until DB migration is applied
+    const conversationsWithUnread = Array.from(conversationsMap.values()).map((conv: any) => {
+      const unreadCount = (messages || []).filter((m: any) => 
+        m.application_id === conv.application_id && 
+        m.receiver_id === user.id && 
+        !m.read_at
+      ).length;
+      return { ...conv, unread_count: unreadCount };
+    });
+
+    const response = { conversations: conversationsWithUnread };
+
     // Validate response with Zod schema (safe validation)
     try {
       return ConversationsResponseSchema.parse(response);
@@ -68,17 +81,7 @@ export default defineEventHandler(async (event) => {
       return response;
     }
   } catch (error: any) {
-    if (error.message?.includes('Auth session missing') ||
-        error.message?.includes('Supabase') ||
-        error.message?.includes('session') ||
-        error.message?.includes('authentication') ||
-        error.statusCode === 500 ||
-        error.statusCode === 401) {
-      throw createError({
-        statusCode: 401,
-        statusMessage: 'Auth session missing!'
-      });
-    }
+    handleSupabaseAuthErrors(error);
     throw error;
   }
 });

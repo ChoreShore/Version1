@@ -1,6 +1,6 @@
 import { serverSupabaseClient, serverSupabaseUser } from '#supabase/server';
 import { validateCreateContract, ContractResponseSchema } from '~/schemas/contract';
-import { ensureAuthenticated, handleSupabaseAuthErrors } from '~/server/utils/api';
+import { ensureAuthenticated, handleSupabaseAuthErrors, ensureJobEmployer } from '~/server/utils/api';
 
 export default defineEventHandler(async (event) => {
   try {
@@ -23,12 +23,8 @@ export default defineEventHandler(async (event) => {
     const { application_id, employer_id, worker_id, job_id } = validation.data;
     const client = await serverSupabaseClient(event);
 
-    if (user.id !== employer_id) {
-      throw createError({
-        statusCode: 403,
-        statusMessage: 'Only the employer can create a contract'
-      });
-    }
+    // Authorization check: only the job employer can create a contract
+    await ensureJobEmployer(client, job_id, user.id);
 
     const { data: existingContract } = await client
       .from('contracts')

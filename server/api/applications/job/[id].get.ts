@@ -1,17 +1,14 @@
 import { serverSupabaseClient, serverSupabaseUser } from '#supabase/server';
 import { ApplicationWithDetailsSchema, ApplicationsResponseSchema } from '~/schemas/application';
+import { handleSupabaseAuthErrors, ensureAuthenticated, ensureJobEmployer } from '~/server/utils/api';
 
 export default defineEventHandler(async (event) => {
   try {
     const jobId = getRouterParam(event, 'id');
-    const user = await serverSupabaseUser(event);
-
-    if (!user) {
-      throw createError({ 
-        statusCode: 401, 
-        statusMessage: 'Sign in to view applications' 
-      });
-    }
+    const user = ensureAuthenticated(
+      await serverSupabaseUser(event),
+      'Sign in to view applications'
+    );
 
     if (!jobId) {
       throw createError({ statusCode: 400, statusMessage: 'Job ID is required' });
@@ -24,12 +21,16 @@ export default defineEventHandler(async (event) => {
 
     const client = await serverSupabaseClient(event);
 
-    // Get applications for this job with worker details
+    // Authorization check: only the job employer can view applications for their job
+    await ensureJobEmployer(client, jobId, user.id);
+
+    // Get applications for this job with worker and job details
     const { data, error } = await client
       .from('applications')
       .select(`
         *,
-        worker:profiles!worker_id(first_name, last_name, phone)
+        worker:profiles!worker_id(first_name, last_name, phone),
+        job:jobs(budget_amount, budget_type)
       `)
       .eq('job_id', jobId)
       .order('created_at', { ascending: false });
@@ -39,11 +40,19 @@ export default defineEventHandler(async (event) => {
     }
 
     // Transform data to include missing required fields
-    const applications = (data || []).map(app => ({
-      ...app,
-      job_id: jobId, // Add missing job_id field
-      updated_at: app.created_at // Add missing updated_at field (same as created_at for now)
-    }));
+    const applications = (data || []).map(app => {
+      const { job, worker, ...appData } = app;
+      return {
+        ...appData,
+        job_id: jobId, // Add missing job_id field
+        updated_at: app.created_at, // Add missing updated_at field (same as created_at for now)
+        job_budget_amount: job?.budget_amount,
+        job_budget_type: job?.budget_type,
+        worker_first_name: worker?.first_name,
+        worker_last_name: worker?.last_name,
+        worker_phone: worker?.phone
+      };
+    });
 
     const response = { applications };
     
@@ -58,18 +67,7 @@ export default defineEventHandler(async (event) => {
       return response;
     }
   } catch (error: any) {
-    // Handle Supabase client initialization errors
-    if (error.message?.includes('Auth session missing') || 
-        error.message?.includes('Supabase') ||
-        error.message?.includes('session') ||
-        error.message?.includes('authentication') ||
-        error.statusCode === 500 ||
-        error.statusCode === 401) {
-      throw createError({ 
-        statusCode: 401, 
-        statusMessage: 'Auth session missing!' 
-      });
-    }
+    handleSupabaseAuthErrors(error);
     throw error;
   }
 });

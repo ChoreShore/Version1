@@ -1,5 +1,6 @@
 import { serverSupabaseClient, serverSupabaseUser } from '#supabase/server';
 import { ApplicationsResponseSchema } from '~/schemas/application';
+import { handleSupabaseAuthErrors } from '~/server/utils/api';
 
 export default defineEventHandler(async (event) => {
   try {
@@ -24,7 +25,7 @@ export default defineEventHandler(async (event) => {
         .from('applications')
         .select(`
           *,
-          job:jobs!inner(title, employer_id),
+          job:jobs!inner(title, employer_id, budget_amount, budget_type),
           worker:profiles!worker_id(first_name, last_name)
         `)
         .eq('jobs.employer_id', user.id)
@@ -35,6 +36,8 @@ export default defineEventHandler(async (event) => {
         return {
           ...appData,
           job_title: job?.title,
+          job_budget_amount: job?.budget_amount,
+          job_budget_type: job?.budget_type,
           worker_name: worker ? `${worker.first_name} ${worker.last_name}` : null
         };
       });
@@ -45,7 +48,7 @@ export default defineEventHandler(async (event) => {
         .from('applications')
         .select(`
           *,
-          job:jobs(title, employer_id, employer:profiles!jobs_employer_id_fkey(first_name, last_name))
+          job:jobs(title, employer_id, budget_amount, budget_type, employer:profiles!jobs_employer_id_fkey(first_name, last_name))
         `)
         .eq('worker_id', user.id)
         .order('created_at', { ascending: false });
@@ -55,6 +58,8 @@ export default defineEventHandler(async (event) => {
         return {
           ...appData,
           job_title: job?.title,
+          job_budget_amount: job?.budget_amount,
+          job_budget_type: job?.budget_type,
           employer_name: job?.employer ? `${job.employer.first_name} ${job.employer.last_name}` : null
         };
       });
@@ -76,18 +81,7 @@ export default defineEventHandler(async (event) => {
       return response;
     }
   } catch (error: any) {
-    // Handle Supabase client initialization errors
-    if (error.message?.includes('Auth session missing') || 
-        error.message?.includes('Supabase') ||
-        error.message?.includes('session') ||
-        error.message?.includes('authentication') ||
-        error.statusCode === 500 ||
-        error.statusCode === 401) {
-      throw createError({ 
-        statusCode: 401, 
-        statusMessage: 'Auth session missing!' 
-      });
-    }
+    handleSupabaseAuthErrors(error);
     throw error;
   }
 });

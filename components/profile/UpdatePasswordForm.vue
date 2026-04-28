@@ -57,12 +57,24 @@
       </button>
     </form>
   </FormErrorBoundary>
+
+  <ConfirmDialog
+    :is-open="showConfirmDialog"
+    title="Unsaved Changes"
+    message="You have unsaved changes. Are you sure you want to cancel?"
+    confirm-text="Cancel"
+    cancel-text="Continue"
+    @confirm="handleDialogConfirm"
+    @cancel="handleDialogCancel"
+  />
 </template>
 
 <script setup lang="ts">
 import { ref, computed } from 'vue';
 import { UpdatePasswordSchema } from '~/schemas/auth';
 import FormErrorBoundary from '~/components/primitives/FormErrorBoundary.vue';
+import ConfirmDialog from '~/components/primitives/ConfirmDialog.vue';
+import { useDirtyForm } from '~/composables/useDirtyForm';
 
 const { updatePassword } = useAuth();
 
@@ -75,6 +87,14 @@ const form = ref({
 const submitting = ref(false);
 const error = ref<string | null>(null);
 const success = ref<string | null>(null);
+const showConfirmDialog = ref(false);
+
+// Use dirty form composable
+const { isDirty, resetDirty } = useDirtyForm({
+  formData: form.value,
+  message: 'You have unsaved changes. Are you sure you want to cancel?',
+  enableBeforeUnload: true
+});
 
 const fieldErrors = computed(() => {
   const result = UpdatePasswordSchema.safeParse(form.value);
@@ -111,11 +131,24 @@ const handleSubmit = async () => {
     const result = await updatePassword(validation.data);
     success.value = result.message;
     form.value = { currentPassword: '', newPassword: '', confirmPassword: '' };
+    resetDirty();
   } catch (err: any) {
     error.value = err.data?.statusMessage || 'Failed to update password';
   } finally {
     submitting.value = false;
   }
+};
+
+const handleDialogConfirm = () => {
+  showConfirmDialog.value = false;
+  form.value = { currentPassword: '', newPassword: '', confirmPassword: '' };
+  error.value = null;
+  success.value = null;
+  resetDirty();
+};
+
+const handleDialogCancel = () => {
+  showConfirmDialog.value = false;
 };
 
 const handleFormError = (error: Error, formName?: string) => {
@@ -126,6 +159,7 @@ const handleFormReset = () => {
   form.value = { currentPassword: '', newPassword: '', confirmPassword: '' };
   error.value = null;
   success.value = null;
+  resetDirty();
 };
 </script>
 

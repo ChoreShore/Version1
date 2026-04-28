@@ -1,17 +1,14 @@
 import { serverSupabaseClient, serverSupabaseUser } from '#supabase/server';
 import { ApplicationResponseSchema } from '~/schemas/application';
+import { handleSupabaseAuthErrors, ensureAuthenticated, ensureApplicationOwner, ensureJobEmployer } from '~/server/utils/api';
 
 export default defineEventHandler(async (event) => {
   try {
     const applicationId = getRouterParam(event, 'id');
-    const user = await serverSupabaseUser(event);
-
-    if (!user) {
-      throw createError({ 
-        statusCode: 401, 
-        statusMessage: 'Sign in to view application details' 
-      });
-    }
+    const user = ensureAuthenticated(
+      await serverSupabaseUser(event),
+      'Sign in to view application details'
+    );
 
     if (!applicationId) {
       throw createError({ statusCode: 400, statusMessage: 'Application ID is required' });
@@ -24,9 +21,24 @@ export default defineEventHandler(async (event) => {
 
     const client = await serverSupabaseClient(event);
 
-    // RLS will handle authorization:
-    // - Workers can view their own applications
-    // - Employers can view applications for their jobs
+    // Authorization check: user must either be the application owner (worker) or the job employer
+    // First check if user is the worker
+    try {
+      await ensureApplicationOwner(client, applicationId, user.id);
+    } catch (error) {
+      // If not the worker, check if they're the job employer
+      const { data: application } = await client
+        .from('applications')
+        .select('job_id')
+        .eq('id', applicationId)
+        .single();
+      
+      if (application) {
+        await ensureJobEmployer(client, application.job_id, user.id);
+      } else {
+        throw error;
+      }
+    }
 
     const { data, error } = await client
       .from('applications')
@@ -65,14 +77,6 @@ export default defineEventHandler(async (event) => {
         throw createError({ statusCode: 404, statusMessage: 'Application not found' });
       }
       
-      // Check if it's an RLS policy violation
-      if (error.code === '42501') {
-        throw createError({ 
-          statusCode: 403, 
-          statusMessage: 'You can only view applications you have permission to see' 
-        });
-      }
-      
       throw createError({ statusCode: 400, statusMessage: error.message });
     }
 
@@ -87,18 +91,7 @@ export default defineEventHandler(async (event) => {
       return response;
     }
   } catch (error: any) {
-    // Handle Supabase client initialization errors
-    if (error.message?.includes('Auth session missing') || 
-        error.message?.includes('Supabase') ||
-        error.message?.includes('session') ||
-        error.message?.includes('authentication') ||
-        error.statusCode === 500 ||
-        error.statusCode === 401) {
-      throw createError({ 
-        statusCode: 401, 
-        statusMessage: 'Auth session missing!' 
-      });
-    }
+    handleSupabaseAuthErrors(error);
     throw error;
   }
 });

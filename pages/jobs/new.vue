@@ -126,6 +126,16 @@
         </div>
       </form>
     </FormErrorBoundary>
+
+    <ConfirmDialog
+      :is-open="showConfirmDialog"
+      title="Unsaved Changes"
+      message="You have unsaved changes. Are you sure you want to leave without saving?"
+      confirm-text="Leave"
+      cancel-text="Stay"
+      @confirm="handleDialogConfirm"
+      @cancel="handleDialogCancel"
+    />
   </section>
 </template>
 
@@ -134,15 +144,24 @@ definePageMeta({
   layout: 'default'
 });
 
-import { computed, onMounted, ref } from 'vue';
+import { computed, onMounted, onBeforeUnmount, ref, watch } from 'vue';
 import FormField from '~/components/primitives/form/FormField.vue';
 import FormLabel from '~/components/primitives/form/FormLabel.vue';
 import FormControl from '~/components/primitives/form/FormControl.vue';
 import FormHint from '~/components/primitives/form/FormHint.vue';
 import FormErrorBoundary from '~/components/primitives/FormErrorBoundary.vue';
+import ConfirmDialog from '~/components/primitives/ConfirmDialog.vue';
 import { useJobs } from '~/composables/useJobs';
+import { useDirtyForm } from '~/composables/useDirtyForm';
 import type { CreateJobInput } from '~/schemas/job';
 import { validateCreateJob } from '~/schemas/job';
+
+function generateRequestId(): string {
+  if (typeof crypto !== 'undefined' && crypto.randomUUID) {
+    return crypto.randomUUID();
+  }
+  return `${Date.now()}-${Math.random().toString(36).slice(2, 11)}`;
+}
 
 const jobsApi = useJobs();
 
@@ -159,6 +178,14 @@ const form = ref<CreateJobInput & { category_id: string }>({
 const errors = ref<Record<string, string>>({});
 const submitting = ref(false);
 const categories = ref<Array<{ id: string; name: string }>>([]);
+const showConfirmDialog = ref(false);
+
+// Use dirty form composable
+const { isDirty, resetDirty, confirmNavigation } = useDirtyForm({
+  formData: form.value,
+  message: 'You have unsaved changes. Are you sure you want to leave without saving?',
+  enableBeforeUnload: true
+});
 
 const minDate = computed(() => {
   const tomorrow = new Date();
@@ -225,22 +252,24 @@ const validateForm = () => {
 
 const handleSubmit = async () => {
   if (!validateForm()) return;
-  
+
   submitting.value = true;
-  
+
   try {
-    const payload: CreateJobInput = {
+    const payload: CreateJobInput & { client_request_id: string } = {
       title: form.value.title.trim(),
       description: form.value.description.trim(),
       category_id: form.value.category_id,
       budget_type: form.value.budget_type,
       budget_amount: form.value.budget_amount,
       deadline: form.value.deadline,
-      postcode: form.value.postcode.trim()
+      postcode: form.value.postcode.trim(),
+      client_request_id: generateRequestId()
     };
-    
+
     await jobsApi.createJob(payload);
-    
+    resetDirty();
+
     // Redirect to dashboard to see the new job
     navigateTo('/dashboard');
   } catch (error: any) {
@@ -251,7 +280,20 @@ const handleSubmit = async () => {
 };
 
 const handleCancel = () => {
+  if (isDirty.value) {
+    showConfirmDialog.value = true;
+  } else {
+    navigateTo('/jobs');
+  }
+};
+
+const handleDialogConfirm = () => {
+  showConfirmDialog.value = false;
   navigateTo('/jobs');
+};
+
+const handleDialogCancel = () => {
+  showConfirmDialog.value = false;
 };
 
 onMounted(() => {

@@ -22,6 +22,7 @@
         <textarea
           v-model="form.cover_letter"
           rows="5"
+          maxlength="1000"
           placeholder="Share why you're a great fit"
           :class="{ 'application-form__input--error': fieldErrors.cover_letter }"
         ></textarea>
@@ -55,6 +56,16 @@
       </button>
     </form>
   </FormErrorBoundary>
+
+  <ConfirmDialog
+    :is-open="showConfirmDialog"
+    title="Unsaved Changes"
+    message="You have unsaved changes. Are you sure you want to cancel your application?"
+    confirm-text="Cancel Application"
+    cancel-text="Continue"
+    @confirm="handleDialogConfirm"
+    @cancel="handleDialogCancel"
+  />
 </template>
 
 <script setup lang="ts">
@@ -62,6 +73,8 @@ import { ref, watch, computed } from 'vue';
 import { z } from 'zod';
 import type { ApplicationWithDetails } from '~/schemas/application';
 import FormErrorBoundary from '~/components/primitives/FormErrorBoundary.vue';
+import ConfirmDialog from '~/components/primitives/ConfirmDialog.vue';
+import { useDirtyForm } from '~/composables/useDirtyForm';
 
 // Form validation schema using Zod
 const applicationFormSchema = z.object({
@@ -94,6 +107,15 @@ const emit = defineEmits<{
 const form = ref({
   cover_letter: '',
   proposed_rate: ''
+});
+
+const showConfirmDialog = ref(false);
+
+// Use dirty form composable
+const { isDirty, resetDirty } = useDirtyForm({
+  formData: form.value,
+  message: 'You have unsaved changes. Are you sure you want to cancel your application?',
+  enableBeforeUnload: true
 });
 
 // Computed property for field validation errors
@@ -141,8 +163,19 @@ const handleSubmit = () => {
 watch(() => props.success, (newSuccess) => {
   if (newSuccess) {
     form.value = { cover_letter: '', proposed_rate: '' };
+    resetDirty();
   }
 });
+
+const handleDialogConfirm = () => {
+  showConfirmDialog.value = false;
+  form.value = { cover_letter: '', proposed_rate: '' };
+  resetDirty();
+};
+
+const handleDialogCancel = () => {
+  showConfirmDialog.value = false;
+};
 
 // Error boundary handlers
 const handleFormError = (error: Error, formName?: string) => {
@@ -153,6 +186,7 @@ const handleFormError = (error: Error, formName?: string) => {
 const handleFormReset = () => {
   // Reset form data when error boundary reset is triggered
   form.value = { cover_letter: '', proposed_rate: '' };
+  resetDirty();
 };
 </script>
 

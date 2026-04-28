@@ -2,28 +2,6 @@
   <section class="dashboard-page">
     <RtwVerificationModal v-if="showRtwModal" @verified="onRtwVerified" @close="showRtwModal = false" />
     
-    <!-- Temporary fix button for contracts with missing worker_id -->
-    <div v-if="showFixButton" class="dashboard-page__fix-banner">
-      <button 
-        type="button" 
-        class="dashboard-page__fix-button"
-        :disabled="fixingContracts"
-        @click="fixContractWorkerIds"
-      >
-        {{ fixingContracts ? 'Fixing...' : 'Fix Contracts (Admin)' }}
-      </button>
-      <button 
-        type="button" 
-        class="dashboard-page__dismiss-button"
-        @click="showFixButton = false"
-      >
-        ✕
-      </button>
-      <p v-if="fixResult" class="dashboard-page__fix-result">
-        {{ fixResult }}
-      </p>
-    </div>
-    
     <OverviewStats :stats="stats" />
 
     <div class="dashboard-page__grid">
@@ -51,27 +29,6 @@
         </template>
       </DataList>
 
-      <DataList title="Active Contracts" description="Contracts awaiting payment or in progress">
-        <template v-if="contractsLoading">
-          <li v-for="n in 2" :key="`contract-skeleton-${n}`">
-            <LoadingSkeleton variant="block" height="120px" />
-          </li>
-        </template>
-        <template v-else-if="!contracts.length">
-          <li>
-            <EmptyState 
-              title="No active contracts" 
-              description="Contracts will appear here when an employer accepts your application." 
-            />
-          </li>
-        </template>
-        <template v-else>
-          <li v-for="contract in contracts" :key="contract.id">
-            <ContractCard :contract="contract" />
-          </li>
-        </template>
-      </DataList>
-
       <DataList title="Applications" description="Latest applications">
         <template v-if="applicationsLoading">
           <li v-for="n in 3" :key="`app-skeleton-${n}`">
@@ -92,6 +49,36 @@
           </li>
         </template>
       </DataList>
+
+      <DataList title="Payments" description="Recent payment activity">
+        <template v-if="paymentsLoading">
+          <li v-for="n in 2" :key="`pay-skeleton-${n}`">
+            <LoadingSkeleton variant="block" height="100px" />
+          </li>
+        </template>
+        <template v-else-if="!paymentEvents.length">
+          <li>
+            <EmptyState
+              title="No payment activity"
+              description="Payments will appear here after you hire and pay a worker."
+            />
+          </li>
+        </template>
+        <template v-else>
+          <li v-for="event in paymentEvents.slice(0, 3)" :key="event.id">
+            <article class="dashboard-payment-card">
+              <header class="dashboard-payment-card__header">
+                <div>
+                  <h4 class="dashboard-payment-card__title">{{ event.job_title }}</h4>
+                  <p class="dashboard-payment-card__meta">{{ formatEventType(event.event_type) }}</p>
+                </div>
+                <StatusPill :label="event.status" :variant="getStatusVariant(event.status)" />
+              </header>
+              <p class="dashboard-payment-card__amount">{{ formatCurrency(event.amount, event.currency) }}</p>
+            </article>
+          </li>
+        </template>
+      </DataList>
     </div>
   </section>
 </template>
@@ -109,17 +96,16 @@ import EmptyState from '~/components/primitives/EmptyState.vue';
 import LoadingSkeleton from '~/components/primitives/LoadingSkeleton.vue';
 import { useJobs } from '~/composables/useJobs';
 import { useApplications } from '~/composables/useApplications';
+import { usePayments } from '~/composables/usePayments';
 import { useActiveRole } from '~/composables/useActiveRole';
 import { useRtw } from '~/composables/useRtw';
 import RtwVerificationModal from '~/components/profile/RtwVerificationModal.vue';
-import ContractCard from '~/components/contracts/ContractCard.vue';
+import StatusPill from '~/components/primitives/StatusPill.vue';
+import type { PaymentEventInput } from '~/schemas/payment';
 
 const { role } = useActiveRole();
 const { isRtwRequired, fetchRtwStatus } = useRtw();
 const showRtwModal = ref(false);
-const showFixButton = ref(true);
-const fixingContracts = ref(false);
-const fixResult = ref<string | null>(null);
 
 watch(isRtwRequired, (required) => {
   if (required) showRtwModal.value = true;
@@ -127,10 +113,10 @@ watch(isRtwRequired, (required) => {
 
 const jobs = ref<any[]>([]);
 const applications = ref<any[]>([]);
-const contracts = ref<any[]>([]);
+const paymentEvents = ref<PaymentEventInput[]>([]);
 const jobsLoading = ref(true);
 const applicationsLoading = ref(true);
-const contractsLoading = ref(false);
+const paymentsLoading = ref(true);
 
 const user = useSupabaseUser();
 const supabase = useSupabaseClient() as any;
@@ -139,11 +125,12 @@ const stats = computed(() => {
   if (role.value === 'employer') {
     const openJobs = jobs.value.filter((job) => job.status === 'open').length;
     const pendingApps = applications.value.filter((app) => app.status === 'pending').length;
+    const pendingPayments = paymentEvents.value.filter((evt) => evt.status === 'pending').length;
     return [
       { title: 'Open jobs', value: openJobs.toString() },
       { title: 'Applications', value: applications.value.length.toString() },
       { title: 'Pending decisions', value: pendingApps.toString() },
-      { title: 'Avg. rating', value: '4.8★' }
+      { title: 'Pending payments', value: pendingPayments.toString() }
     ];
   } else {
     const pendingApps = applications.value.filter((app) => app.status === 'pending').length;
@@ -178,35 +165,22 @@ const loadApplications = async () => {
   }
 };
 
-const loadContracts = async () => {
-  if (!user.value) return;
-  contractsLoading.value = true;
+const loadPayments = async () => {
+  paymentsLoading.value = true;
   try {
-    const { data, error } = await supabase
-      .from('contracts')
-      .select('*, escrow_payment:escrow_payments(*), job:jobs(title, budget_amount)')
-      .or(`employer_id.eq.${user.value.id},worker_id.eq.${user.value.id}`)
-      .in('status', ['pending', 'active'])
-      .order('created_at', { ascending: false });
-    if (error) {
-      console.error('Error loading contracts:', error);
-    }
-    contracts.value = (data ?? []).map((c: any) => ({
-      ...c,
-      job_title: c.job?.title,
-      job_budget_amount: c.job?.budget_amount
-    }));
-  } catch (err) {
-    console.error('Exception in loadContracts:', err);
+    const response = await usePayments().listEvents(role.value);
+    paymentEvents.value = response.events ?? [];
+  } catch {
+    paymentEvents.value = [];
   } finally {
-    contractsLoading.value = false;
+    paymentsLoading.value = false;
   }
 };
 
 const loadData = () => {
   loadJobs();
   loadApplications();
-  loadContracts();
+  loadPayments();
 };
 
 watch(role, () => {
@@ -218,28 +192,36 @@ onMounted(() => {
   loadData();
 });
 
+const getStatusVariant = (status: string): 'neutral' | 'info' | 'success' | 'warning' => {
+  const map: Record<string, 'neutral' | 'info' | 'success' | 'warning'> = {
+    pending: 'warning',
+    processed: 'success',
+    failed: 'neutral',
+    refunded: 'info'
+  };
+  return map[status] || 'neutral';
+};
+
+const formatEventType = (eventType: string) => {
+  const map: Record<string, string> = {
+    employer_payment: 'Employer Payment',
+    worker_payout: 'Worker Payout',
+    refund: 'Refund'
+  };
+  return map[eventType] || eventType;
+};
+
+const formatCurrency = (amount: number, currency: string) =>
+  new Intl.NumberFormat('en-GB', {
+    style: 'currency',
+    currency: currency || 'GBP'
+  }).format(amount || 0);
+
 const onRtwVerified = () => {
   showRtwModal.value = false;
   loadData();
 };
 
-const fixContractWorkerIds = async () => {
-  fixingContracts.value = true;
-  fixResult.value = null;
-  try {
-    const result = await $fetch<{ success: boolean; message: string; fixed: number; total: number; errors?: string[] }>('/api/contracts/fix-worker-ids', {
-      method: 'POST'
-    });
-    fixResult.value = result.message;
-    if (result.fixed > 0) {
-      await loadContracts(); // Reload contracts to show the fixed ones
-    }
-  } catch (err: any) {
-    fixResult.value = `Error: ${err?.data?.statusMessage || err.message || 'Failed to fix contracts'}`;
-  } finally {
-    fixingContracts.value = false;
-  }
-};
 
 // Refresh data when navigating back to dashboard
 onActivated(() => {
@@ -260,53 +242,38 @@ onActivated(() => {
   gap: var(--space-5);
 }
 
-.dashboard-page__fix-banner {
-  background: rgba(245, 158, 11, 0.1);
-  border: 1px solid rgba(245, 158, 11, 0.3);
-  border-radius: var(--radius-md);
-  padding: var(--space-3);
+.dashboard-payment-card {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-4);
+  background: var(--color-surface);
   display: flex;
-  align-items: center;
+  flex-direction: column;
   gap: var(--space-3);
-  flex-wrap: wrap;
 }
 
-.dashboard-page__fix-button {
-  background: var(--color-warning);
-  color: white;
-  border: none;
-  border-radius: var(--radius-md);
-  padding: var(--space-2) var(--space-4);
-  font-weight: 600;
-  cursor: pointer;
+.dashboard-payment-card__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: var(--space-3);
 }
 
-.dashboard-page__fix-button:hover:not(:disabled) {
-  opacity: 0.9;
+.dashboard-payment-card__title {
+  margin: 0;
+  font-size: var(--text-sm);
 }
 
-.dashboard-page__fix-button:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
+.dashboard-payment-card__meta {
+  margin: var(--space-1) 0 0 0;
+  color: var(--color-text-muted);
+  font-size: var(--text-xs);
 }
 
-.dashboard-page__dismiss-button {
-  background: transparent;
-  border: none;
-  color: var(--color-text-subtle);
-  cursor: pointer;
-  padding: var(--space-1);
+.dashboard-payment-card__amount {
+  margin: 0;
+  font-weight: 700;
   font-size: var(--text-lg);
 }
 
-.dashboard-page__dismiss-button:hover {
-  color: var(--color-text);
-}
-
-.dashboard-page__fix-result {
-  margin: 0;
-  font-size: var(--text-sm);
-  color: var(--color-text);
-  font-weight: 500;
-}
 </style>

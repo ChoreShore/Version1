@@ -13,8 +13,8 @@ export const useMessages = () => {
     });
   };
 
-  const getJobMessages = async (jobId: string) => {
-    return await $fetch<MessagesResponseInput>(`/api/messages/${jobId}`);
+  const getJobMessages = async (jobId: string, options?: { signal?: AbortSignal }) => {
+    return await $fetch<MessagesResponseInput>(`/api/messages/${jobId}`, options);
   };
 
   const sendMessage = async (payload: CreateMessageInput) => {

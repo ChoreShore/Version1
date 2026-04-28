@@ -1,16 +1,22 @@
 import { PasswordResetSchema } from '~/schemas/auth';
+import { validatePasswordReset } from '~/schemas/auth';
 import { serverSupabaseClient } from '#supabase/server';
+import { rateLimiters } from '~/server/utils/rateLimit';
 
 export default defineEventHandler(async (event) => {
   try {
     const body = await readBody(event);
-    
+
+    // Apply rate limiting based on email
+    rateLimiters.auth(body.email);
+
     // Validate request body with Zod
-    const validation = PasswordResetSchema.safeParse(body);
-    if (!validation.success) {
+    const validation = validatePasswordReset(body);
+    if (!validation.success || !validation.data) {
       throw createError({ 
         statusCode: 400, 
-        statusMessage: 'Invalid email address'
+        statusMessage: 'Validation failed',
+        data: { errors: validation.errors }
       });
     }
 
@@ -25,18 +31,7 @@ export default defineEventHandler(async (event) => {
 
     return { success: true };
   } catch (error: any) {
-    // Handle Supabase client initialization errors
-    if (error.message?.includes('Auth session missing') || 
-        error.message?.includes('Supabase') ||
-        error.message?.includes('session') ||
-        error.message?.includes('authentication') ||
-        error.statusCode === 500 ||
-        error.statusCode === 401) {
-      throw createError({ 
-        statusCode: 401, 
-        statusMessage: 'Auth session missing!' 
-      });
-    }
+    handleSupabaseAuthErrors(error);
     throw error;
   }
 });

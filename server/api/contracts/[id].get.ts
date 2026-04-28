@@ -1,5 +1,5 @@
 import { serverSupabaseClient, serverSupabaseUser } from '#supabase/server';
-import { ensureAuthenticated, assertValidUuid, handleSupabaseAuthErrors } from '~/server/utils/api';
+import { ensureAuthenticated, assertValidUuid, handleSupabaseAuthErrors, ensureContractParticipant } from '~/server/utils/api';
 
 export default defineEventHandler(async (event) => {
   try {
@@ -11,12 +11,13 @@ export default defineEventHandler(async (event) => {
     const contractId = assertValidUuid(getRouterParam(event, 'id'), { label: 'Contract ID' });
     const client = await serverSupabaseClient(event);
 
+    // Authorization check: ensure user is a participant in this contract
+    await ensureContractParticipant(client, contractId, user.id);
+
     const { data: contract, error } = await client
       .from('contracts')
       .select(`
         *,
-        escrow_payment:escrow_payments(*),
-        transactions:transactions(*),
         job:jobs(title, budget_amount),
         employer:profiles!contracts_employer_id_fkey(first_name, last_name),
         worker:profiles!contracts_worker_id_fkey(first_name, last_name)
@@ -31,20 +32,11 @@ export default defineEventHandler(async (event) => {
       throw createError({ statusCode: 400, statusMessage: error.message });
     }
 
-    if (contract.employer_id !== user.id && contract.worker_id !== user.id) {
-      throw createError({
-        statusCode: 403,
-        statusMessage: 'You do not have access to this contract'
-      });
-    }
-
-    const { escrow_payment, transactions, job, employer, worker, ...contractData } = contract as any;
+    const { job, employer, worker, ...contractData } = contract as any;
 
     return {
       contract: {
         ...contractData,
-        escrow_payment: escrow_payment ?? null,
-        transactions: transactions ?? [],
         job_title: job?.title,
         job_budget_amount: job?.budget_amount ?? null,
         employer_first_name: employer?.first_name,

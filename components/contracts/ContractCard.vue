@@ -7,21 +7,10 @@
           <NuxtLink :to="`/contracts/${contract.id}`">{{ contract.job_title ?? 'Untitled Job' }}</NuxtLink>
         </h3>
       </div>
-      <div class="contract-card__badges">
-        <StatusPill :label="contractStatusLabel" :variant="contractStatusVariant" />
-        <PaymentStatusBadge v-if="contract.escrow_payment" :status="contract.escrow_payment.status" />
-      </div>
+      <StatusPill :label="contractStatusLabel" :variant="contractStatusVariant" />
     </header>
 
     <dl class="contract-card__meta">
-      <div v-if="contract.escrow_payment">
-        <dt>Job amount</dt>
-        <dd>£{{ contract.escrow_payment.worker_payout_amount.toFixed(2) }}</dd>
-      </div>
-      <div v-if="contract.escrow_payment">
-        <dt>Total paid</dt>
-        <dd>£{{ contract.escrow_payment.total_amount.toFixed(2) }}</dd>
-      </div>
       <div>
         <dt>Created</dt>
         <dd>{{ createdAt }}</dd>
@@ -38,7 +27,6 @@
 import { computed } from 'vue';
 import type { ContractWithDetailsInput, ContractStatus } from '~/schemas/contract';
 import StatusPill from '~/components/primitives/StatusPill.vue';
-import PaymentStatusBadge from '~/components/payments/PaymentStatusBadge.vue';
 
 const props = defineProps<{ contract: ContractWithDetailsInput }>();
 
@@ -50,7 +38,7 @@ const contractStatusVariantMap: Record<ContractStatus, 'neutral' | 'warning' | '
 };
 
 const contractStatusLabelMap: Record<ContractStatus, string> = {
-  pending: 'Awaiting Payment',
+  pending: 'Pending',
   active: 'In Progress',
   completed: 'Completed',
   cancelled: 'Cancelled'

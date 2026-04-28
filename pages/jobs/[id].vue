@@ -16,6 +16,23 @@
     <template v-else-if="job">
       <JobCard :job="job" />
 
+      <div v-if="isEmployerOwner" class="job-detail__status-control">
+        <label for="job-status">Job Status</label>
+        <select 
+          id="job-status" 
+          v-model="jobStatus" 
+          :disabled="statusUpdating"
+          @change="updateJobStatus"
+          class="job-detail__status-select"
+        >
+          <option value="draft">Draft</option>
+          <option value="open">Open</option>
+          <option value="closed">Closed</option>
+          <option value="completed">Completed</option>
+        </select>
+        <span v-if="statusUpdating" class="job-detail__status-updating">Updating...</span>
+      </div>
+
       <div class="job-detail__layout">
         <div class="job-detail__grid">
           <DataList title="Job info">
@@ -66,11 +83,6 @@
         </aside>
       </div>
 
-      <div v-if="pendingContractId" class="job-detail__pay-banner">
-        <span>✅ Application accepted. <strong>Escrow payment required</strong> to activate the contract.</span>
-        <NuxtLink :to="`/contracts/${pendingContractId}`" class="job-detail__pay-link">Pay to Activate →</NuxtLink>
-      </div>
-
       <DataList v-if="isEmployerOwner" title="Applications" description="Applicants for this job">
         <template v-if="applicationsLoading">
           <li v-for="n in 3" :key="`job-app-${n}`"><LoadingSkeleton variant="block" height="140px" /></li>
@@ -112,7 +124,7 @@ import LoadingSkeleton from '~/components/primitives/LoadingSkeleton.vue';
 import ApplicationCard from '~/components/applications/ApplicationCard.vue';
 import ApplicationForm from '~/components/applications/ApplicationForm.vue';
 import ApplicationActions from '~/components/applications/ApplicationActions.vue';
-import type { JobWithDetailsInput } from '~/schemas/job';
+import type { JobWithDetailsInput, JobStatus } from '~/schemas/job';
 import type { ApplicationStatus, ApplicationWithDetailsInput } from '~/schemas/application';
 import { useJobs } from '~/composables/useJobs';
 import { useApplications } from '~/composables/useApplications';
@@ -124,7 +136,6 @@ const route = useRoute();
 const jobsApi = useJobs();
 const applicationsApi = useApplications();
 const user = useSupabaseUser();
-const supabase = useSupabaseClient() as any;
 const { role } = useActiveRole();
 const { isRtwRequired, fetchRtwStatus } = useRtw();
 const showRtwModal = ref(false);
@@ -135,6 +146,8 @@ const loading = ref(true);
 const error = ref<string | null>(null);
 const applicationsLoading = ref(true);
 const applicationUpdating = ref<Record<string, boolean>>({});
+const statusUpdating = ref(false);
+const jobStatus = ref<JobStatus>('open');
 
 const applySubmitting = ref(false);
 const applyError = ref<string | null>(null);
@@ -168,6 +181,7 @@ const fetchJob = async () => {
   try {
     const response = await jobsApi.getJob(jobId.value);
     job.value = response.job as JobWithDetailsInput;
+    jobStatus.value = job.value.status;
   } catch (err: any) {
     error.value = err?.data?.statusMessage || 'We could not load this job.';
   } finally {
@@ -186,8 +200,15 @@ const fetchApplications = async () => {
   }
 };
 
-const submitApplication = async (formData: { cover_letter: string; proposed_rate?: number }) => {
-  if (!canApply.value || !jobId.value) return;
+const submitApplication = async (formData: { cover_letter?: string; proposed_rate?: number }) => {
+  // Re-check eligibility immediately before submit
+  await fetchRtwStatus();
+
+  if (!canApply.value || !jobId.value) {
+    applyError.value = 'You are no longer eligible to apply to this job.';
+    return;
+  }
+
   applyError.value = null;
   applySuccess.value = null;
 
@@ -212,27 +233,31 @@ const submitApplication = async (formData: { cover_letter: string; proposed_rate
   }
 };
 
-const pendingContractId = ref<string | null>(null);
-
 const updateApplicationStatus = async (applicationId: string, status: ApplicationStatus) => {
   applicationUpdating.value = { ...applicationUpdating.value, [applicationId]: true };
-  pendingContractId.value = null;
   try {
     await applicationsApi.updateApplication(applicationId, { status });
     await fetchApplications();
-
-    if (status === 'accepted') {
-      const { data } = await supabase
-        .from('contracts')
-        .select('id')
-        .eq('application_id', applicationId)
-        .maybeSingle();
-      if (data?.id) pendingContractId.value = data.id;
-    }
   } catch (err) {
     console.error(err);
   } finally {
     applicationUpdating.value = { ...applicationUpdating.value, [applicationId]: false };
+  }
+};
+
+const updateJobStatus = async () => {
+  if (!job.value || statusUpdating.value) return;
+
+  statusUpdating.value = true;
+  try {
+    await jobsApi.updateJob(jobId.value, { status: jobStatus.value });
+
+    await fetchJob();
+  } catch (err: any) {
+    error.value = err?.data?.statusMessage || 'Failed to update job status';
+    jobStatus.value = job.value.status;
+  } finally {
+    statusUpdating.value = false;
   }
 };
 
@@ -263,6 +288,40 @@ onMounted(() => {
   text-decoration: none;
   color: var(--color-text-muted);
   font-weight: 600;
+}
+
+.job-detail__status-control {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+}
+
+.job-detail__status-control label {
+  font-weight: 600;
+  font-size: var(--text-sm);
+}
+
+.job-detail__status-select {
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-background);
+  font-size: var(--text-sm);
+  cursor: pointer;
+}
+
+.job-detail__status-select:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.job-detail__status-updating {
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
 }
 
 .job-detail__grid {

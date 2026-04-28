@@ -1,16 +1,20 @@
 import { UpdatePasswordSchema } from '~/schemas/auth';
 import { serverSupabaseClient, serverSupabaseUser } from '#supabase/server';
+import { rateLimiters } from '~/server/utils/rateLimit';
 
 export default defineEventHandler(async (event) => {
   try {
     const user = await serverSupabaseUser(event);
-    
+
     if (!user) {
       throw createError({
         statusCode: 401,
         statusMessage: 'Unauthorized - Please sign in'
       });
     }
+
+    // Apply rate limiting based on user ID (password operations are sensitive)
+    rateLimiters.password(user.id);
 
     const body = await readBody(event);
     

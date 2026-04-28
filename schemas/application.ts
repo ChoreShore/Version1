@@ -17,6 +17,7 @@ export const CreateApplicationSchema = z.object({
     .trim()
     .optional(),
   proposed_rate: z.number()
+    .int('Rate must be a whole number')
     .min(20, 'Proposed rate must be at least £20')
     .max(30, 'Proposed rate must be no more than £30')
     .optional()
@@ -35,6 +36,7 @@ export const UpdateApplicationSchema = z.object({
     .trim()
     .optional(),
   proposed_rate: z.number()
+    .int('Rate must be a whole number')
     .min(20, 'Proposed rate must be at least £20')
     .max(30, 'Proposed rate must be no more than £30')
     .optional(),
@@ -62,12 +64,13 @@ export const ApplicationWithDetailsSchema = ApplicationSchema.extend({
   job_budget_min: z.number().optional(),
   job_budget_max: z.number().optional(),
   job_budget_amount: z.number().optional(),
+  job_budget_type: z.union([z.literal('fixed'), z.literal('hourly')]).optional(),
   employer_first_name: z.string().optional(),
   employer_last_name: z.string().optional(),
   worker_first_name: z.string().optional(),
   worker_last_name: z.string().optional(),
   // Additional fields for compatibility
-  availability_notes: z.string().optional(),
+  availability_notes: z.string().nullable().optional(),
   employer_name: z.string().optional(),
   worker_name: z.string().optional()
 });

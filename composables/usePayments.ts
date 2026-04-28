@@ -1,48 +1,46 @@
 import type {
-  EscrowPaymentResponse,
-  ConfirmEscrowResponse,
-  ReleaseFundsResponse,
-  RefundEscrowResponse
+  CreatePaymentIntentInput,
+  ConfirmPaymentInput,
+  PayoutInput,
+  PaymentIntentResponseInput,
+  PaymentConfirmationResponseInput,
+  PayoutResponseInput,
+  PaymentsListResponseInput
 } from '~/schemas/payment';
+import type { Role } from '~/schemas/role';
 
 export const usePayments = () => {
-  const createEscrow = async (contractId: string) => {
-    return await $fetch<EscrowPaymentResponse & { fee_breakdown: any }>('/api/payments/create-escrow', {
-      method: 'POST',
-      body: { contract_id: contractId }
+  const listEvents = async (role?: Role) => {
+    return await $fetch<PaymentsListResponseInput>('/api/payments', {
+      params: role ? { role } : undefined
     });
   };
 
-  const confirmEscrow = async (contractId: string, paymentIntentId: string) => {
-    return await $fetch<ConfirmEscrowResponse>('/api/payments/confirm-escrow', {
+  const createIntent = async (payload: CreatePaymentIntentInput) => {
+    return await $fetch<PaymentIntentResponseInput>('/api/payments/create-intent', {
       method: 'POST',
-      body: { contract_id: contractId, payment_intent_id: paymentIntentId }
+      body: payload
     });
   };
 
-  const releaseFunds = async (contractId: string) => {
-    return await $fetch<ReleaseFundsResponse>('/api/payments/release-funds', {
+  const confirmPayment = async (payload: ConfirmPaymentInput) => {
+    return await $fetch<PaymentConfirmationResponseInput>('/api/payments/confirm', {
       method: 'POST',
-      body: { contract_id: contractId }
+      body: payload
     });
   };
 
-  const refundEscrow = async (contractId: string) => {
-    return await $fetch<RefundEscrowResponse>('/api/payments/refund-escrow', {
+  const processPayout = async (payload: PayoutInput) => {
+    return await $fetch<PayoutResponseInput>('/api/payments/payout', {
       method: 'POST',
-      body: { contract_id: contractId }
+      body: payload
     });
-  };
-
-  const getTransactionHistory = async () => {
-    return await $fetch<{ transactions: any[] }>('/api/transactions/history');
   };
 
   return {
-    createEscrow,
-    confirmEscrow,
-    releaseFunds,
-    refundEscrow,
-    getTransactionHistory
+    listEvents,
+    createIntent,
+    confirmPayment,
+    processPayout
   };
 };

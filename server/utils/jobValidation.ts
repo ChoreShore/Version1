@@ -241,9 +241,9 @@ export function validateUpdateJobPayload(payload: any): { valid: boolean; messag
   }
   
   if (payload.status !== undefined) {
-    const validStatuses = ['open', 'in_progress', 'completed', 'cancelled'];
+    const validStatuses = ['draft', 'open', 'closed', 'completed'];
     if (!validStatuses.includes(payload.status)) {
-      return { valid: false, message: 'Invalid status. Must be one of: open, in_progress, completed, cancelled', field: 'status' };
+      return { valid: false, message: 'Invalid status. Must be one of: draft, open, closed, completed', field: 'status' };
     }
   }
   

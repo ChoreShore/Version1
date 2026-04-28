@@ -14,13 +14,7 @@
           <p class="contract-detail__eyebrow">Contract</p>
           <h1>{{ contract.job_title ?? 'Untitled Job' }}</h1>
         </div>
-        <div class="contract-detail__status-group">
-          <StatusPill :label="contractStatusLabel" :variant="contractStatusVariant" />
-          <PaymentStatusBadge
-            v-if="contract.escrow_payment"
-            :status="contract.escrow_payment.status"
-          />
-        </div>
+        <StatusPill :label="contractStatusLabel" :variant="contractStatusVariant" />
       </header>
 
       <div class="contract-detail__grid">
@@ -28,18 +22,6 @@
           <li>
             <span>Status</span>
             <strong>{{ contractStatusLabel }}</strong>
-          </li>
-          <li v-if="contract.escrow_payment">
-            <span>Job Amount (worker receives)</span>
-            <strong>£{{ contract.escrow_payment.worker_payout_amount.toFixed(2) }}</strong>
-          </li>
-          <li v-if="contract.escrow_payment">
-            <span>Platform Fee</span>
-            <strong>£{{ contract.escrow_payment.platform_fee.toFixed(2) }}</strong>
-          </li>
-          <li v-if="contract.escrow_payment">
-            <span>Total Charged</span>
-            <strong>£{{ contract.escrow_payment.total_amount.toFixed(2) }}</strong>
           </li>
           <li>
             <span>Employer</span>
@@ -55,120 +37,13 @@
           </li>
         </DataList>
 
-        <DataList title="Transactions" description="All financial movements for this contract">
-          <template v-if="!contract.transactions?.length">
-            <li>
-              <EmptyState title="No transactions yet" description="Transactions will appear here after payment." />
-            </li>
-          </template>
-          <template v-else>
-            <li v-for="txn in contract.transactions" :key="txn.id" class="contract-detail__txn">
-              <div class="contract-detail__txn-info">
-                <span class="contract-detail__txn-type">{{ txnLabel(txn.transaction_type) }}</span>
-                <span class="contract-detail__txn-date">{{ new Date(txn.created_at).toLocaleDateString() }}</span>
-              </div>
-              <strong :class="`contract-detail__txn-amount--${txnAmountClass(txn.transaction_type)}`">
-                {{ txnSign(txn.transaction_type) }}£{{ txn.amount.toFixed(2) }}
-              </strong>
-            </li>
-          </template>
-        </DataList>
       </div>
 
-      <div v-if="isEmployer" class="contract-detail__actions">
-        <button
-          v-if="contract.status === 'pending' && !contract.escrow_payment"
-          type="button"
-          class="contract-detail__btn contract-detail__btn--primary"
-          :disabled="actionLoading"
-          @click="showPayModal = true"
-        >
-          Pay to Activate (£{{ pendingTotalAmount }})
-        </button>
 
-        <button
-          v-if="contract.status === 'active'"
-          type="button"
-          class="contract-detail__btn contract-detail__btn--success"
-          :disabled="actionLoading"
-          @click="handleRelease"
-        >
-          {{ actionLoading ? 'Processing...' : 'Mark Complete & Release Funds' }}
-        </button>
-
-        <button
-          v-if="['pending', 'active'].includes(contract.status)"
-          type="button"
-          class="contract-detail__btn contract-detail__btn--danger"
-          :disabled="actionLoading"
-          @click="handleRefund"
-        >
-          {{ actionLoading ? 'Processing...' : 'Cancel & Refund' }}
-        </button>
-      </div>
-
-      <details v-if="isEmployer" class="contract-detail__test-panel">
-        <summary>Payment Test Panel</summary>
-        <p class="contract-detail__test-help">
-          Run mock payment endpoints for this contract without using browser console.
-        </p>
-
-        <div class="contract-detail__test-actions">
-          <button
-            type="button"
-            class="contract-detail__btn contract-detail__btn--primary"
-            :disabled="testLoading"
-            @click="runCreateEscrow"
-          >
-            {{ testLoading ? 'Running...' : '1) Create Escrow' }}
-          </button>
-
-          <button
-            type="button"
-            class="contract-detail__btn contract-detail__btn--primary"
-            :disabled="testLoading || !lastPaymentIntentId"
-            @click="runConfirmEscrow"
-          >
-            {{ testLoading ? 'Running...' : '2) Confirm Escrow' }}
-          </button>
-
-          <button
-            type="button"
-            class="contract-detail__btn contract-detail__btn--success"
-            :disabled="testLoading"
-            @click="runReleaseFunds"
-          >
-            {{ testLoading ? 'Running...' : '3A) Release Funds' }}
-          </button>
-
-          <button
-            type="button"
-            class="contract-detail__btn contract-detail__btn--danger"
-            :disabled="testLoading"
-            @click="runRefundEscrow"
-          >
-            {{ testLoading ? 'Running...' : '3B) Refund Escrow' }}
-          </button>
-        </div>
-
-        <p class="contract-detail__test-meta">
-          Payment intent for confirm: <strong>{{ lastPaymentIntentId ?? 'Create escrow first' }}</strong>
-        </p>
-
-        <div v-if="testError" class="contract-detail__error">{{ testError }}</div>
-        <pre v-if="testResult" class="contract-detail__test-result">{{ testResult }}</pre>
-      </details>
 
       <div v-if="actionError" class="contract-detail__error">{{ actionError }}</div>
     </template>
 
-    <EscrowPaymentModal
-      v-if="showPayModal && contract && pendingFees"
-      :contract-id="contract.id"
-      :fees="pendingFees"
-      @confirmed="onPaymentConfirmed"
-      @cancel="showPayModal = false"
-    />
   </section>
 </template>
 
@@ -181,41 +56,19 @@ import DataList from '~/components/primitives/DataList.vue';
 import EmptyState from '~/components/primitives/EmptyState.vue';
 import LoadingSkeleton from '~/components/primitives/LoadingSkeleton.vue';
 import StatusPill from '~/components/primitives/StatusPill.vue';
-import PaymentStatusBadge from '~/components/payments/PaymentStatusBadge.vue';
-import EscrowPaymentModal from '~/components/payments/EscrowPaymentModal.vue';
 import { useContracts } from '~/composables/useContracts';
-import { usePayments } from '~/composables/usePayments';
 import type { ContractWithDetailsInput, ContractStatus } from '~/schemas/contract';
-import type { FeeCalculation } from '~/schemas/payment';
 
-const PLATFORM_FEE_RATE = 0.15;
-
-function calculateFees(jobAmount: number): FeeCalculation {
-  const platform_fee_amount = Math.round(jobAmount * PLATFORM_FEE_RATE * 100) / 100;
-  return {
-    job_amount: jobAmount,
-    platform_fee_rate: PLATFORM_FEE_RATE,
-    platform_fee_amount,
-    total_amount: Math.round((jobAmount + platform_fee_amount) * 100) / 100,
-    worker_payout_amount: jobAmount
-  };
-}
 
 const route = useRoute();
 const user = useSupabaseUser();
 const contractsApi = useContracts();
-const paymentsApi = usePayments();
 
 const contract = ref<ContractWithDetailsInput | null>(null);
 const loading = ref(true);
 const error = ref<string | null>(null);
 const actionLoading = ref(false);
 const actionError = ref<string | null>(null);
-const showPayModal = ref(false);
-const testLoading = ref(false);
-const testError = ref<string | null>(null);
-const testResult = ref<string | null>(null);
-const lastPaymentIntentId = ref<string | null>(null);
 
 const contractId = computed(() => route.params.id as string);
 const isEmployer = computed(() => user.value?.id === contract.value?.employer_id);
@@ -228,7 +81,7 @@ const statusVariantMap: Record<ContractStatus, 'neutral' | 'warning' | 'success'
 };
 
 const statusLabelMap: Record<ContractStatus, string> = {
-  pending: 'Awaiting Payment',
+  pending: 'Pending',
   active: 'In Progress',
   completed: 'Completed',
   cancelled: 'Cancelled'
@@ -241,38 +94,7 @@ const contractStatusLabel = computed(() =>
   contract.value ? statusLabelMap[contract.value.status] : ''
 );
 
-const pendingFees = computed((): FeeCalculation | null => {
-  if (!contract.value) return null;
-  if (contract.value.escrow_payment) {
-    return {
-      job_amount: contract.value.escrow_payment.worker_payout_amount,
-      platform_fee_rate: PLATFORM_FEE_RATE,
-      platform_fee_amount: contract.value.escrow_payment.platform_fee,
-      total_amount: contract.value.escrow_payment.total_amount,
-      worker_payout_amount: contract.value.escrow_payment.worker_payout_amount
-    };
-  }
-  if (contract.value.job_budget_amount) {
-    return calculateFees(contract.value.job_budget_amount);
-  }
-  return null;
-});
 
-const pendingTotalAmount = computed(() => pendingFees.value?.total_amount.toFixed(2) ?? '—');
-
-const txnLabel = (type: string) => {
-  const labels: Record<string, string> = {
-    deposit: 'Payment',
-    release: 'Payout to worker',
-    refund: 'Refund',
-    fee: 'Platform fee'
-  };
-  return labels[type] ?? type;
-};
-
-const txnSign = (type: string) => (type === 'refund' || type === 'release' ? '-' : '+');
-const txnAmountClass = (type: string) =>
-  type === 'refund' || type === 'release' ? 'debit' : 'credit';
 
 const fetchContract = async () => {
   loading.value = true;
@@ -287,106 +109,8 @@ const fetchContract = async () => {
   }
 };
 
-const setTestResult = (result: unknown) => {
-  testResult.value = JSON.stringify(result, null, 2);
-};
 
-const runCreateEscrow = async () => {
-  testLoading.value = true;
-  testError.value = null;
-  try {
-    const result = await paymentsApi.createEscrow(contractId.value);
-    lastPaymentIntentId.value = result.payment_intent.id;
-    setTestResult(result);
-    await fetchContract();
-  } catch (err: any) {
-    testError.value = err?.data?.statusMessage || 'Create escrow failed.';
-    setTestResult(err?.data ?? err);
-  } finally {
-    testLoading.value = false;
-  }
-};
 
-const runConfirmEscrow = async () => {
-  if (!lastPaymentIntentId.value) {
-    testError.value = 'Create escrow first to get a payment_intent_id.';
-    return;
-  }
-
-  testLoading.value = true;
-  testError.value = null;
-  try {
-    const result = await paymentsApi.confirmEscrow(contractId.value, lastPaymentIntentId.value);
-    setTestResult(result);
-    await fetchContract();
-  } catch (err: any) {
-    testError.value = err?.data?.statusMessage || 'Confirm escrow failed.';
-    setTestResult(err?.data ?? err);
-  } finally {
-    testLoading.value = false;
-  }
-};
-
-const runReleaseFunds = async () => {
-  testLoading.value = true;
-  testError.value = null;
-  try {
-    const result = await paymentsApi.releaseFunds(contractId.value);
-    setTestResult(result);
-    await fetchContract();
-  } catch (err: any) {
-    testError.value = err?.data?.statusMessage || 'Release funds failed.';
-    setTestResult(err?.data ?? err);
-  } finally {
-    testLoading.value = false;
-  }
-};
-
-const runRefundEscrow = async () => {
-  testLoading.value = true;
-  testError.value = null;
-  try {
-    const result = await paymentsApi.refundEscrow(contractId.value);
-    setTestResult(result);
-    await fetchContract();
-  } catch (err: any) {
-    testError.value = err?.data?.statusMessage || 'Refund escrow failed.';
-    setTestResult(err?.data ?? err);
-  } finally {
-    testLoading.value = false;
-  }
-};
-
-const onPaymentConfirmed = async () => {
-  showPayModal.value = false;
-  await fetchContract();
-};
-
-const handleRelease = async () => {
-  actionLoading.value = true;
-  actionError.value = null;
-  try {
-    await paymentsApi.releaseFunds(contractId.value);
-    await fetchContract();
-  } catch (err: any) {
-    actionError.value = err?.data?.statusMessage || 'Could not release funds.';
-  } finally {
-    actionLoading.value = false;
-  }
-};
-
-const handleRefund = async () => {
-  actionLoading.value = true;
-  actionError.value = null;
-  try {
-    await paymentsApi.refundEscrow(contractId.value);
-    await fetchContract();
-  } catch (err: any) {
-    actionError.value = err?.data?.statusMessage || 'Could not process refund.';
-  } finally {
-    actionLoading.value = false;
-  }
-};
 
 onMounted(() => {
   fetchContract();

@@ -1,6 +1,6 @@
 import { serverSupabaseClient, serverSupabaseUser } from '#supabase/server';
 import { JobResponseSchema } from '~/schemas/job';
-import { assertValidUuid, ensureAuthenticated, handleSupabaseAuthErrors } from '~/server/utils/api';
+import { assertValidUuid, ensureAuthenticated, handleSupabaseAuthErrors, ensureJobOwner } from '~/server/utils/api';
 
 export default defineEventHandler(async (event) => {
   try {
@@ -13,6 +13,9 @@ export default defineEventHandler(async (event) => {
     });
 
     const client = await serverSupabaseClient(event);
+
+    // Authorization check: ensure user owns this job
+    await ensureJobOwner(client, jobId, user.id);
 
     const { data, error } = await client
       .from('jobs')
@@ -28,11 +31,6 @@ export default defineEventHandler(async (event) => {
       // Check if it's a "not found" error
       if (error.code === 'PGRST116') {
         throw createError({ statusCode: 404, statusMessage: 'Job not found' });
-      }
-      
-      // Check if it's an RLS policy violation (trying to access other's jobs)
-      if (error.code === '42501') {
-        throw createError({ statusCode: 403, statusMessage: 'You can only view your own job details' });
       }
       
       throw createError({ statusCode: 400, statusMessage: error.message });

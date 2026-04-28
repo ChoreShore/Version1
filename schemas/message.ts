@@ -9,7 +9,16 @@ export const CreateMessageSchema = z.object({
     .min(1, 'Message body is required')
     .max(2000, 'Message must be less than 2000 characters')
     .trim(),
-  attachment_url: z.string().url('Invalid attachment URL').optional()
+  attachment_url: z.string().url('Invalid attachment URL').optional().refine(
+    (url) => {
+      if (!url) return true;
+      // In production, validate against your CDN domain
+      // Example: return url.includes('your-cdn-domain.com') || url.includes('your-storage-bucket.s3.amazonaws.com');
+      return true; // Allow all URLs for now - add domain validation in production
+    },
+    'Attachment URL must be from a trusted source'
+  ),
+  client_message_id: z.string().uuid('Invalid client message ID format').optional()
 });
 
 // Full message schema (lenient for database responses)
@@ -21,9 +30,10 @@ export const MessageSchema = z.object({
   receiver_id: z.string(),
   body: z.string(),
   attachment_url: z.string().nullable().optional(),
-  created_at: z.string(),
-  updated_at: z.string(),
-  sent_at: z.string().optional() // Add sent_at field for compatibility
+  created_at: z.string().optional(),
+  updated_at: z.string().optional(),
+  sent_at: z.string().optional(), // Add sent_at field for compatibility
+  client_message_id: z.string().optional()
 });
 
 // Message with details schema (lenient for database responses)
@@ -35,15 +45,16 @@ export const MessageWithDetailsSchema = MessageSchema.extend({
 
 // API response schemas (lenient for database responses)
 export const MessagesResponseSchema = z.object({
-  messages: MessageSchema.array()
+  messages: MessageSchema.array(),
+  pagination: z.object({
+    offset: z.number(),
+    limit: z.number(),
+    hasMore: z.boolean()
+  }).optional()
 });
 
 export const MessageResponseSchema = z.object({
   message: z.union([MessageSchema, MessageWithDetailsSchema])
-});
-
-export const ConversationsResponseSchema = z.object({
-  conversations: MessageWithDetailsSchema.array()
 });
 
 // Additional message types for compatibility
@@ -51,7 +62,7 @@ export const ConversationSummarySchema = z.object({
   id: z.string(),
   job_id: z.string(),
   application_id: z.string(),
-  last_message: z.string(),
+  last_message: z.string().optional(),
   last_message_at: z.string(),
   unread_count: z.number().optional(),
   other_user: z.object({
@@ -69,6 +80,10 @@ export const ConversationSummarySchema = z.object({
   last_message_preview: z.string().optional(),
   last_message_content: z.string().optional(),
   last_message_sent_at: z.string().optional()
+});
+
+export const ConversationsResponseSchema = z.object({
+  conversations: ConversationSummarySchema.array()
 });
 
 export const MessageWithProfilesSchema = MessageSchema.extend({

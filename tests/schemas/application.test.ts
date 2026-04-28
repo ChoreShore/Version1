@@ -100,7 +100,7 @@ describe('CreateApplicationSchema', () => {
     });
   });
 
-  describe('proposed_rate (optional, £20–£30)', () => {
+  describe('proposed_rate (optional, £20–£30, integer only)', () => {
     it('is valid when omitted', () => {
       expect(CreateApplicationSchema.safeParse(valid).success).toBe(true);
     });
@@ -143,6 +143,18 @@ describe('CreateApplicationSchema', () => {
       const result = CreateApplicationSchema.safeParse({ ...valid, proposed_rate: '25' });
       expect(result.success).toBe(false);
     });
+
+    it('rejects a decimal rate (20.5)', () => {
+      const result = CreateApplicationSchema.safeParse({ ...valid, proposed_rate: 20.5 });
+      expect(result.success).toBe(false);
+      if (!result.success) expect(result.error.issues[0].message).toMatch(/whole number/);
+    });
+
+    it('rejects a decimal rate (25.99)', () => {
+      const result = CreateApplicationSchema.safeParse({ ...valid, proposed_rate: 25.99 });
+      expect(result.success).toBe(false);
+      if (!result.success) expect(result.error.issues[0].message).toMatch(/whole number/);
+    });
   });
 });
 
@@ -181,7 +193,7 @@ describe('UpdateApplicationSchema', () => {
     });
   });
 
-  describe('proposed_rate (£20–£30)', () => {
+  describe('proposed_rate (£20–£30, integer only)', () => {
     it('accepts 20', () => {
       expect(UpdateApplicationSchema.safeParse({ proposed_rate: 20 }).success).toBe(true);
     });
@@ -200,6 +212,18 @@ describe('UpdateApplicationSchema', () => {
       const result = UpdateApplicationSchema.safeParse({ proposed_rate: 31 });
       expect(result.success).toBe(false);
       if (!result.success) expect(result.error.issues[0].message).toMatch(/no more than £30/);
+    });
+
+    it('rejects a decimal rate (20.5)', () => {
+      const result = UpdateApplicationSchema.safeParse({ proposed_rate: 20.5 });
+      expect(result.success).toBe(false);
+      if (!result.success) expect(result.error.issues[0].message).toMatch(/whole number/);
+    });
+
+    it('rejects a decimal rate (25.99)', () => {
+      const result = UpdateApplicationSchema.safeParse({ proposed_rate: 25.99 });
+      expect(result.success).toBe(false);
+      if (!result.success) expect(result.error.issues[0].message).toMatch(/whole number/);
     });
   });
 
