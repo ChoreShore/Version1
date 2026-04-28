@@ -8,8 +8,15 @@ function hasEmployerRole(roles: unknown): boolean {
   if (Array.isArray(roles)) {
     return roles.includes('employer');
   }
+
+  if (roles && typeof roles === 'object') {
+    const values = Object.values(roles as Record<string, unknown>);
+    return values.includes('employer') || (roles as Record<string, unknown>).employer === true;
+  }
+
   if (typeof roles === 'string') {
-    return roles === 'employer' || roles.split(',').map(r => r.trim()).includes('employer');
+    const normalized = roles.replace(/[{}]/g, '');
+    return normalized === 'employer' || normalized.split(',').map(r => r.trim()).includes('employer');
   }
   return false;
 }
@@ -44,9 +51,12 @@ export default defineEventHandler(async (event) => {
       .order('created_at', { ascending: false })
       .limit(limit);
 
-    // Role-based filtering — based on server-resolved role, not client-supplied query.role
-    if (isEmployer) {
-      // Employers only see their own jobs
+    // Scope filtering
+    // If client requests personal scope, always return only the caller's jobs.
+    if (query.scope === 'mine') {
+      builder = builder.eq('employer_id', user.id);
+    } else if (isEmployer) {
+      // Employers default to their own jobs
       builder = builder.eq('employer_id', user.id);
     } else {
       // Workers see open jobs from other employers
