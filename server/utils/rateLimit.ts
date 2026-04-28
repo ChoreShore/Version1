@@ -1,4 +1,4 @@
-import { createError } from 'h3';
+import { createError, setHeader } from 'h3';
 
 interface RateLimitConfig {
   windowMs: number; // Time window in milliseconds
@@ -111,18 +111,24 @@ export function checkRateLimit(
  * @returns Function that throws error if rate limited
  */
 export function createRateLimiter(config: RateLimitConfig) {
-  return (identifier: string) => {
+  return (identifier: string, event?: any) => {
     const result = checkRateLimit(identifier, config);
     
     if (!result.success) {
+      if (event) {
+        setHeader(event, 'Retry-After', Math.ceil((result.resetTime.getTime() - Date.now()) / 1000));
+        setHeader(event, 'X-RateLimit-Limit', result.limit);
+        setHeader(event, 'X-RateLimit-Remaining', result.remaining);
+        setHeader(event, 'X-RateLimit-Reset', result.resetTime.toISOString());
+      }
+      
       throw createError({
         statusCode: 429,
         statusMessage: 'Too many requests. Please try again later.',
-        headers: {
-          'Retry-After': Math.ceil((result.resetTime.getTime() - Date.now()) / 1000).toString(),
-          'X-RateLimit-Limit': result.limit.toString(),
-          'X-RateLimit-Remaining': result.remaining.toString(),
-          'X-RateLimit-Reset': result.resetTime.toISOString()
+        data: {
+          limit: result.limit,
+          remaining: result.remaining,
+          resetTime: result.resetTime
         }
       });
     }

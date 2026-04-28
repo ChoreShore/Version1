@@ -41,17 +41,10 @@ export const SignUpFormSchema = z.object({
     .min(1, 'Phone number is required')
     .max(20, 'Phone number must be less than 20 characters')
     .trim()
-    .optional(),
-  
-  role: z.enum(['employer', 'worker'], {
-    message: 'Role must be either employer or worker'
-  }).or(z.literal(''))
+    .optional()
 }).refine((data) => data.password === data.confirmPassword, {
   message: "Passwords don't match",
   path: ["confirmPassword"]
-}).refine((data) => data.role !== '', {
-  message: "Role is required",
-  path: ["role"]
 });
 
 // Sign-up API schema (matches actual API usage - no confirmPassword)

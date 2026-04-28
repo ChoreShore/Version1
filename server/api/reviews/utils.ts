@@ -21,12 +21,14 @@ export type ReviewRow = {
   rating: number;
   comment: string | null;
   created_at: string;
+  updated_at?: string;
   job?: { id: string; title: string } | null;
   reviewer?: { id: string; first_name: string | null; last_name: string | null } | null;
   reviewed_user?: { id: string; first_name: string | null; last_name: string | null } | null;
 };
 
 export const mapReview = (row: ReviewRow): ReviewInput => ({
+  id: row.review_id,
   review_id: row.review_id,
   job_id: row.job_id,
   reviewer_id: row.reviewer_id,
@@ -34,9 +36,10 @@ export const mapReview = (row: ReviewRow): ReviewInput => ({
   rating: row.rating,
   comment: row.comment,
   created_at: row.created_at,
+  updated_at: row.updated_at ?? row.created_at,
   job_title: row.job?.title,
-  reviewer_first_name: row.reviewer?.first_name ?? null,
-  reviewer_last_name: row.reviewer?.last_name ?? null,
-  reviewed_user_first_name: row.reviewed_user?.first_name ?? null,
-  reviewed_user_last_name: row.reviewed_user?.last_name ?? null
+  reviewer_first_name: row.reviewer?.first_name ?? undefined,
+  reviewer_last_name: row.reviewer?.last_name ?? undefined,
+  reviewed_user_first_name: row.reviewed_user?.first_name ?? undefined,
+  reviewed_user_last_name: row.reviewed_user?.last_name ?? undefined
 });

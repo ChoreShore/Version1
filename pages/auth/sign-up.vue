@@ -104,26 +104,6 @@
               <FormError v-if="errors.last_name">{{ errors.last_name }}</FormError>
             </FormField>
 
-            <!-- Role Selection -->
-            <FormField id="role" :error="errors.role" :state="errors.role ? 'error' : 'default'">
-              <FormLabel for="role">I want to</FormLabel>
-              <FormControl>
-                <select
-                  id="role"
-                  v-model="form.role"
-                  class="form-select"
-                  :disabled="loading"
-                  required
-                  @change="validateField('role')"
-                >
-                  <option value="">Select your role</option>
-                  <option value="worker">Find work opportunities</option>
-                  <option value="employer">Hire talented workers</option>
-                </select>
-              </FormControl>
-              <FormError v-if="errors.role">{{ errors.role }}</FormError>
-            </FormField>
-
             <!-- Submit Button -->
             <button class="auth-form__submit" type="submit" :disabled="loading || !canSubmit">
               <LoadingSkeleton v-if="loading" variant="text" width="100%" height="16px" />
@@ -193,7 +173,7 @@ const form = reactive<SignUpFormInput>({
   confirmPassword: '',
   first_name: '',
   last_name: '',
-  role: ''
+  phone: ''
 });
 
 const errors = reactive<Record<string, string>>({});
@@ -251,11 +231,13 @@ const validateField = (field: keyof SignUpFormInput) => {
     }
   }
 
-  if (field === 'role') {
-    if (!fieldValue || !['worker', 'employer'].includes(fieldValue as string)) {
-      errors[field] = 'Please select a role';
+  if (field === 'phone' && fieldValue) {
+    const phoneRegex = /^[+]?[(]?[0-9]{1,4}[)]?[-\s.]?[(]?[0-9]{1,4}[)]?[-\s.]?[0-9]{1,9}$/;
+    if (!phoneRegex.test(fieldValue as string)) {
+      errors[field] = 'Please enter a valid phone number';
     }
   }
+
 };
 
 const validateForm = () => {
@@ -264,13 +246,15 @@ const validateForm = () => {
 };
 
 const isFormValid = computed(() => {
-  return Object.values(form).every(value => value.trim() !== '') && 
+  const { phone, ...requiredFields } = form;
+  return Object.values(requiredFields).every(value => value.trim() !== '') && 
          Object.keys(errors).length === 0;
 });
 
 const canSubmit = computed(() => {
+  const { phone, ...requiredFields } = form;
   return Object.keys(errors).length === 0 && 
-         Object.values(form).every(value => value && value.trim() !== '');
+         Object.values(requiredFields).every(value => value && value.trim() !== '');
 });
 
 // Form submission
@@ -292,19 +276,13 @@ const handleSubmit = async () => {
       return;
     }
 
-    // Prepare data for API (remove confirmPassword and ensure role is valid)
-    if (!form.role || !['employer', 'worker'].includes(form.role)) {
-      errors.role = 'Please select a role';
-      return;
-    }
-
     const apiData: SignUpInput = {
       email: form.email,
       password: form.password,
       first_name: form.first_name,
       last_name: form.last_name,
-      role: form.role, // Now safe since we validated it's 'employer' | 'worker'
-      phone: form.phone
+      role: 'employer',
+      phone: form.phone || undefined
     };
 
     await auth.signup(apiData);
@@ -337,7 +315,7 @@ const handleFormReset = () => {
     confirmPassword: '',
     first_name: '',
     last_name: '',
-    role: ''
+    phone: ''
   });
   Object.keys(errors).forEach(key => delete errors[key]);
   submitError.value = '';

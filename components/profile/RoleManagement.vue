@@ -2,7 +2,7 @@
   <div class="role-management">
     <header>
       <h3>Your roles</h3>
-      <p class="role-management__hint">Add roles to access different features</p>
+      <p class="role-management__hint">Add the Worker role to apply to jobs and receive payments</p>
     </header>
 
     <div class="role-management__current">
@@ -30,14 +30,9 @@
         {{ loading ? 'Adding...' : '+ Add Worker role' }}
       </button>
       
-      <button
-        v-if="!hasEmployerRole"
-        @click="addRole('employer')"
-        :disabled="loading"
-        class="role-button role-button--employer"
-      >
-        {{ loading ? 'Adding...' : '+ Add Employer role' }}
-      </button>
+      <p v-if="hasWorkerRole" class="role-management__all-roles">
+        You have all available roles.
+      </p>
     </div>
 
     <p v-if="error" class="role-management__error">{{ error }}</p>
@@ -53,6 +48,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue';
 import type { Role } from '~/schemas/role';
+import type { Profile } from '~/types/auth';
 
 const { addRole: addRoleApi } = useAuth();
 const user = useSupabaseUser();
@@ -78,7 +74,7 @@ const fetchUserRoles = async () => {
     
     if (fetchError) throw fetchError;
     
-    userRoles.value = data?.roles || [];
+    userRoles.value = (data as Profile | null)?.roles || [];
   } catch (err: any) {
     console.error('Failed to fetch roles:', err);
   }
@@ -177,6 +173,12 @@ onMounted(() => {
   color: var(--color-text-muted);
   font-size: var(--text-sm);
   font-style: italic;
+}
+
+.role-management__all-roles {
+  margin: 0;
+  color: var(--color-text-muted);
+  font-size: var(--text-sm);
 }
 
 .role-management__actions {

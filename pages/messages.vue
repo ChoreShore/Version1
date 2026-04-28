@@ -330,7 +330,8 @@ const handleSend = async () => {
 
       // Update the conversation in the sidebar to reflect the new message
       if (activeConversation.value) {
-        const conv = conversations.value.find(c => c.id === activeConversation.value.id);
+        const activeId = activeConversation.value.id;
+        const conv = conversations.value.find(c => c.id === activeId);
         if (conv) {
           conv.last_message_preview = response.message.body;
           conv.last_message_at = new Date().toISOString();
