@@ -4,6 +4,23 @@ import { validateCreateJob, JobResponseSchema } from '~/schemas/job';
 import { ensureAuthenticated, handleSupabaseAuthErrors } from '~/server/utils/api';
 import { rateLimiters } from '~/server/utils/rateLimit';
 
+function hasEmployerRole(roles: unknown): boolean {
+  if (Array.isArray(roles)) {
+    return roles.includes('employer');
+  }
+
+  if (roles && typeof roles === 'object') {
+    const values = Object.values(roles as Record<string, unknown>);
+    return values.includes('employer') || (roles as Record<string, unknown>).employer === true;
+  }
+
+  if (typeof roles === 'string') {
+    const normalized = roles.replace(/[{}]/g, '');
+    return normalized === 'employer' || normalized.split(',').map(r => r.trim()).includes('employer');
+  }
+  return false;
+}
+
 export default defineEventHandler(async (event) => {
   try {
     const user = ensureAuthenticated(
@@ -42,19 +59,7 @@ export default defineEventHandler(async (event) => {
       });
     }
 
-    // Check if user has employer role (handle PostgreSQL arrays)
-    let hasEmployerRole = false;
-    
-    if (Array.isArray(profile.roles)) {
-      hasEmployerRole = profile.roles.includes('employer');
-    } else if (profile.roles && typeof profile.roles === 'string') {
-      hasEmployerRole = profile.roles === 'employer';
-    } else if (profile.roles && Array.isArray(profile.roles)) {
-      // Handle PostgreSQL array format
-      hasEmployerRole = profile.roles.some((role: string) => role === 'employer');
-    }
-
-    if (!hasEmployerRole) {
+    if (!hasEmployerRole(profile.roles)) {
       throw createError({
         statusCode: 403,
         statusMessage: 'Only employers can create jobs. Add employer role to your profile first.'

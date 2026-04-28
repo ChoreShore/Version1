@@ -16,8 +16,6 @@ export default defineEventHandler(async (event) => {
 
     const query = getQuery(event);
     const type = (query.type as 'given' | 'received') ?? 'received';
-    const role = query.role as string;
-
     const client = await serverSupabaseClient(event);
 
     const column = type === 'given' ? 'reviewer_id' : 'reviewed_user_id';

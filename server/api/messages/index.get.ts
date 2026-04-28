@@ -14,7 +14,6 @@ export default defineEventHandler(async (event) => {
     }
 
     const query = getQuery(event);
-    const role = query.role as string;
     const client = await serverSupabaseClient(event);
 
     // Get all messages for this user
