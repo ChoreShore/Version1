@@ -31,6 +31,14 @@
           <option value="completed">Completed</option>
         </select>
         <span v-if="statusUpdating" class="job-detail__status-updating">Updating...</span>
+        <button 
+          type="button" 
+          class="job-detail__delete-button" 
+          :disabled="deleting"
+          @click="showDeleteDialog = true"
+        >
+          {{ deleting ? 'Deleting...' : 'Delete Job' }}
+        </button>
       </div>
 
       <div class="job-detail__layout">
@@ -107,6 +115,16 @@
           </li>
         </template>
       </DataList>
+
+      <ConfirmDialog
+        :is-open="showDeleteDialog"
+        title="Delete Job"
+        message="Are you sure you want to delete this job? This action cannot be undone."
+        confirm-text="Delete"
+        cancel-text="Cancel"
+        @confirm="deleteJob"
+        @cancel="showDeleteDialog = false"
+      />
     </template>
   </section>
 </template>
@@ -124,6 +142,7 @@ import LoadingSkeleton from '~/components/primitives/LoadingSkeleton.vue';
 import ApplicationCard from '~/components/applications/ApplicationCard.vue';
 import ApplicationForm from '~/components/applications/ApplicationForm.vue';
 import ApplicationActions from '~/components/applications/ApplicationActions.vue';
+import ConfirmDialog from '~/components/primitives/ConfirmDialog.vue';
 import type { JobWithDetailsInput, JobStatus } from '~/schemas/job';
 import type { ApplicationStatus, ApplicationWithDetailsInput } from '~/schemas/application';
 import { useJobs } from '~/composables/useJobs';
@@ -139,6 +158,8 @@ const user = useSupabaseUser();
 const { role } = useActiveRole();
 const { isRtwRequired, fetchRtwStatus } = useRtw();
 const showRtwModal = ref(false);
+const showDeleteDialog = ref(false);
+const deleting = ref(false);
 
 const job = ref<JobWithDetailsInput | null>(null);
 const applications = ref<ApplicationWithDetailsInput[]>([]);
@@ -261,6 +282,21 @@ const updateJobStatus = async () => {
   }
 };
 
+const deleteJob = async () => {
+  if (!jobId.value || deleting.value) return;
+
+  deleting.value = true;
+  showDeleteDialog.value = false;
+  try {
+    await jobsApi.deleteJob(jobId.value);
+    navigateTo('/jobs');
+  } catch (err: any) {
+    error.value = err?.data?.statusMessage || 'Failed to delete job';
+  } finally {
+    deleting.value = false;
+  }
+};
+
 watch(jobId, () => {
   fetchJob();
   fetchApplications();
@@ -322,6 +358,27 @@ onMounted(() => {
 .job-detail__status-updating {
   font-size: var(--text-sm);
   color: var(--color-text-muted);
+}
+
+.job-detail__delete-button {
+  padding: var(--space-2) var(--space-4);
+  background: var(--color-danger-600);
+  color: white;
+  border: none;
+  border-radius: var(--radius-md);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 150ms ease;
+}
+
+.job-detail__delete-button:hover:not(:disabled) {
+  background: var(--color-danger-700);
+}
+
+.job-detail__delete-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 
 .job-detail__grid {

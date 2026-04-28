@@ -273,6 +273,7 @@ const handleSubmit = async () => {
     // Redirect to dashboard to see the new job
     navigateTo('/dashboard');
   } catch (error: any) {
+    console.error('Job creation error:', error);
     errors.value.general = error?.data?.statusMessage || 'Failed to create job. Please try again.';
   } finally {
     submitting.value = false;

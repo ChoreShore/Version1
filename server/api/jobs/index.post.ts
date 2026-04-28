@@ -61,19 +61,19 @@ export default defineEventHandler(async (event) => {
       });
     }
 
-    // Validate category exists and is active
-    const { data: category } = await client
+    // Validate category exists
+    const { data: category, error: categoryError } = await client
       .from('job_categories')
-      .select('id, is_active')
+      .select('id')
       .eq('id', body.category_id)
       .single();
 
-    if (!category) {
-      throw createError({ statusCode: 400, statusMessage: 'Invalid category ID' });
+    if (categoryError) {
+      throw createError({ statusCode: 500, statusMessage: 'Failed to query category' });
     }
 
-    if (category.is_active === false) {
-      throw createError({ statusCode: 400, statusMessage: 'Selected category is inactive' });
+    if (!category) {
+      throw createError({ statusCode: 400, statusMessage: 'Invalid category ID' });
     }
 
     // Deduplication: prevent double-submit by checking for an identical job created recently

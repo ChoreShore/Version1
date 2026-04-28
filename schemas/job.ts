@@ -38,7 +38,9 @@ export const CreateJobSchema = z.object({
     }, { message: 'Invalid deadline format' })
     .refine((date) => new Date(date) > new Date(), {
       message: 'Deadline must be in the future'
-    })
+    }),
+
+  client_request_id: z.string().optional()
 });
 
 // Job update schema - all fields optional plus status

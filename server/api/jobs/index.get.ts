@@ -45,11 +45,11 @@ export default defineEventHandler(async (event) => {
       .limit(limit);
 
     // Role-based filtering — based on server-resolved role, not client-supplied query.role
-    if (isEmployer && query.scope === 'mine') {
-      // Show only jobs posted by this employer
+    if (isEmployer) {
+      // Employers only see their own jobs
       builder = builder.eq('employer_id', user.id);
     } else {
-      // For authenticated workers or employers in "browse" mode: show open jobs from other users
+      // Workers see open jobs from other employers
       builder = builder
         .eq('status', 'open')
         .neq('employer_id', user.id);

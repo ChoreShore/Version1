@@ -2,6 +2,16 @@ import { serverSupabaseClient, serverSupabaseUser } from '#supabase/server';
 import { ApplicationsResponseSchema } from '~/schemas/application';
 import { handleSupabaseAuthErrors } from '~/server/utils/api';
 
+function hasEmployerRole(roles: unknown): boolean {
+  if (Array.isArray(roles)) {
+    return roles.includes('employer');
+  }
+  if (typeof roles === 'string') {
+    return roles === 'employer' || roles.split(',').map(r => r.trim()).includes('employer');
+  }
+  return false;
+}
+
 export default defineEventHandler(async (event) => {
   try {
     const user = await serverSupabaseUser(event);
@@ -13,13 +23,20 @@ export default defineEventHandler(async (event) => {
       });
     }
 
-    const query = getQuery(event);
-    const role = query.role as string;
     const client = await serverSupabaseClient(event);
+
+    // Resolve actual role from the user's profile — never trust query.role for authorization
+    const { data: profile } = await client
+      .from('profiles')
+      .select('roles')
+      .eq('id', user.id)
+      .single();
+
+    const isEmployer = hasEmployerRole(profile?.roles);
 
     let data, error;
 
-    if (role === 'employer') {
+    if (isEmployer) {
       // Get applications for jobs posted by this employer using direct query
       const result = await client
         .from('applications')

@@ -5,13 +5,7 @@ export default defineNuxtConfig({
   supabase: {
     redirect: false,
     url: process.env.SUPABASE_URL,
-    key: process.env.SUPABASE_KEY,
-    cookieOptions: {
-      name: 'sb-access-token',
-      lifetime: 60 * 60 * 4,
-      sameSite: 'strict',
-      secure: process.env.NODE_ENV === 'production'
-    }
+    key: process.env.SUPABASE_KEY
   },
   typescript: {
     strict: true
