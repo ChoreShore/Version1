@@ -11,6 +11,14 @@
       </section>
 
       <section class="settings-section">
+        <RtwSettingsSection />
+      </section>
+
+      <section class="settings-section">
+        <IdentitySettingsSection />
+      </section>
+
+      <section class="settings-section">
         <div class="payment-methods">
           <header class="payment-methods__header">
             <h2>Mock payment connections</h2>
@@ -76,6 +84,8 @@
 
 <script setup lang="ts">
 import RoleManagement from '~/components/profile/RoleManagement.vue';
+import RtwSettingsSection from '~/components/profile/RtwSettingsSection.vue';
+import IdentitySettingsSection from '~/components/profile/IdentitySettingsSection.vue';
 import UpdatePasswordForm from '~/components/profile/UpdatePasswordForm.vue';
 import DeleteAccountForm from '~/components/profile/DeleteAccountForm.vue';
 import StatusPill from '~/components/primitives/StatusPill.vue';

@@ -10,6 +10,11 @@ export default defineNuxtConfig({
   typescript: {
     strict: true
   },
+  runtimeConfig: {
+    public: {
+      diditUnilinkUrl: process.env.DIDIT_UNILINK_URL
+    }
+  },
   routeRules: {
     '/api/**': {
       headers: {
