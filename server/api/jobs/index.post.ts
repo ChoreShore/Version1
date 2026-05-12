@@ -1,25 +1,10 @@
 import { serverSupabaseClient, serverSupabaseUser } from '#supabase/server';
 import type { CreateJobInput, JobResponseInput } from '~/schemas/job';
 import { validateCreateJob, JobResponseSchema } from '~/schemas/job';
-import { ensureAuthenticated, handleSupabaseAuthErrors } from '~/server/utils/api';
+import { ensureAuthenticated, rethrowIfAuthError } from '~/server/utils/api';
 import { rateLimiters } from '~/server/utils/rateLimit';
-
-function hasEmployerRole(roles: unknown): boolean {
-  if (Array.isArray(roles)) {
-    return roles.includes('employer');
-  }
-
-  if (roles && typeof roles === 'object') {
-    const values = Object.values(roles as Record<string, unknown>);
-    return values.includes('employer') || (roles as Record<string, unknown>).employer === true;
-  }
-
-  if (typeof roles === 'string') {
-    const normalized = roles.replace(/[{}]/g, '');
-    return normalized === 'employer' || normalized.split(',').map(r => r.trim()).includes('employer');
-  }
-  return false;
-}
+import { geocodePostcode } from '~/server/utils/geocoding';
+import { hasRole } from '~/server/utils/roles';
 
 export default defineEventHandler(async (event) => {
   try {
@@ -59,7 +44,7 @@ export default defineEventHandler(async (event) => {
       });
     }
 
-    if (!hasEmployerRole(profile.roles)) {
+    if (!hasRole(profile.roles, 'employer')) {
       throw createError({
         statusCode: 403,
         statusMessage: 'Only employers can create jobs. Add employer role to your profile first.'
@@ -74,6 +59,7 @@ export default defineEventHandler(async (event) => {
       .single();
 
     if (categoryError) {
+      console.error('Category query failed:', categoryError);
       throw createError({ statusCode: 500, statusMessage: 'Failed to query category' });
     }
 
@@ -85,7 +71,7 @@ export default defineEventHandler(async (event) => {
     const thirtySecondsAgo = new Date(Date.now() - 30 * 1000).toISOString();
     const { data: recentDuplicate } = await client
       .from('jobs')
-      .select('id, title, description, category_id, budget_type, budget_amount, deadline, postcode, created_at')
+      .select('id')
       .eq('employer_id', user.id)
       .eq('title', body.title)
       .eq('description', body.description)
@@ -116,9 +102,22 @@ export default defineEventHandler(async (event) => {
         try {
           return JobResponseSchema.parse(response);
         } catch (validationError) {
+          console.error('Response validation failed:', validationError);
           throw createError({ statusCode: 500, statusMessage: 'Invalid response format' });
         }
       }
+    }
+
+    // Geocode postcode to coordinates
+    let latitude: number | null = null;
+    let longitude: number | null = null;
+
+    const geocodingResult = await geocodePostcode(body.postcode);
+    if (geocodingResult.success && geocodingResult.latitude && geocodingResult.longitude) {
+      latitude = geocodingResult.latitude;
+      longitude = geocodingResult.longitude;
+    } else {
+      console.warn(`Failed to geocode postcode: ${body.postcode}`, geocodingResult.error);
     }
 
     const { data, error } = await client
@@ -132,6 +131,8 @@ export default defineEventHandler(async (event) => {
         budget_amount: body.budget_amount,
         deadline: body.deadline,
         postcode: body.postcode,
+        latitude,
+        longitude,
         status: 'open'
       })
       .select(`
@@ -142,7 +143,8 @@ export default defineEventHandler(async (event) => {
       .single();
 
     if (error) {
-      throw createError({ statusCode: 400, statusMessage: error.message });
+      console.error('Job creation failed:', error);
+      throw createError({ statusCode: 500, statusMessage: 'Failed to create job' });
     }
 
     const response = { job: data };
@@ -151,10 +153,11 @@ export default defineEventHandler(async (event) => {
     try {
       return JobResponseSchema.parse(response);
     } catch (validationError) {
+      console.error('Response validation failed:', validationError);
       throw createError({ statusCode: 500, statusMessage: 'Invalid response format' });
     }
   } catch (error: any) {
-    handleSupabaseAuthErrors(error);
+    rethrowIfAuthError(error);
     throw error;
   }
 });

@@ -1,7 +1,5 @@
 <template>
   <section class="dashboard-page">
-    <RtwVerificationModal v-if="showRtwModal" @verified="onRtwVerified" @close="showRtwModal = false" />
-    
     <OverviewStats :stats="stats" />
 
     <div class="dashboard-page__grid">
@@ -98,18 +96,10 @@ import { useJobs } from '~/composables/useJobs';
 import { useApplications } from '~/composables/useApplications';
 import { usePayments } from '~/composables/usePayments';
 import { useActiveRole } from '~/composables/useActiveRole';
-import { useRtw } from '~/composables/useRtw';
-import RtwVerificationModal from '~/components/profile/RtwVerificationModal.vue';
 import StatusPill from '~/components/primitives/StatusPill.vue';
 import type { PaymentEventInput } from '~/schemas/payment';
 
 const { role } = useActiveRole();
-const { isRtwRequired, fetchRtwStatus } = useRtw();
-const showRtwModal = ref(false);
-
-watch(isRtwRequired, (required) => {
-  if (required) showRtwModal.value = true;
-}, { immediate: true });
 
 const jobs = ref<any[]>([]);
 const applications = ref<any[]>([]);
@@ -188,7 +178,6 @@ watch(role, () => {
 });
 
 onMounted(() => {
-  fetchRtwStatus();
   loadData();
 });
 
@@ -217,12 +206,6 @@ const formatCurrency = (amount: number, currency: string) =>
     currency: currency || 'GBP'
   }).format(amount || 0);
 
-const onRtwVerified = () => {
-  showRtwModal.value = false;
-  loadData();
-};
-
-
 // Refresh data when navigating back to dashboard
 onActivated(() => {
   loadData();
@@ -238,7 +221,7 @@ onActivated(() => {
 
 .dashboard-page__grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
   gap: var(--space-5);
 }
 

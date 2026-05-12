@@ -6,7 +6,7 @@
         <div class="rtw-modal__icon">🪪</div>
         <h2 id="rtw-title" class="rtw-modal__title">Verify your right to work</h2>
         <p class="rtw-modal__subtitle">
-          Before you can apply to jobs on ChoreShore, you need to verify your UK right to work using your Home Office share code.
+          Verify your UK right to work using your Home Office share code. This is optional and earns you a verified badge to stand out to employers.
         </p>
       </header>
 

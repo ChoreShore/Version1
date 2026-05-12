@@ -2,7 +2,7 @@
   <div v-if="isWorker" class="rtw-settings">
     <header class="rtw-settings__header">
       <h2>Right to work</h2>
-      <p class="rtw-settings__subtitle">Verify your UK right to work to apply for jobs.</p>
+      <p class="rtw-settings__subtitle">Optional: verify your UK right to work to earn a verified badge and stand out to employers.</p>
     </header>
 
     <div class="rtw-settings__body">

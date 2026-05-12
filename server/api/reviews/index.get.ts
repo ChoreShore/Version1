@@ -1,7 +1,7 @@
 import { serverSupabaseClient, serverSupabaseUser } from '#supabase/server';
 import { ReviewsResponseSchema } from '~/schemas/review';
 import { mapReview, reviewSelect } from './utils';
-import { handleSupabaseAuthErrors } from '~/server/utils/api';
+import { rethrowIfAuthError } from '~/server/utils/api';
 
 export default defineEventHandler(async (event) => {
   try {
@@ -43,7 +43,7 @@ export default defineEventHandler(async (event) => {
       return response;
     }
   } catch (error: any) {
-    handleSupabaseAuthErrors(error);
+    rethrowIfAuthError(error);
     throw error;
   }
 });

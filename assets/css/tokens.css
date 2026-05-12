@@ -1,41 +1,92 @@
 :root {
   color-scheme: light;
 
-  /* Brand palette */
-  --color-primary-100: #e6f0ff;
-  --color-primary-200: #c3d9ff;
-  --color-primary-300: #8fb4ff;
-  --color-primary-400: #5c8dff;
-  --color-primary-500: #3366ff;
-  --color-primary-600: #1f4dde;
-  --color-primary-700: #163bb0;
+  /* CORE BRAND (REFINED PALETTE) */
+  --teal: #14453D;
+  --mint: #E8F3F1;
+  --terracotta: #D4745E;
 
-  /* Semantic colors */
-  --color-success: #0f9d58;
-  --color-success-light: #d1f4e0;
-  --color-warning: #f59e0b;
-  --color-warning-light: #fef3c7;
-  --color-danger: #d93025;
-  --color-danger-light: #fecaca;
+  /* SUPPORTING COLORS */
+  --dark: #1A1A1A;
+  --grey: #666666;
+  --white: #ffffff;
 
-  /* Surfaces & content */
-  --color-bg: #f5f6f8;
-  --color-surface: #ffffff;
-  --color-surface-muted: #f0f2f5;
-  --color-border: #dde1e7;
-  --color-text: #111827;
-  --color-text-muted: #4b5563;
-  --color-text-subtle: #6b7280;
+  /* SYSTEM COLORS (SEO + UX OPTIMISED) */
+  --bg: #F7FAF9;
+  --surface: #ffffff;
+  --hover: #F0F7F5;
+  --border: #E5E7EB;
+
+  /* TEXT SYSTEM */
+  --text: #1A1A1A;
+  --muted: #6B7280;
+
+  /* ACTION COLORS */
+  --primary: var(--teal);
+  --accent: var(--terracotta);
+  --success: #2E7D6B;
+
+  /* UI */
+  --shadow: 0 8px 22px rgba(0, 0, 0, 0.08);
+  --shadow-hover: 0 12px 28px rgba(0, 0, 0, 0.10);
+
+  /* Backward-compatible aliases for existing components */
+  --color-primary-100: var(--mint);
+  --color-primary-200: #d0e8e3;
+  --color-primary-300: #a3d4ca;
+  --color-primary-400: #5c9d90;
+  --color-primary-500: var(--success);
+  --color-primary-600: var(--teal);
+  --color-primary-700: #0f342e;
+
+  --color-primary: var(--teal);
+  --color-success: var(--success);
+  --color-success-light: var(--mint);
+  --color-warning: var(--terracotta);
+  --color-warning-light: #fce8e2;
+  --color-danger: #c0392b;
+  --color-danger-light: #f9d6d3;
+
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-surface-muted: var(--hover);
+  --color-border: var(--border);
+  --color-text: var(--text);
+  --color-text-muted: var(--muted);
+  --color-text-subtle: var(--muted);
+
+  /* Extended aliases for auth pages and other components */
+  --color-primary-50: #f4faf8;
+  --color-secondary-50: #fdf8f6;
+  --color-gray-900: var(--text);
+  --color-gray-600: var(--muted);
+  --color-gray-300: var(--border);
+  --color-gray-200: var(--border);
+  --color-error-50: #fef2f2;
+  --color-error-200: #fecaca;
+  --color-error-500: #ef4444;
+  --color-error-700: #b91c1c;
+  --color-success-50: #f0fdf4;
+  --color-success-200: #bbf7d0;
+  --color-success-600: var(--success);
+  --color-success-700: #145c4e;
+
+  --radius-xl: 20px;
+  --ease-out: cubic-bezier(0.4, 0, 0.2, 1);
+  --font-bold: 700;
+  --font-semibold: 600;
+  --text-3xl: 1.875rem;
 
   /* Radii */
   --radius-sm: 6px;
   --radius-md: 10px;
-  --radius-lg: 18px;
+  --radius-lg: 16px;
   --radius-pill: 999px;
 
   /* Shadows */
-  --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.08);
-  --shadow-md: 0 8px 30px rgba(15, 23, 42, 0.08);
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.06);
+  --shadow-md: var(--shadow);
+  --shadow-xl: 0 20px 40px rgba(0, 0, 0, 0.12);
 
   /* Spacing scale (4px base) */
   --space-1: 4px;
@@ -49,8 +100,8 @@
   --space-12: 48px;
 
   /* Typography */
-  --font-sans: 'Inter', 'Space Grotesk', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-  --font-mono: 'JetBrains Mono', 'SFMono-Regular', ui-monospace, Menlo, Consolas, monospace;
+  --font-sans: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+  --font-mono: 'SFMono-Regular', ui-monospace, Menlo, Consolas, monospace;
   --text-xs: 0.75rem;
   --text-sm: 0.875rem;
   --text-base: 1rem;
@@ -59,27 +110,30 @@
   --text-2xl: 1.5rem;
 
   /* Focus ring */
-  --focus-ring-color: rgba(51, 102, 255, 0.4);
+  --focus-ring-color: rgba(20, 69, 61, 0.35);
   --focus-ring: 0 0 0 3px var(--focus-ring-color);
 }
 
 * {
+  margin: 0;
+  padding: 0;
   box-sizing: border-box;
 }
 
 html,
 body {
-  padding: 0;
-  margin: 0;
   font-family: var(--font-sans);
-  color: var(--color-text);
-  background-color: var(--color-bg);
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.5;
   min-height: 100%;
   -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
 }
 
 body {
-  line-height: 1.6;
+  word-break: break-word;
+  overflow-wrap: anywhere;
 }
 
 img,
@@ -104,7 +158,7 @@ textarea {
 .job-form input,
 .job-form select {
   width: 100%;
-  border: 1px solid var(--color-border);
+  border: 1px solid var(--border);
   border-radius: var(--radius-lg);
   padding: 12px 14px;
   background: white;
@@ -121,8 +175,8 @@ textarea {
 .job-form input:focus,
 .job-form select:focus {
   outline: none;
-  border-color: var(--color-primary-500);
-  box-shadow: 0 0 0 3px var(--color-primary-100);
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px var(--mint);
 }
 
 button {
@@ -135,7 +189,7 @@ button {
 }
 
 ::selection {
-  background-color: rgba(51, 102, 255, 0.2);
+  background-color: rgba(20, 69, 61, 0.15);
 }
 
 .sr-only {

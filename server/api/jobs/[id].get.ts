@@ -1,6 +1,6 @@
 import { serverSupabaseClient, serverSupabaseUser } from '#supabase/server';
 import { JobResponseSchema } from '~/schemas/job';
-import { assertValidUuid, ensureAuthenticated, handleSupabaseAuthErrors, ensureJobOwner } from '~/server/utils/api';
+import { assertValidUuid, ensureAuthenticated, rethrowIfAuthError, ensureJobOwner } from '~/server/utils/api';
 
 export default defineEventHandler(async (event) => {
   try {
@@ -52,7 +52,7 @@ export default defineEventHandler(async (event) => {
       throw createError({ statusCode: 500, statusMessage: 'Invalid response format' });
     }
   } catch (error: any) {
-    handleSupabaseAuthErrors(error);
+    rethrowIfAuthError(error);
     throw error;
   }
 });

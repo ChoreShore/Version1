@@ -33,11 +33,11 @@ withDefaults(
 
 <style scoped>
 .empty-state {
-  border: 1px dashed var(--color-border);
+  border: 1px dashed var(--border);
   border-radius: var(--radius-lg);
   padding: var(--space-10) var(--space-6);
   text-align: center;
-  background: var(--color-surface);
+  background: var(--surface);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -48,7 +48,7 @@ withDefaults(
   width: 72px;
   height: 72px;
   border-radius: 50%;
-  background: var(--color-surface-muted);
+  background: var(--hover);
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -60,7 +60,7 @@ withDefaults(
   text-transform: uppercase;
   letter-spacing: 0.08em;
   font-size: var(--text-xs);
-  color: var(--color-text-muted);
+  color: var(--muted);
 }
 
 .empty-state__title {
@@ -70,7 +70,7 @@ withDefaults(
 
 .empty-state__description {
   margin: 0;
-  color: var(--color-text-subtle);
+  color: var(--muted);
   max-width: 36ch;
 }
 

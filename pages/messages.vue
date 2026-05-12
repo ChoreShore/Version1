@@ -378,9 +378,16 @@ onUnmounted(() => {
 <style scoped>
 .messages-page {
   display: grid;
-  grid-template-columns: minmax(280px, 360px) 1fr;
-  gap: var(--space-5);
+  grid-template-columns: 1fr;
+  gap: var(--space-4);
   min-height: calc(100vh - 180px);
+}
+
+@media (min-width: 900px) {
+  .messages-page {
+    grid-template-columns: minmax(260px, 320px) 1fr;
+    gap: var(--space-5);
+  }
 }
 
 .messages-page__sidebar {
@@ -509,9 +516,4 @@ onUnmounted(() => {
   color: var(--color-error);
 }
 
-@media (max-width: 900px) {
-  .messages-page {
-    grid-template-columns: 1fr;
-  }
-}
 </style>

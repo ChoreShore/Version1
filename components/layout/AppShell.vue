@@ -63,7 +63,8 @@ defineExpose({ openSidebar, closeSidebar, toggleSidebar });
   position: relative;
   display: flex;
   min-height: 100vh;
-  background-color: var(--color-bg);
+  background-color: var(--bg);
+  overflow-x: hidden;
 }
 
 .app-shell__mobile-toggle {
@@ -78,8 +79,8 @@ defineExpose({ openSidebar, closeSidebar, toggleSidebar });
   height: 44px;
   padding: 10px;
   border-radius: var(--radius-md);
-  border: 1px solid var(--color-border);
-  background-color: var(--color-surface);
+  border: 1px solid var(--border);
+  background-color: var(--surface);
   box-shadow: var(--shadow-sm);
   justify-content: center;
   align-items: center;
@@ -88,7 +89,7 @@ defineExpose({ openSidebar, closeSidebar, toggleSidebar });
 .app-shell__mobile-toggle span {
   width: 100%;
   height: 2px;
-  background-color: var(--color-text);
+  background-color: var(--text);
 }
 
 .app-shell__sidebar {
@@ -98,8 +99,8 @@ defineExpose({ openSidebar, closeSidebar, toggleSidebar });
   bottom: 0;
   width: 280px;
   padding: var(--space-6) var(--space-4);
-  background-color: var(--color-surface);
-  border-right: 1px solid var(--color-border);
+  background-color: var(--surface);
+  border-right: 1px solid var(--border);
   overflow-y: auto;
   transform: translateX(-100%);
   transition: transform 200ms cubic-bezier(0.4, 0, 0.2, 1);
@@ -115,6 +116,7 @@ defineExpose({ openSidebar, closeSidebar, toggleSidebar });
   display: flex;
   flex-direction: column;
   width: 100%;
+  min-width: 0;
   min-height: 100vh;
   padding-top: 72px;
 }
@@ -123,19 +125,26 @@ defineExpose({ openSidebar, closeSidebar, toggleSidebar });
   position: sticky;
   top: 0;
   z-index: 40;
-  background-color: rgba(255, 255, 255, 0.8);
+  background-color: rgba(255, 255, 255, 0.85);
   backdrop-filter: blur(12px);
-  border-bottom: 1px solid var(--color-border);
+  border-bottom: 1px solid var(--border);
 }
 
 .app-shell__main {
-  padding: var(--space-6);
+  padding: var(--space-4);
+  min-width: 0;
+}
+
+@media (min-width: 768px) {
+  .app-shell__main {
+    padding: var(--space-6);
+  }
 }
 
 .app-shell__scrim {
   position: fixed;
   inset: 0;
-  background-color: rgba(15, 23, 42, 0.45);
+  background-color: rgba(26, 26, 26, 0.35);
   z-index: 40;
 }
 

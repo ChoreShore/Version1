@@ -2,24 +2,8 @@ import { serverSupabaseClient, serverSupabaseUser } from '#supabase/server';
 import type { JobsQueryInput } from '~/schemas/job';
 import { JobsResponseSchema, JobsQuerySchema } from '~/schemas/job';
 import { fetchPreviewJobs } from '~/server/utils/preview';
-import { handleSupabaseAuthErrors } from '~/server/utils/api';
-
-function hasEmployerRole(roles: unknown): boolean {
-  if (Array.isArray(roles)) {
-    return roles.includes('employer');
-  }
-
-  if (roles && typeof roles === 'object') {
-    const values = Object.values(roles as Record<string, unknown>);
-    return values.includes('employer') || (roles as Record<string, unknown>).employer === true;
-  }
-
-  if (typeof roles === 'string') {
-    const normalized = roles.replace(/[{}]/g, '');
-    return normalized === 'employer' || normalized.split(',').map(r => r.trim()).includes('employer');
-  }
-  return false;
-}
+import { rethrowIfAuthError } from '~/server/utils/api';
+import { hasRole } from '~/server/utils/roles';
 
 export default defineEventHandler(async (event) => {
   try {
@@ -38,7 +22,7 @@ export default defineEventHandler(async (event) => {
       .eq('id', user.id)
       .single();
 
-    const isEmployer = hasEmployerRole(profile?.roles);
+    const isEmployer = hasRole(profile?.roles, 'employer');
 
     const limit = query.limit ? parseInt(query.limit, 10) : 20;
     let builder = client
@@ -106,7 +90,7 @@ export default defineEventHandler(async (event) => {
       throw createError({ statusCode: 500, statusMessage: 'Invalid response format' });
     }
   } catch (error: any) {
-    handleSupabaseAuthErrors(error);
+    rethrowIfAuthError(error);
 
     if (error.statusCode) {
       throw error;

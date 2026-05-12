@@ -9,6 +9,7 @@
       </div>
       <div class="job-card__status-group">
         <StatusPill v-if="job.has_applied" label="Applied" variant="success" />
+        <StatusPill v-if="job.distance_km !== undefined" :label="`${job.distance_km.toFixed(1)} km`" variant="info" />
         <StatusPill :label="statusLabel" :variant="statusVariant" />
       </div>
     </header>
@@ -45,7 +46,7 @@ import type { JobWithDetailsInput } from '~/schemas/job';
 import InfoBadge from '~/components/primitives/InfoBadge.vue';
 import StatusPill from '~/components/primitives/StatusPill.vue';
 
-const props = defineProps<{ job: JobWithDetailsInput & { application_count?: number; has_applied?: boolean } }>();
+const props = defineProps<{ job: JobWithDetailsInput & { application_count?: number; has_applied?: boolean; distance_km?: number } }>();
 
 const statusVariantMap: Record<string, 'neutral' | 'info' | 'success' | 'warning'> = {
   draft: 'neutral',
@@ -70,14 +71,35 @@ const deadlineDisplay = computed(() => new Date(props.job.deadline).toLocaleDate
 
 <style scoped>
 .job-card {
-  border: 1px solid var(--color-border);
+  background: var(--surface);
+  border: 1px solid var(--border);
   border-radius: var(--radius-lg);
   padding: var(--space-5);
-  background: var(--color-surface);
-  box-shadow: var(--shadow-sm);
+  box-shadow: var(--shadow);
+  transition: all 0.25s ease;
+  position: relative;
+  overflow: hidden;
   display: flex;
   flex-direction: column;
   gap: var(--space-4);
+}
+
+.job-card::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 3px;
+  width: 100%;
+  background: linear-gradient(90deg, var(--primary), var(--accent));
+  opacity: 0.8;
+}
+
+.job-card:hover,
+.job-card:focus-within {
+  transform: translateY(-4px);
+  background: #fbfcfc;
+  box-shadow: var(--shadow-hover);
 }
 
 .job-card__header {
@@ -99,12 +121,15 @@ const deadlineDisplay = computed(() => new Date(props.job.deadline).toLocaleDate
   font-size: var(--text-xs);
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: var(--color-text-subtle);
+  color: var(--muted);
 }
 
 .job-card__title {
   margin: 0;
   font-size: var(--text-lg);
+  font-weight: 650;
+  color: var(--text);
+  line-height: 1.3;
 }
 
 .job-card__title a {
@@ -114,7 +139,7 @@ const deadlineDisplay = computed(() => new Date(props.job.deadline).toLocaleDate
 
 .job-card__description {
   margin: 0;
-  color: var(--color-text-muted);
+  color: var(--muted);
 }
 
 .job-card__meta {
@@ -128,12 +153,13 @@ const deadlineDisplay = computed(() => new Date(props.job.deadline).toLocaleDate
   font-size: var(--text-xs);
   text-transform: uppercase;
   letter-spacing: 0.08em;
-  color: var(--color-text-subtle);
+  color: var(--muted);
 }
 
 .job-card__meta dd {
   margin: 0;
   font-weight: 600;
+  color: var(--text);
 }
 
 .job-card__footer {

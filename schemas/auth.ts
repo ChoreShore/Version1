@@ -41,7 +41,11 @@ export const SignUpFormSchema = z.object({
     .min(1, 'Phone number is required')
     .max(20, 'Phone number must be less than 20 characters')
     .trim()
-    .optional()
+    .optional(),
+
+  role: z.enum(['employer', 'worker'], {
+    message: 'Role is required'
+  })
 }).refine((data) => data.password === data.confirmPassword, {
   message: "Passwords don't match",
   path: ["confirmPassword"]

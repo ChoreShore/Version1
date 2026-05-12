@@ -2,6 +2,7 @@ import { PasswordResetSchema } from '~/schemas/auth';
 import { validatePasswordReset } from '~/schemas/auth';
 import { serverSupabaseClient } from '#supabase/server';
 import { rateLimiters } from '~/server/utils/rateLimit';
+import { rethrowIfAuthError } from '~/server/utils/api';
 
 export default defineEventHandler(async (event) => {
   try {
@@ -31,7 +32,7 @@ export default defineEventHandler(async (event) => {
 
     return { success: true };
   } catch (error: any) {
-    handleSupabaseAuthErrors(error);
+    rethrowIfAuthError(error);
     throw error;
   }
 });

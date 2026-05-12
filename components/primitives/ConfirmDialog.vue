@@ -78,7 +78,8 @@ const handleOverlayClick = () => {
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0, 0, 0, 0.5);
+  background: rgba(26, 26, 26, 0.35);
+  backdrop-filter: blur(4px);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -87,24 +88,24 @@ const handleOverlayClick = () => {
 }
 
 .confirm-dialog {
-  background: var(--color-surface);
+  background: var(--surface);
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-xl);
   max-width: 500px;
   width: 100%;
-  animation: modalIn 200ms var(--ease-out);
+  animation: modalIn 200ms ease-out;
 }
 
 .confirm-dialog__header {
   padding: var(--space-6) var(--space-6) var(--space-4);
-  border-bottom: 1px solid var(--color-border);
+  border-bottom: 1px solid var(--border);
 }
 
 .confirm-dialog__title {
   margin: 0;
   font-size: var(--text-lg);
-  font-weight: var(--font-semibold);
-  color: var(--color-text);
+  font-weight: 600;
+  color: var(--text);
 }
 
 .confirm-dialog__body {
@@ -113,7 +114,7 @@ const handleOverlayClick = () => {
 
 .confirm-dialog__message {
   margin: 0;
-  color: var(--color-text-muted);
+  color: var(--muted);
   line-height: 1.5;
 }
 
@@ -122,42 +123,42 @@ const handleOverlayClick = () => {
   display: flex;
   gap: var(--space-3);
   justify-content: flex-end;
-  border-top: 1px solid var(--color-border);
+  border-top: 1px solid var(--border);
 }
 
 .confirm-dialog__button {
   padding: var(--space-3) var(--space-4);
   border-radius: var(--radius-md);
-  font-weight: var(--font-medium);
+  font-weight: 500;
   font-size: var(--text-sm);
   cursor: pointer;
-  transition: all 150ms var(--ease-out);
+  transition: all 150ms ease;
   border: none;
 }
 
 .confirm-dialog__button--cancel {
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
-  color: var(--color-text);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  color: var(--text);
 }
 
 .confirm-dialog__button--cancel:hover {
-  background: var(--color-surface-muted);
+  background: var(--hover);
 }
 
 .confirm-dialog__button--confirm {
-  background: var(--color-primary-600);
+  background: var(--teal);
   color: white;
 }
 
 .confirm-dialog__button--confirm:hover {
-  background: var(--color-primary-700);
+  background: var(--success);
 }
 
 /* Modal transition */
 .modal-enter-active,
 .modal-leave-active {
-  transition: opacity 200ms var(--ease-out);
+  transition: opacity 200ms ease-out;
 }
 
 .modal-enter-from,
@@ -177,10 +178,14 @@ const handleOverlayClick = () => {
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .confirm-dialog-overlay {
+    backdrop-filter: none;
+  }
+
   .confirm-dialog {
     animation: none;
   }
-  
+
   .modal-enter-active,
   .modal-leave-active {
     transition: none;

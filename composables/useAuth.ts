@@ -1,49 +1,82 @@
 import type { SignUpInput, SignInInput, Role, UpdatePasswordInput, DeleteAccountInput } from '~/schemas/auth';
 
+function normalizeFetchError(error: any): never {
+  const message = error?.statusMessage || error?.message || 'Something went wrong';
+  throw new Error(message);
+}
+
 export const useAuth = () => {
   const user = useSupabaseUser();
 
   const signup = async (payload: SignUpInput) => {
-    await $fetch('/api/auth/signup', { method: 'POST', body: payload });
+    try {
+      await $fetch('/api/auth/signup', { method: 'POST', body: payload });
+    } catch (error) {
+      normalizeFetchError(error);
+    }
   };
 
   const signin = async (payload: SignInInput) => {
-    await $fetch('/api/auth/signin', { method: 'POST', body: payload });
+    try {
+      await $fetch('/api/auth/signin', { method: 'POST', body: payload });
+    } catch (error) {
+      normalizeFetchError(error);
+    }
   };
 
   const addRole = async (role: Role) => {
-    const data = await $fetch<{ roles: Role[] }>(
-      '/api/auth/add-role',
-      { method: 'POST', body: { role } }
-    );
-    return data.roles;
+    try {
+      const data = await $fetch<{ roles: Role[] }>(
+        '/api/auth/add-role',
+        { method: 'POST', body: { role } }
+      );
+      return data.roles;
+    } catch (error) {
+      normalizeFetchError(error);
+    }
   };
 
   const resetPassword = async (email: string) => {
-    await $fetch('/api/auth/reset-password', {
-      method: 'POST',
-      body: { email }
-    });
+    try {
+      await $fetch('/api/auth/reset-password', {
+        method: 'POST',
+        body: { email }
+      });
+    } catch (error) {
+      normalizeFetchError(error);
+    }
   };
 
   const updatePassword = async (payload: UpdatePasswordInput) => {
-    const data = await $fetch<{ success: boolean; message: string }>(
-      '/api/auth/update-password',
-      { method: 'POST', body: payload }
-    );
-    return data;
+    try {
+      const data = await $fetch<{ success: boolean; message: string }>(
+        '/api/auth/update-password',
+        { method: 'POST', body: payload }
+      );
+      return data;
+    } catch (error) {
+      normalizeFetchError(error);
+    }
   };
 
   const deleteAccount = async (payload: DeleteAccountInput) => {
-    const data = await $fetch<{ success: boolean; message: string }>(
-      '/api/auth/delete-account',
-      { method: 'DELETE', body: payload }
-    );
-    return data;
+    try {
+      const data = await $fetch<{ success: boolean; message: string }>(
+        '/api/auth/delete-account',
+        { method: 'DELETE', body: payload }
+      );
+      return data;
+    } catch (error) {
+      normalizeFetchError(error);
+    }
   };
 
   const signout = async () => {
-    await $fetch('/api/auth/signout', { method: 'POST' });
+    try {
+      await $fetch('/api/auth/signout', { method: 'POST' });
+    } catch (error) {
+      normalizeFetchError(error);
+    }
   };
 
   return { user, signup, signin, addRole, resetPassword, updatePassword, deleteAccount, signout };

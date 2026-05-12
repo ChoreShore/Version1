@@ -1,5 +1,5 @@
 import { serverSupabaseClient, serverSupabaseUser } from '#supabase/server';
-import { ensureAuthenticated, assertValidUuid, handleSupabaseAuthErrors, ensureContractParticipant } from '~/server/utils/api';
+import { ensureAuthenticated, assertValidUuid, rethrowIfAuthError, ensureContractParticipant } from '~/server/utils/api';
 
 export default defineEventHandler(async (event) => {
   try {
@@ -46,7 +46,7 @@ export default defineEventHandler(async (event) => {
       }
     };
   } catch (error: any) {
-    handleSupabaseAuthErrors(error);
+    rethrowIfAuthError(error);
     throw error;
   }
 });

@@ -104,6 +104,26 @@
               <FormError v-if="errors.last_name">{{ errors.last_name }}</FormError>
             </FormField>
 
+            <!-- Role Field -->
+            <FormField id="role" :error="errors.role" :state="errors.role ? 'error' : 'default'">
+              <FormLabel for="role">I want to</FormLabel>
+              <FormControl>
+                <select
+                  id="role"
+                  v-model="form.role"
+                  class="form-select"
+                  :disabled="loading"
+                  required
+                  @blur="validateField('role')"
+                >
+                  <option value="" disabled>Select a role</option>
+                  <option value="employer">Hire talent (Employer)</option>
+                  <option value="worker">Find work (Worker)</option>
+                </select>
+              </FormControl>
+              <FormError v-if="errors.role">{{ errors.role }}</FormError>
+            </FormField>
+
             <!-- Submit Button -->
             <button class="auth-form__submit" type="submit" :disabled="loading || !canSubmit">
               <LoadingSkeleton v-if="loading" variant="text" width="100%" height="16px" />
@@ -167,14 +187,15 @@ const router = useRouter();
 const auth = useAuth();
 
 // Form state
-const form = reactive<SignUpFormInput>({
+const form = reactive({
   email: '',
   password: '',
   confirmPassword: '',
   first_name: '',
   last_name: '',
-  phone: ''
-});
+  phone: '',
+  role: ''
+}) as unknown as SignUpFormInput;
 
 const errors = reactive<Record<string, string>>({});
 const loading = ref(false);
@@ -214,8 +235,8 @@ const validateField = (field: keyof SignUpFormInput) => {
     const password = fieldValue as string;
     if (password.length < 8) {
       errors[field] = 'Password must be at least 8 characters';
-    } else if (!/(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]/.test(password)) {
-      errors[field] = 'Password must contain uppercase, lowercase, number, and special character';
+    } else if (!/(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/.test(password)) {
+      errors[field] = 'Password must contain at least one uppercase letter, one lowercase letter, and one number';
     }
   }
 
@@ -228,6 +249,12 @@ const validateField = (field: keyof SignUpFormInput) => {
   if (field === 'first_name' || field === 'last_name') {
     if ((fieldValue as string).length < 2) {
       errors[field] = `${field === 'first_name' ? 'First' : 'Last'} name must be at least 2 characters`;
+    }
+  }
+
+  if (field === 'role') {
+    if (!fieldValue || !['employer', 'worker'].includes(fieldValue as string)) {
+      errors[field] = 'Please select a role';
     }
   }
 
@@ -281,7 +308,7 @@ const handleSubmit = async () => {
       password: form.password,
       first_name: form.first_name,
       last_name: form.last_name,
-      role: 'employer',
+      role: form.role,
       phone: form.phone || undefined
     };
 
@@ -315,7 +342,8 @@ const handleFormReset = () => {
     confirmPassword: '',
     first_name: '',
     last_name: '',
-    phone: ''
+    phone: '',
+    role: ''
   });
   Object.keys(errors).forEach(key => delete errors[key]);
   submitError.value = '';

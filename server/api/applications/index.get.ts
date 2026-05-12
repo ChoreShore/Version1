@@ -1,16 +1,7 @@
 import { serverSupabaseClient, serverSupabaseUser } from '#supabase/server';
 import { ApplicationsResponseSchema } from '~/schemas/application';
-import { handleSupabaseAuthErrors } from '~/server/utils/api';
-
-function hasEmployerRole(roles: unknown): boolean {
-  if (Array.isArray(roles)) {
-    return roles.includes('employer');
-  }
-  if (typeof roles === 'string') {
-    return roles === 'employer' || roles.split(',').map(r => r.trim()).includes('employer');
-  }
-  return false;
-}
+import { rethrowIfAuthError } from '~/server/utils/api';
+import { hasRole } from '~/server/utils/roles';
 
 export default defineEventHandler(async (event) => {
   try {
@@ -32,7 +23,7 @@ export default defineEventHandler(async (event) => {
       .eq('id', user.id)
       .single();
 
-    const isEmployer = hasEmployerRole(profile?.roles);
+    const isEmployer = hasRole(profile?.roles, 'employer');
 
     let data, error;
 
@@ -98,7 +89,7 @@ export default defineEventHandler(async (event) => {
       return response;
     }
   } catch (error: any) {
-    handleSupabaseAuthErrors(error);
+    rethrowIfAuthError(error);
     throw error;
   }
 });

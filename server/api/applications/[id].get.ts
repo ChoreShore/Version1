@@ -1,6 +1,6 @@
 import { serverSupabaseClient, serverSupabaseUser } from '#supabase/server';
 import { ApplicationResponseSchema } from '~/schemas/application';
-import { handleSupabaseAuthErrors, ensureAuthenticated, ensureApplicationOwner, ensureJobEmployer } from '~/server/utils/api';
+import { rethrowIfAuthError, ensureAuthenticated, ensureApplicationOwner, ensureJobEmployer } from '~/server/utils/api';
 
 export default defineEventHandler(async (event) => {
   try {
@@ -91,7 +91,7 @@ export default defineEventHandler(async (event) => {
       return response;
     }
   } catch (error: any) {
-    handleSupabaseAuthErrors(error);
+    rethrowIfAuthError(error);
     throw error;
   }
 });

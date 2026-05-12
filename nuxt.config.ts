@@ -22,7 +22,7 @@ export default defineNuxtConfig({
         'X-Frame-Options': 'DENY',
         'X-Content-Type-Options': 'nosniff',
         'Referrer-Policy': 'strict-origin-when-cross-origin',
-        'Permissions-Policy': 'geolocation=(), microphone=(), camera=(), payment=()'
+        'Permissions-Policy': 'geolocation=(self), microphone=(), camera=(), payment=()'
       }
     }
   },

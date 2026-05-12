@@ -10,7 +10,7 @@ export interface UuidValidationOptions {
   invalidMessage?: string;
 }
 
-export function handleSupabaseAuthErrors(error: any): void {
+export function rethrowIfAuthError(error: any): void {
   if (
     error?.statusCode === 500 ||
     error?.statusCode === 401 ||
@@ -19,6 +19,11 @@ export function handleSupabaseAuthErrors(error: any): void {
   ) {
     throw createError({ statusCode: 401, statusMessage: 'Auth session missing!' });
   }
+}
+
+/** @deprecated Use rethrowIfAuthError instead */
+export function handleSupabaseAuthErrors(error: any): void {
+  rethrowIfAuthError(error);
 }
 
 export function ensureAuthenticated<T>(user: T | null | undefined, message = 'Sign in to continue'): NonNullable<T> {

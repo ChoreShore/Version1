@@ -1,6 +1,6 @@
 import { serverSupabaseClient, serverSupabaseUser } from '#supabase/server';
 import { validateCreateMessage, MessageResponseSchema } from '~/schemas/message';
-import { handleSupabaseAuthErrors, ensureAuthenticated, ensureMessageParticipant } from '~/server/utils/api';
+import { rethrowIfAuthError, ensureAuthenticated, ensureMessageParticipant } from '~/server/utils/api';
 
 // Simple in-memory rate limiter (for production, use Redis-backed rate limiting)
 const rateLimitStore = new Map<string, number[]>();
@@ -107,6 +107,13 @@ export default defineEventHandler(async (event) => {
     const receiverIsWorker = application.worker_id === validatedData.receiver_id;
     const receiverIsEmployer = job.employer_id === validatedData.receiver_id;
 
+    if (!isWorker && !isEmployer) {
+      throw createError({
+        statusCode: 403,
+        statusMessage: 'You are not authorized to send messages for this application'
+      });
+    }
+
     if (!receiverIsWorker && !receiverIsEmployer) {
       throw createError({
         statusCode: 403,
@@ -140,7 +147,8 @@ export default defineEventHandler(async (event) => {
         try {
           return MessageResponseSchema.parse(response);
         } catch (validationError) {
-          return response;
+          console.error('Response validation failed:', validationError);
+          throw createError({ statusCode: 500, statusMessage: 'Invalid response format' });
         }
       }
     }
@@ -173,11 +181,11 @@ export default defineEventHandler(async (event) => {
     try {
       return MessageResponseSchema.parse(response);
     } catch (validationError) {
-      // Return unvalidated response to prevent breaking the application
-      return response;
+      console.error('Response validation failed:', validationError);
+      throw createError({ statusCode: 500, statusMessage: 'Invalid response format' });
     }
   } catch (error: any) {
-    handleSupabaseAuthErrors(error);
+    rethrowIfAuthError(error);
     throw error;
   }
 });

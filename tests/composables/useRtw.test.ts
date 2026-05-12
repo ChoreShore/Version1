@@ -222,40 +222,21 @@ describe('useRtw composable', () => {
   });
 
   describe('isRtwRequired', () => {
-    it('is true when worker role and status is unverified', async () => {
+    it('is always false because RTW is optional', async () => {
       const { useRtw } = await import('~/composables/useRtw');
-      const { isRtwRequired, rtwStatus, resetRtwCache } = useRtw();
+      const { isRtwRequired, rtwStatus, rtwExpiryDate, resetRtwCache } = useRtw();
 
       resetRtwCache();
       rtwStatus.value = 'unverified';
-
-      expect(isRtwRequired.value).toBe(true);
-    });
-
-    it('is false when status is verified and not expired', async () => {
-      const futureDate = new Date();
-      futureDate.setFullYear(futureDate.getFullYear() + 2);
-      const futureDateStr = futureDate.toISOString().split('T')[0];
-
-      const { useRtw } = await import('~/composables/useRtw');
-      const { isRtwRequired, rtwStatus, rtwExpiryDate, resetRtwCache } = useRtw();
-
-      resetRtwCache();
-      rtwStatus.value = 'verified';
-      rtwExpiryDate.value = futureDateStr;
-
       expect(isRtwRequired.value).toBe(false);
-    });
 
-    it('is true when status is verified but expiry date has passed', async () => {
-      const { useRtw } = await import('~/composables/useRtw');
-      const { isRtwRequired, rtwStatus, rtwExpiryDate, resetRtwCache } = useRtw();
+      rtwStatus.value = 'verified';
+      rtwExpiryDate.value = '2099-01-01';
+      expect(isRtwRequired.value).toBe(false);
 
-      resetRtwCache();
       rtwStatus.value = 'verified';
       rtwExpiryDate.value = '2020-01-01';
-
-      expect(isRtwRequired.value).toBe(true);
+      expect(isRtwRequired.value).toBe(false);
     });
   });
 

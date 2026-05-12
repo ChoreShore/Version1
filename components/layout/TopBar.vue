@@ -20,6 +20,7 @@
   align-items: center;
   padding: var(--space-4) var(--space-6);
   min-height: 72px;
+  min-width: 0;
 }
 
 .top-bar__left,
@@ -28,6 +29,7 @@
   display: flex;
   align-items: center;
   gap: var(--space-3);
+  min-width: 0;
 }
 
 .top-bar__center {
@@ -40,15 +42,12 @@
 
 @media (max-width: 768px) {
   .top-bar {
-    grid-template-columns: 1fr auto;
+    grid-template-columns: minmax(min-content, 1fr) auto;
     grid-template-areas:
       'left actions'
       'center center';
     row-gap: var(--space-3);
-  }
-
-  .top-bar__left {
-    grid-area: left;
+    padding: var(--space-3) var(--space-4);
   }
 
   .top-bar__center {
@@ -58,6 +57,7 @@
 
   .top-bar__right {
     grid-area: actions;
+    flex-wrap: wrap;
   }
 }
 </style>

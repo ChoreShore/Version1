@@ -17,9 +17,7 @@ export const useRtw = () => {
     return new Date(rtwExpiryDate.value) < new Date();
   });
 
-  const isRtwRequired = computed(
-    () => isWorker.value && (rtwStatus.value !== 'verified' || isExpired.value)
-  );
+  const isRtwRequired = computed(() => false);
 
   const fetchRtwStatus = async () => {
     if (!user.value || rtwFetched.value) return;

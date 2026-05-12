@@ -26,27 +26,27 @@ withDefaults(
   border-radius: var(--radius-pill);
   font-size: var(--text-xs);
   font-weight: 600;
-  background-color: var(--color-surface-muted);
-  color: var(--color-text);
+  background-color: var(--hover);
+  color: var(--text);
 }
 
 .variant-info {
-  background-color: var(--color-primary-100);
-  color: var(--color-primary-700);
+  background-color: var(--mint);
+  color: var(--teal);
 }
 
 .variant-success {
-  background-color: rgba(15, 157, 88, 0.12);
-  color: var(--color-success);
+  background-color: rgba(46, 125, 107, 0.12);
+  color: var(--success);
 }
 
 .variant-warning {
-  background-color: rgba(245, 158, 11, 0.15);
-  color: var(--color-warning);
+  background-color: rgba(212, 116, 94, 0.15);
+  color: var(--accent);
 }
 
 .variant-danger {
-  background-color: rgba(217, 48, 37, 0.12);
+  background-color: rgba(192, 57, 43, 0.12);
   color: var(--color-danger);
 }
 </style>

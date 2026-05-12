@@ -91,7 +91,7 @@ const isActive = (item: NavItem) => {
 
 .nav-sidebar__brand {
   padding-bottom: var(--space-4);
-  border-bottom: 1px solid var(--color-border);
+  border-bottom: 1px solid var(--border);
 }
 
 .nav-sidebar__brand-link {
@@ -106,24 +106,28 @@ const isActive = (item: NavItem) => {
   width: 40px;
   height: 40px;
   border-radius: var(--radius-lg);
-  background: var(--color-primary-100);
-  color: var(--color-primary-600);
+  background: linear-gradient(135deg, var(--teal), var(--accent));
+  color: white;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  font-weight: 600;
+  font-weight: 700;
+  font-size: var(--text-sm);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
 }
 
 .nav-sidebar__brand-title {
   margin: 0;
   font-size: var(--text-base);
-  font-weight: 600;
+  font-weight: 700;
+  color: var(--teal);
 }
 
 .nav-sidebar__brand-subtitle {
   margin: 0;
-  font-size: var(--text-sm);
-  color: var(--color-text-muted);
+  font-size: var(--text-xs);
+  color: var(--muted);
+  letter-spacing: 0.2px;
 }
 
 .nav-sidebar__list,
@@ -142,7 +146,7 @@ const isActive = (item: NavItem) => {
   gap: var(--space-3);
   padding: 10px 12px;
   border-radius: var(--radius-md);
-  color: var(--color-text);
+  color: var(--text);
   text-decoration: none;
   font-weight: 500;
   transition: background 120ms ease, color 120ms ease;
@@ -150,11 +154,11 @@ const isActive = (item: NavItem) => {
 
 .nav-sidebar__link:hover,
 .nav-sidebar__link.is-active {
-  background-color: var(--color-surface-muted);
+  background-color: var(--hover);
 }
 
 .nav-sidebar__link.is-active {
-  color: var(--color-primary-600);
+  color: var(--teal);
 }
 
 .nav-sidebar__icon {
@@ -169,8 +173,8 @@ const isActive = (item: NavItem) => {
   margin-left: auto;
   padding: 2px 8px;
   border-radius: var(--radius-pill);
-  background-color: var(--color-primary-100);
-  color: var(--color-primary-600);
+  background-color: var(--mint);
+  color: var(--teal);
   font-size: var(--text-xs);
   font-weight: 600;
 }
@@ -178,6 +182,6 @@ const isActive = (item: NavItem) => {
 .nav-sidebar__footer {
   margin-top: auto;
   padding-top: var(--space-4);
-  border-top: 1px solid var(--color-border);
+  border-top: 1px solid var(--border);
 }
 </style>

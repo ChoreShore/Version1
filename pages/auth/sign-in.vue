@@ -173,8 +173,14 @@ const handleFormReset = () => {
 .auth-shell {
   min-height: 100vh;
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-  background: var(--color-surface-2, #f5f7fb);
+  grid-template-columns: 1fr;
+  background: var(--bg);
+}
+
+@media (min-width: 768px) {
+  .auth-shell {
+    grid-template-columns: 1fr 1fr;
+  }
 }
 
 .auth-card {
@@ -195,13 +201,13 @@ const handleFormReset = () => {
   text-transform: uppercase;
   letter-spacing: 0.08em;
   font-size: var(--text-xs);
-  color: var(--color-text-subtle);
+  color: var(--muted);
   margin-bottom: 8px;
 }
 
 .auth-card__description {
   margin: 8px 0 0;
-  color: var(--color-text-muted);
+  color: var(--muted);
 }
 
 .auth-form {
@@ -212,7 +218,7 @@ const handleFormReset = () => {
 
 .auth-form input {
   width: 100%;
-  border: 1px solid var(--color-border);
+  border: 1px solid var(--border);
   border-radius: var(--radius-lg);
   padding: 12px 14px;
 }
@@ -220,7 +226,7 @@ const handleFormReset = () => {
 .auth-form__submit {
   border: none;
   border-radius: var(--radius-lg);
-  background: var(--color-primary-600);
+  background: var(--teal);
   color: white;
   padding: 14px;
   font-weight: 600;
@@ -228,6 +234,11 @@ const handleFormReset = () => {
   display: inline-flex;
   justify-content: center;
   align-items: center;
+  transition: background 150ms ease;
+}
+
+.auth-form__submit:hover {
+  background: var(--success);
 }
 
 .auth-card__error {
@@ -236,7 +247,7 @@ const handleFormReset = () => {
 }
 
 .auth-visual {
-  background: linear-gradient(180deg, var(--color-primary-700), var(--color-primary-500));
+  background: linear-gradient(180deg, var(--teal), var(--success));
   color: white;
   padding: var(--space-8);
   display: flex;
@@ -261,18 +272,18 @@ const handleFormReset = () => {
   text-align: center;
   margin-top: var(--space-6);
   padding-top: var(--space-6);
-  border-top: 1px solid var(--color-border);
+  border-top: 1px solid var(--border);
 }
 
 .auth-link {
-  color: var(--color-primary-600);
+  color: var(--teal);
   text-decoration: none;
-  font-weight: var(--font-semibold);
+  font-weight: 600;
   transition: color 150ms ease-out;
 }
 
 .auth-link:hover {
-  color: var(--color-primary-700);
+  color: var(--accent);
   text-decoration: underline;
 }
 

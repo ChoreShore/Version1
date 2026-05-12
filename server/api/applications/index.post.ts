@@ -1,6 +1,7 @@
 import { serverSupabaseClient, serverSupabaseUser } from '#supabase/server';
 import { validateCreateApplication, ApplicationResponseSchema } from '~/schemas/application';
 import { rateLimiters } from '~/server/utils/rateLimit';
+import { rethrowIfAuthError } from '~/server/utils/api';
 
 export default defineEventHandler(async (event) => {
   try {
@@ -141,7 +142,7 @@ export default defineEventHandler(async (event) => {
       return response;
     }
   } catch (error: any) {
-    handleSupabaseAuthErrors(error);
+    rethrowIfAuthError(error);
     throw error;
   }
 });

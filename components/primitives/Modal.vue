@@ -133,7 +133,7 @@ onBeforeUnmount(() => {
 .modal__overlay {
   position: absolute;
   inset: 0;
-  background: rgba(15, 23, 42, 0.45);
+  background: rgba(26, 26, 26, 0.35);
   backdrop-filter: blur(4px);
 }
 
@@ -143,10 +143,10 @@ onBeforeUnmount(() => {
   width: min(640px, 100%);
   max-height: 90vh;
   overflow-y: auto;
-  background: var(--color-surface);
+  background: var(--surface);
   border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-md);
-  border: 1px solid var(--color-border);
+  box-shadow: var(--shadow);
+  border: 1px solid var(--border);
   display: flex;
   flex-direction: column;
 }
@@ -164,7 +164,7 @@ onBeforeUnmount(() => {
   justify-content: space-between;
   gap: var(--space-4);
   padding: var(--space-5);
-  border-bottom: 1px solid var(--color-border);
+  border-bottom: 1px solid var(--border);
 }
 
 .modal__title {
@@ -177,12 +177,12 @@ onBeforeUnmount(() => {
   text-transform: uppercase;
   letter-spacing: 0.08em;
   font-size: var(--text-xs);
-  color: var(--color-text-muted);
+  color: var(--muted);
 }
 
 .modal__description {
   margin: var(--space-2) 0 0;
-  color: var(--color-text-subtle);
+  color: var(--muted);
 }
 
 .modal__close {
@@ -190,6 +190,12 @@ onBeforeUnmount(() => {
   background: transparent;
   font-size: 1.5rem;
   line-height: 1;
+  color: var(--muted);
+  cursor: pointer;
+}
+
+.modal__close:hover {
+  color: var(--text);
 }
 
 .modal__body {
@@ -199,10 +205,21 @@ onBeforeUnmount(() => {
 
 .modal__footer {
   padding: var(--space-5);
-  border-top: 1px solid var(--color-border);
+  border-top: 1px solid var(--border);
   display: flex;
   justify-content: flex-end;
   gap: var(--space-3);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .modal__overlay {
+    backdrop-filter: none;
+  }
+
+  .modal-fade-enter-active,
+  .modal-fade-leave-active {
+    transition: none;
+  }
 }
 
 .modal-fade-enter-active,

@@ -87,7 +87,7 @@ describe('signin', () => {
   it('propagates fetch errors', async () => {
     mockFetch.mockRejectedValue({ statusCode: 401, statusMessage: 'Invalid credentials' });
     await expect(auth.signin({ email: 'x@y.com', password: 'wrong' }))
-      .rejects.toMatchObject({ statusCode: 401 });
+      .rejects.toThrow('Invalid credentials');
   });
 });
 
@@ -210,7 +210,7 @@ describe('deleteAccount', () => {
 
   it('propagates fetch errors', async () => {
     mockFetch.mockRejectedValue({ statusCode: 403, statusMessage: 'Forbidden' });
-    await expect(auth.deleteAccount(payload)).rejects.toMatchObject({ statusCode: 403 });
+    await expect(auth.deleteAccount(payload)).rejects.toThrow('Forbidden');
   });
 });
 

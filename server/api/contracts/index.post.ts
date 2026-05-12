@@ -1,6 +1,6 @@
 import { serverSupabaseClient, serverSupabaseUser } from '#supabase/server';
 import { validateCreateContract, ContractResponseSchema } from '~/schemas/contract';
-import { ensureAuthenticated, handleSupabaseAuthErrors, ensureJobEmployer } from '~/server/utils/api';
+import { ensureAuthenticated, rethrowIfAuthError, ensureJobEmployer } from '~/server/utils/api';
 
 export default defineEventHandler(async (event) => {
   try {
@@ -55,7 +55,7 @@ export default defineEventHandler(async (event) => {
       return { contract: data };
     }
   } catch (error: any) {
-    handleSupabaseAuthErrors(error);
+    rethrowIfAuthError(error);
     throw error;
   }
 });

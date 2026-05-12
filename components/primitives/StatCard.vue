@@ -33,10 +33,10 @@ const trendVariant = computed(() => props.trend?.variant ?? 'up');
 
 <style scoped>
 .stat-card {
-  background: var(--color-surface);
+  background: var(--surface);
   border-radius: var(--radius-lg);
   padding: var(--space-5);
-  border: 1px solid var(--color-border);
+  border: 1px solid var(--border);
   box-shadow: var(--shadow-sm);
   display: flex;
   flex-direction: column;
@@ -53,7 +53,7 @@ const trendVariant = computed(() => props.trend?.variant ?? 'up');
 .stat-card__title {
   margin: 0;
   font-size: var(--text-sm);
-  color: var(--color-text-muted);
+  color: var(--muted);
   text-transform: uppercase;
   letter-spacing: 0.08em;
 }
@@ -62,11 +62,12 @@ const trendVariant = computed(() => props.trend?.variant ?? 'up');
   width: 32px;
   height: 32px;
   border-radius: var(--radius-md);
-  background: var(--color-primary-100);
-  color: var(--color-primary-700);
+  background: linear-gradient(135deg, var(--mint), #ffffff);
+  color: var(--teal);
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  border: 1px solid var(--border);
 }
 
 .stat-card__value {
@@ -77,7 +78,7 @@ const trendVariant = computed(() => props.trend?.variant ?? 'up');
 
 .stat-card__description {
   margin: 0;
-  color: var(--color-text-muted);
+  color: var(--muted);
 }
 
 .stat-card__trend {
@@ -89,7 +90,7 @@ const trendVariant = computed(() => props.trend?.variant ?? 'up');
 }
 
 .stat-card__trend.up {
-  color: var(--color-success);
+  color: var(--success);
 }
 
 .stat-card__trend.down {
@@ -98,6 +99,6 @@ const trendVariant = computed(() => props.trend?.variant ?? 'up');
 
 .stat-card__trend-label {
   font-weight: 400;
-  color: var(--color-text-muted);
+  color: var(--muted);
 }
 </style>

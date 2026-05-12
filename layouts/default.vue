@@ -96,46 +96,56 @@ const pageTitle = computed(() => {
 
 <style scoped>
 .layout-content {
-  padding: var(--space-6);
+  padding: var(--space-4);
   display: flex;
   flex-direction: column;
-  gap: var(--space-6);
+  gap: var(--space-4);
+  min-width: 0;
+}
+
+@media (min-width: 768px) {
+  .layout-content {
+    padding: var(--space-6);
+    gap: var(--space-6);
+  }
 }
 
 .topbar__context {
   margin: 0;
   font-weight: 600;
-  color: var(--color-text-muted);
+  color: var(--muted);
 }
 
 .topbar__action {
-  border: 1px solid var(--color-border);
-  background: var(--color-surface);
+  border: 1px solid var(--border);
+  background: var(--surface);
   border-radius: var(--radius-md);
   padding: 8px 14px;
   text-decoration: none;
   color: inherit;
   display: inline-block;
+  font-weight: 500;
+  transition: background 120ms ease;
 }
 
 .topbar__action:hover {
-  background: var(--color-surface-muted);
+  background: var(--hover);
 }
 
 .topbar__action--primary {
-  background: var(--color-primary-600);
+  background: var(--teal);
   color: white;
   border-color: transparent;
 }
 
 .topbar__action--primary:hover {
-  background: var(--color-primary-700);
+  background: var(--success);
 }
 
 .sidebar-footer {
   margin-top: auto;
   padding-top: var(--space-4);
-  border-top: 1px solid var(--color-border);
+  border-top: 1px solid var(--border);
 }
 
 .sidebar-footer__signout {
@@ -146,7 +156,7 @@ const pageTitle = computed(() => {
   border-radius: var(--radius-md);
   border: none;
   background: none;
-  color: var(--color-text-muted);
+  color: var(--muted);
   font-weight: 500;
   font-size: inherit;
   cursor: pointer;
@@ -155,7 +165,7 @@ const pageTitle = computed(() => {
 }
 
 .sidebar-footer__signout:hover {
-  background-color: var(--color-surface-muted);
-  color: var(--color-text);
+  background-color: var(--hover);
+  color: var(--text);
 }
 </style>

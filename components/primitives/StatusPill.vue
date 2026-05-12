@@ -27,27 +27,27 @@ withDefaults(
   font-weight: 600;
   letter-spacing: 0.02em;
   text-transform: uppercase;
-  background: var(--color-surface-muted);
-  color: var(--color-text-muted);
+  background: var(--hover);
+  color: var(--muted);
 }
 
 .status-info {
-  background: var(--color-primary-100);
-  color: var(--color-primary-700);
+  background: var(--mint);
+  color: var(--teal);
 }
 
 .status-success {
-  background: rgba(15, 157, 88, 0.12);
-  color: var(--color-success);
+  background: rgba(46, 125, 107, 0.12);
+  color: var(--success);
 }
 
 .status-warning {
-  background: rgba(245, 158, 11, 0.18);
-  color: var(--color-warning);
+  background: rgba(212, 116, 94, 0.15);
+  color: #A8553D;
 }
 
 .status-danger {
-  background: rgba(217, 48, 37, 0.15);
+  background: rgba(192, 57, 43, 0.12);
   color: var(--color-danger);
 }
 </style>

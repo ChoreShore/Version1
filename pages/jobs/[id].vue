@@ -70,17 +70,7 @@
         </div>
 
         <aside v-if="showApplyPanel" class="job-detail__apply">
-          <div v-if="isRtwRequired" class="rtw-gate">
-            <p class="rtw-gate__icon">🪪</p>
-            <h3 class="rtw-gate__title">Right to work required</h3>
-            <p class="rtw-gate__body">You must verify your UK right to work before applying to jobs on ChoreShore.</p>
-            <button type="button" class="rtw-gate__button" @click="showRtwModal = true">
-              Verify now
-            </button>
-            <RtwVerificationModal v-if="showRtwModal" @verified="onRtwVerified" @close="showRtwModal = false" />
-          </div>
           <ApplicationForm
-            v-else
             :job-id="jobId"
             :worker-application="workerApplication"
             :submitting="applySubmitting"
@@ -148,16 +138,12 @@ import type { ApplicationStatus, ApplicationWithDetailsInput } from '~/schemas/a
 import { useJobs } from '~/composables/useJobs';
 import { useApplications } from '~/composables/useApplications';
 import { useActiveRole } from '~/composables/useActiveRole';
-import { useRtw } from '~/composables/useRtw';
-import RtwVerificationModal from '~/components/profile/RtwVerificationModal.vue';
 
 const route = useRoute();
 const jobsApi = useJobs();
 const applicationsApi = useApplications();
 const user = useSupabaseUser();
 const { role } = useActiveRole();
-const { isRtwRequired, fetchRtwStatus } = useRtw();
-const showRtwModal = ref(false);
 const showDeleteDialog = ref(false);
 const deleting = ref(false);
 
@@ -222,9 +208,6 @@ const fetchApplications = async () => {
 };
 
 const submitApplication = async (formData: { cover_letter?: string; proposed_rate?: number }) => {
-  // Re-check eligibility immediately before submit
-  await fetchRtwStatus();
-
   if (!canApply.value || !jobId.value) {
     applyError.value = 'You are no longer eligible to apply to this job.';
     return;
@@ -302,12 +285,7 @@ watch(jobId, () => {
   fetchApplications();
 });
 
-const onRtwVerified = () => {
-  showRtwModal.value = false;
-};
-
 onMounted(() => {
-  fetchRtwStatus();
   fetchJob();
   fetchApplications();
 });
@@ -383,7 +361,7 @@ onMounted(() => {
 
 .job-detail__grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
   gap: var(--space-4);
 }
 
@@ -404,49 +382,4 @@ onMounted(() => {
   align-items: center;
 }
 
-.rtw-gate {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: var(--space-3);
-  padding: var(--space-6);
-  border: 2px dashed var(--color-border);
-  border-radius: var(--radius-lg);
-  background: var(--color-surface);
-  text-align: center;
-}
-
-.rtw-gate__icon {
-  margin: 0;
-  font-size: 2rem;
-}
-
-.rtw-gate__title {
-  margin: 0;
-  font-size: var(--text-lg);
-  font-weight: 700;
-}
-
-.rtw-gate__body {
-  margin: 0;
-  color: var(--color-text-muted);
-  font-size: var(--text-sm);
-  line-height: 1.5;
-}
-
-.rtw-gate__button {
-  padding: var(--space-3) var(--space-5);
-  background: var(--color-primary-600);
-  color: white;
-  border: none;
-  border-radius: var(--radius-md);
-  font-weight: 600;
-  font-size: var(--text-sm);
-  cursor: pointer;
-  transition: background 150ms ease;
-}
-
-.rtw-gate__button:hover {
-  background: var(--color-primary-700);
-}
 </style>

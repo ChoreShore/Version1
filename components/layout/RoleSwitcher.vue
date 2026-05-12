@@ -72,9 +72,11 @@ const select = (value: string) => {
   gap: 6px;
   padding: 4px;
   border-radius: var(--radius-lg);
-  background-color: var(--color-surface);
-  border: 1px solid var(--color-border);
-  min-width: 280px;
+  background-color: var(--surface);
+  border: 1px solid var(--border);
+  width: 100%;
+  max-width: 280px;
+  min-width: 0;
 }
 
 .role-switcher__option {
@@ -89,24 +91,42 @@ const select = (value: string) => {
 }
 
 .role-switcher__option:hover {
-  background-color: var(--color-surface-muted);
+  background-color: var(--hover);
 }
 
 .role-switcher__option.is-active {
-  background: var(--color-primary-100);
-  color: var(--color-primary-700);
-  box-shadow: inset 0 0 0 1px var(--color-primary-200);
+  background: var(--mint);
+  color: var(--teal);
+  box-shadow: inset 0 0 0 1px var(--border);
 }
 
 .role-switcher__label {
   display: block;
   font-weight: 600;
   font-size: var(--text-sm);
+  white-space: nowrap;
 }
 
 .role-switcher__description {
   display: block;
   font-size: 0.75rem;
-  color: var(--color-text-subtle);
+  color: var(--muted);
+  white-space: nowrap;
+}
+
+@media (max-width: 480px) {
+  .role-switcher {
+    width: auto;
+    max-width: none;
+  }
+
+  .role-switcher__option {
+    flex: 1 0 auto;
+    padding: 8px 12px;
+  }
+
+  .role-switcher__description {
+    display: none;
+  }
 }
 </style>
