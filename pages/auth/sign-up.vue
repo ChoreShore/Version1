@@ -14,7 +14,7 @@
         >
           <form @submit.prevent="handleSubmit" class="auth-form" novalidate>
             <!-- Email Field -->
-            <FormField id="email" :error="errors.email" :state="errors.email ? 'error' : 'default'">
+            <FormField id="email" :error="errors.email" :state="getFieldState('email')">
               <FormLabel for="email">Email Address</FormLabel>
               <FormControl>
                 <input
@@ -25,14 +25,16 @@
                   :disabled="loading"
                   autocomplete="email"
                   required
+                  @input="validateField('email')"
                   @blur="validateField('email')"
                 />
               </FormControl>
               <FormError v-if="errors.email">{{ errors.email }}</FormError>
+              <FormSuccess v-if="!errors.email && form.email.length > 0">✓</FormSuccess>
             </FormField>
 
             <!-- Password Field -->
-            <FormField id="password" :error="errors.password" :state="errors.password ? 'error' : 'default'">
+            <FormField id="password" :error="errors.password" :state="getFieldState('password')">
               <FormLabel for="password">Password</FormLabel>
               <FormControl>
                 <input
@@ -43,15 +45,19 @@
                   :disabled="loading"
                   autocomplete="new-password"
                   required
+                  @input="validateField('password')"
                   @blur="validateField('password')"
                 />
               </FormControl>
-             
-              <FormError v-if="errors.password">{{ errors.password }}</FormError>
+              <div class="form-field__hint-row">
+                <FormError v-if="errors.password">{{ errors.password }}</FormError>
+                <span class="char-count" :class="{ 'is-over': form.password.length > 128 }">{{ form.password.length }}/128</span>
+              </div>
+              <FormSuccess v-if="!errors.password && form.password.length >= 8">✓</FormSuccess>
             </FormField>
 
             <!-- Confirm Password Field -->
-            <FormField id="confirmPassword" :error="errors.confirmPassword" :state="errors.confirmPassword ? 'error' : 'default'">
+            <FormField id="confirmPassword" :error="errors.confirmPassword" :state="getFieldState('confirmPassword')">
               <FormLabel for="confirmPassword">Confirm Password</FormLabel>
               <FormControl>
                 <input
@@ -62,14 +68,16 @@
                   :disabled="loading"
                   autocomplete="new-password"
                   required
+                  @input="validateField('confirmPassword')"
                   @blur="validateField('confirmPassword')"
                 />
               </FormControl>
               <FormError v-if="errors.confirmPassword">{{ errors.confirmPassword }}</FormError>
+              <FormSuccess v-if="!errors.confirmPassword && form.confirmPassword === form.password && form.confirmPassword.length > 0">✓</FormSuccess>
             </FormField>
 
             <!-- First Name Field -->
-            <FormField id="first_name" :error="errors.first_name" :state="errors.first_name ? 'error' : 'default'">
+            <FormField id="first_name" :error="errors.first_name" :state="getFieldState('first_name')">
               <FormLabel for="first_name">First Name</FormLabel>
               <FormControl>
                 <input
@@ -80,14 +88,16 @@
                   :disabled="loading"
                   autocomplete="given-name"
                   required
+                  @input="validateField('first_name')"
                   @blur="validateField('first_name')"
                 />
               </FormControl>
               <FormError v-if="errors.first_name">{{ errors.first_name }}</FormError>
+              <FormSuccess v-if="!errors.first_name && form.first_name.length > 0">✓</FormSuccess>
             </FormField>
 
             <!-- Last Name Field -->
-            <FormField id="last_name" :error="errors.last_name" :state="errors.last_name ? 'error' : 'default'">
+            <FormField id="last_name" :error="errors.last_name" :state="getFieldState('last_name')">
               <FormLabel for="last_name">Last Name</FormLabel>
               <FormControl>
                 <input
@@ -98,14 +108,16 @@
                   :disabled="loading"
                   autocomplete="family-name"
                   required
+                  @input="validateField('last_name')"
                   @blur="validateField('last_name')"
                 />
               </FormControl>
               <FormError v-if="errors.last_name">{{ errors.last_name }}</FormError>
+              <FormSuccess v-if="!errors.last_name && form.last_name.length > 0">✓</FormSuccess>
             </FormField>
 
             <!-- Role Field -->
-            <FormField id="role" :error="errors.role" :state="errors.role ? 'error' : 'default'">
+            <FormField id="role" :error="errors.role" :state="getFieldState('role')">
               <FormLabel for="role">I want to</FormLabel>
               <FormControl>
                 <select
@@ -114,6 +126,7 @@
                   class="form-select"
                   :disabled="loading"
                   required
+                  @change="validateField('role')"
                   @blur="validateField('role')"
                 >
                   <option value="" disabled>Select a role</option>
@@ -122,6 +135,7 @@
                 </select>
               </FormControl>
               <FormError v-if="errors.role">{{ errors.role }}</FormError>
+              <FormSuccess v-if="!errors.role && form.role">✓</FormSuccess>
             </FormField>
 
             <!-- Submit Button -->
@@ -170,12 +184,14 @@ import FormField from '~/components/primitives/form/FormField.vue';
 import FormLabel from '~/components/primitives/form/FormLabel.vue';
 import FormControl from '~/components/primitives/form/FormControl.vue';
 import FormError from '~/components/primitives/form/FormError.vue';
+import FormHint from '~/components/primitives/form/FormHint.vue';
+import FormSuccess from '~/components/primitives/form/FormSuccess.vue';
 import LoadingSkeleton from '~/components/primitives/LoadingSkeleton.vue';
 import FormErrorBoundary from '~/components/primitives/FormErrorBoundary.vue';
 import ConfirmDialog from '~/components/primitives/ConfirmDialog.vue';
 import { useAuth } from '~/composables/useAuth';
 import { useDirtyForm } from '~/composables/useDirtyForm';
-import { validateSignUpForm, validateSignUp } from '~/schemas/auth';
+import { validateSignUpForm, validateSignUp, SignUpFormSchema } from '~/schemas/auth';
 import type { SignUpFormInput, SignUpInput } from '~/schemas/auth';
 
 definePageMeta({
@@ -211,60 +227,36 @@ const { isDirty, resetDirty } = useDirtyForm({
 });
 
 // Validation
+const touchedFields = ref<Set<string>>(new Set());
+
+const getFieldState = (fieldName: string): 'default' | 'success' | 'error' => {
+  if (errors[fieldName]) return 'error';
+  if (touchedFields.value.has(fieldName) && !errors[fieldName]) {
+    const fieldValue = form[fieldName as keyof SignUpFormInput];
+    if (fieldValue && String(fieldValue).length > 0) {
+      // Special check for confirmPassword
+      if (fieldName === 'confirmPassword') {
+        return fieldValue === form.password ? 'success' : 'error';
+      }
+      return 'success';
+    }
+  }
+  return 'default';
+};
+
 const validateField = (field: keyof SignUpFormInput) => {
-  const fieldValue = form[field];
+  touchedFields.value.add(field as string);
   
-  // Clear previous error
-  delete errors[field];
-
-  // Basic validation
-  if (!fieldValue) {
-    errors[field] = `${field.charAt(0).toUpperCase() + field.slice(1)} is required`;
-    return;
-  }
-
-  // Specific validations
-  if (field === 'email') {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(fieldValue as string)) {
-      errors[field] = 'Please enter a valid email address';
+  try {
+    SignUpFormSchema.shape[field as keyof typeof SignUpFormSchema.shape].parse(form[field]);
+    delete errors[field];
+  } catch (error: any) {
+    if (error.errors && error.errors[0]) {
+      errors[field] = error.errors[0].message;
+    } else {
+      errors[field] = 'Invalid value';
     }
   }
-
-  if (field === 'password') {
-    const password = fieldValue as string;
-    if (password.length < 8) {
-      errors[field] = 'Password must be at least 8 characters';
-    } else if (!/(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/.test(password)) {
-      errors[field] = 'Password must contain at least one uppercase letter, one lowercase letter, and one number';
-    }
-  }
-
-  if (field === 'confirmPassword') {
-    if (fieldValue !== form.password) {
-      errors[field] = 'Passwords do not match';
-    }
-  }
-
-  if (field === 'first_name' || field === 'last_name') {
-    if ((fieldValue as string).length < 2) {
-      errors[field] = `${field === 'first_name' ? 'First' : 'Last'} name must be at least 2 characters`;
-    }
-  }
-
-  if (field === 'role') {
-    if (!fieldValue || !['employer', 'worker'].includes(fieldValue as string)) {
-      errors[field] = 'Please select a role';
-    }
-  }
-
-  if (field === 'phone' && fieldValue) {
-    const phoneRegex = /^[+]?[(]?[0-9]{1,4}[)]?[-\s.]?[(]?[0-9]{1,4}[)]?[-\s.]?[0-9]{1,9}$/;
-    if (!phoneRegex.test(fieldValue as string)) {
-      errors[field] = 'Please enter a valid phone number';
-    }
-  }
-
 };
 
 const validateForm = () => {
@@ -352,7 +344,7 @@ const handleFormReset = () => {
 };
 
 const handleSignInClick = () => {
-  if (isDirty.value) {
+  if (isDirty as any) {
     showConfirmDialog.value = true;
   } else {
     router.push('/auth/sign-in');
@@ -389,7 +381,6 @@ const handleDialogCancel = () => {
   border-radius: var(--radius-xl);
   box-shadow: var(--shadow-xl);
   padding: var(--space-8);
-  animation: slideUp 400ms var(--ease-out);
 }
 
 .auth-header {
@@ -455,7 +446,6 @@ const handleDialogCancel = () => {
   border-radius: var(--radius-md);
   border: 1px solid var(--color-error-200);
   font-size: var(--text-sm);
-  animation: shake 400ms var(--ease-out);
 }
 
 .success-message {
@@ -465,7 +455,6 @@ const handleDialogCancel = () => {
   border-radius: var(--radius-md);
   border: 1px solid var(--color-success-200);
   font-size: var(--text-sm);
-  animation: slideUp 300ms var(--ease-out);
 }
 
 .auth-footer {
@@ -487,44 +476,34 @@ const handleDialogCancel = () => {
   text-decoration: underline;
 }
 
-@keyframes slideUp {
-  from {
-    opacity: 0;
-    transform: translateY(20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+.form-field__hint-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--space-2);
 }
 
-@keyframes spin {
-  to {
-    transform: rotate(360deg);
-  }
+.char-count {
+  font-size: var(--text-xs);
+  color: var(--color-text-subtle);
 }
 
-@keyframes shake {
-  0%, 100% { transform: translateX(0); }
-  20% { transform: translateX(-4px); }
-  40% { transform: translateX(4px); }
-  60% { transform: translateX(-2px); }
-  80% { transform: translateX(2px); }
+.char-count.is-over {
+  color: var(--color-error-500);
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .auth-card,
-  .success-message,
-  .submit-error {
-    animation: none;
+  .auth-container {
   }
-  
-  .auth-submit {
+
+  .auth-form__submit {
     transition: none;
   }
-  
-  .loading-spinner {
-    animation: none;
+
+  .auth-form__submit.is-loading {
+  }
+
+  .auth-form__success-icon {
   }
 }
 </style>

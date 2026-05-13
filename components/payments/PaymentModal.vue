@@ -288,12 +288,7 @@ const onComplete = () => {
   border: 4px solid var(--color-border);
   border-top-color: var(--color-primary-600);
   border-radius: 50%;
-  animation: spin 1s linear infinite;
   margin: 0 auto var(--space-3);
-}
-
-@keyframes spin {
-  to { transform: rotate(360deg); }
 }
 
 .payment-modal__success {

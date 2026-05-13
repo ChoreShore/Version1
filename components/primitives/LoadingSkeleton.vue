@@ -21,23 +21,9 @@ const style = computed(() => ({
 </script>
 
 <style scoped>
-@keyframes pulse {
-  0% {
-    opacity: 0.4;
-  }
-  50% {
-    opacity: 1;
-  }
-  100% {
-    opacity: 0.4;
-  }
-}
-
 .skeleton {
-  background: linear-gradient(90deg, #f4f6fb 25%, #e9edf5 37%, #f4f6fb 63%);
-  background-size: 400% 100%;
-  animation: pulse 1.6s ease-in-out infinite;
-  border-radius: var(--radius-sm);
+  background: var(--color-gray-200);
+  border-radius: var(--radius-md);
   display: inline-block;
 }
 

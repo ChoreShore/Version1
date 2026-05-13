@@ -1,19 +1,13 @@
-import { serverSupabaseClient, serverSupabaseUser } from '#supabase/server';
+import { serverSupabaseClient } from '#supabase/server';
 import { ApplicationsResponseSchema } from '~/schemas/application';
-import { rethrowIfAuthError } from '~/server/utils/api';
+import { getAuthenticatedUser } from '~/server/utils/api';
 import { hasRole } from '~/server/utils/roles';
 
 export default defineEventHandler(async (event) => {
   try {
-    const user = await serverSupabaseUser(event);
-
-    if (!user) {
-      throw createError({ 
-        statusCode: 401, 
-        statusMessage: 'Sign in to view your applications' 
-      });
-    }
-
+    console.log('[applications/index.get] Starting request');
+    const user = await getAuthenticatedUser(event, 'Sign in to view your applications');
+    console.log('[applications/index.get] User authenticated:', user.id);
     const client = await serverSupabaseClient(event);
 
     // Resolve actual role from the user's profile — never trust query.role for authorization
@@ -89,7 +83,7 @@ export default defineEventHandler(async (event) => {
       return response;
     }
   } catch (error: any) {
-    rethrowIfAuthError(error);
+    console.error('[applications/index.get] Error:', error);
     throw error;
   }
 });

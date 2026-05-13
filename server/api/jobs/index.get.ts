@@ -1,17 +1,20 @@
-import { serverSupabaseClient, serverSupabaseUser } from '#supabase/server';
+import { serverSupabaseClient } from '#supabase/server';
 import type { JobsQueryInput } from '~/schemas/job';
 import { JobsResponseSchema, JobsQuerySchema } from '~/schemas/job';
 import { fetchPreviewJobs } from '~/server/utils/preview';
-import { rethrowIfAuthError } from '~/server/utils/api';
+import { getAuthenticatedUser } from '~/server/utils/api';
 import { hasRole } from '~/server/utils/roles';
 
 export default defineEventHandler(async (event) => {
   try {
-    const user = await serverSupabaseUser(event);
+    console.log('[jobs/index.get] Starting request');
+    const user = await getAuthenticatedUser(event);
+    console.log('[jobs/index.get] User authenticated:', user?.id);
     const client = await serverSupabaseClient(event);
     const query = getQuery(event) as JobsQueryInput & { role?: string; scope?: string };
 
     if (!user) {
+      console.log('[jobs/index.get] No user, fetching preview jobs');
       return await fetchPreviewJobs(client, query);
     }
 
@@ -90,12 +93,7 @@ export default defineEventHandler(async (event) => {
       throw createError({ statusCode: 500, statusMessage: 'Invalid response format' });
     }
   } catch (error: any) {
-    rethrowIfAuthError(error);
-
-    if (error.statusCode) {
-      throw error;
-    }
-
-    throw createError({ statusCode: 400, statusMessage: error.message });
+    console.error('[jobs/index.get] Error:', error);
+    throw error;
   }
 });

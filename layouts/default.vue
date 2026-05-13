@@ -1,7 +1,7 @@
 <template>
   <AppShell>
     <template #sidebar>
-      <NavSidebar :logo="logo" :items="navItems">
+      <NavSidebar :logo="logo" :items="navItems" :current-role="role">
         <template #footer>
           <div class="sidebar-footer">
             <button class="sidebar-footer__signout" type="button" @click="handleSignOut">Sign out</button>
@@ -16,13 +16,17 @@
           <RoleSwitcher v-model="role" />
         </template>
         <template #center>
-          <p class="topbar__context">{{ pageTitle }}</p>
+          <p class="topbar__context">{{ roleGreeting }} · {{ pageTitle }}</p>
         </template>
         <template #actions>
           <NuxtLink v-if="role === 'employer'" to="/jobs/new" class="topbar__action">Post a job</NuxtLink>
           <NuxtLink to="/messages" class="topbar__action topbar__action--primary">New message</NuxtLink>
         </template>
       </TopBar>
+    </template>
+
+    <template #bottom-nav>
+      <BottomNav />
     </template>
 
     <div class="layout-content">
@@ -36,6 +40,7 @@ import { computed } from 'vue';
 import AppShell from '~/components/layout/AppShell.vue';
 import NavSidebar from '~/components/layout/NavSidebar.vue';
 import TopBar from '~/components/layout/TopBar.vue';
+import BottomNav from '~/components/layout/BottomNav.vue';
 import RoleSwitcher from '~/components/layout/RoleSwitcher.vue';
 import { useActiveRole } from '~/composables/useActiveRole';
 import { useAuth } from '~/composables/useAuth';
@@ -91,6 +96,10 @@ const pageTitle = computed(() => {
   if (path.startsWith('/applications/')) return 'Application details';
   if (path.startsWith('/messages/')) return 'Conversation';
   return 'Dashboard';
+});
+
+const roleGreeting = computed(() => {
+  return role.value === 'employer' ? 'Employer View' : 'Worker View';
 });
 </script>
 

@@ -1,14 +1,11 @@
-import { serverSupabaseClient, serverSupabaseUser } from '#supabase/server';
+import { serverSupabaseClient } from '#supabase/server';
 import { ApplicationResponseSchema } from '~/schemas/application';
-import { rethrowIfAuthError, ensureAuthenticated, ensureApplicationOwner, ensureJobEmployer } from '~/server/utils/api';
+import { getAuthenticatedUser, ensureApplicationOwner, ensureJobEmployer } from '~/server/utils/api';
 
 export default defineEventHandler(async (event) => {
   try {
     const applicationId = getRouterParam(event, 'id');
-    const user = ensureAuthenticated(
-      await serverSupabaseUser(event),
-      'Sign in to view application details'
-    );
+    const user = await getAuthenticatedUser(event, 'Sign in to view application details');
 
     if (!applicationId) {
       throw createError({ statusCode: 400, statusMessage: 'Application ID is required' });
@@ -91,7 +88,6 @@ export default defineEventHandler(async (event) => {
       return response;
     }
   } catch (error: any) {
-    rethrowIfAuthError(error);
     throw error;
   }
 });

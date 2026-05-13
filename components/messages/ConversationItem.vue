@@ -1,5 +1,5 @@
 <template>
-  <button class="conversation-item" type="button" @click="$emit('select', conversation.id)">
+  <button class="conversation-item" :class="{ 'is-active': isActive }" type="button" @click="$emit('select', conversation.id)">
     <div class="conversation-item__avatar">
       <span>{{ initials }}</span>
     </div>
@@ -29,6 +29,7 @@ const props = defineProps<{
     last_message_at: string;
     unread_count?: number;
   };
+  isActive?: boolean;
 }>();
 
 const otherParticipant = computed(() => props.conversation.other_participant_name || 'Conversation');
@@ -54,6 +55,15 @@ const lastMessageTime = computed(() => new Date(props.conversation.last_message_
 .conversation-item:hover,
 .conversation-item:focus-visible {
   box-shadow: var(--shadow-sm);
+}
+
+.conversation-item.is-active {
+  background-color: var(--color-primary-50);
+  border-color: var(--color-primary-300);
+}
+
+.conversation-item.is-active .conversation-item__name {
+  color: var(--color-primary-700);
 }
 
 .conversation-item__avatar {

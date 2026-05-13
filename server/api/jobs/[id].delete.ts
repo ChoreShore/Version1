@@ -1,12 +1,9 @@
-import { serverSupabaseClient, serverSupabaseUser } from '#supabase/server';
-import { assertValidUuid, ensureAuthenticated, rethrowIfAuthError, ensureJobOwner } from '~/server/utils/api';
+import { serverSupabaseClient } from '#supabase/server';
+import { assertValidUuid, getAuthenticatedUser, ensureJobOwner } from '~/server/utils/api';
 
 export default defineEventHandler(async (event) => {
   try {
-    const user = ensureAuthenticated(
-      await serverSupabaseUser(event),
-      'Sign in to delete jobs'
-    );
+    const user = await getAuthenticatedUser(event, 'Sign in to delete jobs');
     const jobId = assertValidUuid(getRouterParam(event, 'id'), {
       label: 'Job ID'
     });
@@ -62,7 +59,6 @@ export default defineEventHandler(async (event) => {
 
     return { success: true };
   } catch (error: any) {
-    rethrowIfAuthError(error);
     throw error;
   }
 });

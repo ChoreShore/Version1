@@ -36,7 +36,17 @@
 
       <template v-else-if="error">
         <li>
-          <EmptyState title="Could not load applications" :description="error" />
+          <EmptyState 
+            title="Could not load applications" 
+            :description="error" 
+            explanation="There was a problem loading your applications. This might be a temporary issue."
+            :tips="['Check your internet connection', 'Try refreshing the page', 'Contact support if the issue persists']"
+            icon="⚠️"
+          >
+            <template #actions>
+              <button type="button" class="empty-state__cta" @click="fetchApplications">Retry</button>
+            </template>
+          </EmptyState>
         </li>
       </template>
 
@@ -45,7 +55,15 @@
           <EmptyState
             :title="role === 'employer' ? 'No applications received' : 'No applications sent'"
             :description="role === 'employer' ? 'Applications for your jobs will appear here.' : 'Apply to jobs to track your submissions here.'"
-          />
+            :explanation="role === 'employer' ? 'When workers apply to your jobs, they\'ll appear in this list with their details.' : 'Your job applications will be tracked here after you submit them.'"
+            :tips="role === 'employer' ? ['Post jobs with clear descriptions to attract applicants', 'Set competitive budgets', 'Respond quickly to applications'] : ['Write personalized cover letters', 'Apply to jobs matching your skills', 'Follow up on pending applications']"
+            icon="📝"
+          >
+            <template #actions>
+              <NuxtLink v-if="role === 'employer'" to="/jobs/new" class="empty-state__cta">Post a job</NuxtLink>
+              <NuxtLink v-if="role === 'worker'" to="/jobs" class="empty-state__cta">Browse jobs</NuxtLink>
+            </template>
+          </EmptyState>
         </li>
       </template>
 
@@ -143,14 +161,34 @@ const handleWithdrawConfirm = async (reason?: WithdrawalReason) => {
 };
 
 const doWithdraw = async (applicationId: string, reason?: WithdrawalReason) => {
+  const appIndex = applications.value.findIndex(a => a.id === applicationId);
+  if (appIndex === -1) return;
+
+  const originalStatus = applications.value[appIndex].status;
+  const originalApplication = { ...applications.value[appIndex] };
+
+  // Optimistic update: change status to withdrawn immediately
+  applications.value[appIndex] = {
+    ...applications.value[appIndex],
+    status: 'withdrawn',
+    ...(reason ? { withdrawal_reason: reason } : {})
+  };
+
   try {
     await applicationsApi.updateApplication(applicationId, {
       status: 'withdrawn',
       ...(reason ? { withdrawal_reason: reason } : {})
     });
-    await fetchApplications();
+    // Success - keep the optimistic update
   } catch (err: any) {
-    error.value = err?.data?.statusMessage || 'Could not withdraw application.';
+    // Revert optimistic update on error
+    applications.value[appIndex] = originalApplication;
+    error.value = err?.data?.statusMessage || 'Could not withdraw application. Please try again.';
+    
+    // Show clear error notification
+    setTimeout(() => {
+      error.value = null;
+    }, 5000);
   }
 };
 

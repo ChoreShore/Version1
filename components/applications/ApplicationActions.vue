@@ -143,14 +143,12 @@ const handleFormError = (error: Error, formName?: string) => {
 }
 
 .application-actions__button:hover:not(:disabled) {
-  transform: translateY(-1px);
   box-shadow: var(--shadow-sm);
 }
 
 .application-actions__button:disabled {
   opacity: 0.5;
   cursor: not-allowed;
-  transform: none;
 }
 
 .application-actions__button--pending {

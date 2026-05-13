@@ -1,18 +1,11 @@
-import { serverSupabaseClient, serverSupabaseUser } from '#supabase/server';
+import { serverSupabaseClient } from '#supabase/server';
 import { validateCreateReview, ReviewResponseSchema } from '~/schemas/review';
 import { mapReview, reviewSelect } from './utils';
-import { rethrowIfAuthError } from '~/server/utils/api';
+import { getAuthenticatedUser } from '~/server/utils/api';
 
 export default defineEventHandler(async (event) => {
   try {
-    const user = await serverSupabaseUser(event);
-
-    if (!user) {
-      throw createError({
-        statusCode: 401,
-        statusMessage: 'Sign in to leave a review'
-      });
-    }
+    const user = await getAuthenticatedUser(event, 'Sign in to leave a review');
 
     const body = await readBody(event);
 
@@ -57,7 +50,6 @@ export default defineEventHandler(async (event) => {
       return response;
     }
   } catch (error: any) {
-    rethrowIfAuthError(error);
     throw error;
   }
 });

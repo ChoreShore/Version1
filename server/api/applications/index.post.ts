@@ -1,19 +1,12 @@
-import { serverSupabaseClient, serverSupabaseUser } from '#supabase/server';
+import { serverSupabaseClient } from '#supabase/server';
 import { validateCreateApplication, ApplicationResponseSchema } from '~/schemas/application';
 import { rateLimiters } from '~/server/utils/rateLimit';
-import { rethrowIfAuthError } from '~/server/utils/api';
+import { getAuthenticatedUser } from '~/server/utils/api';
 
 export default defineEventHandler(async (event) => {
   try {
     const body = await readBody(event);
-    const user = await serverSupabaseUser(event);
-
-    if (!user) {
-      throw createError({ 
-        statusCode: 401, 
-        statusMessage: 'Sign in to apply to jobs' 
-      });
-    }
+    const user = await getAuthenticatedUser(event, 'Sign in to apply to jobs');
 
     // Apply rate limiting based on user ID
     rateLimiters.applications(user.id);
@@ -142,7 +135,6 @@ export default defineEventHandler(async (event) => {
       return response;
     }
   } catch (error: any) {
-    rethrowIfAuthError(error);
     throw error;
   }
 });

@@ -1,7 +1,8 @@
 import { createError } from 'h3';
 import type { SupabaseClient } from '@supabase/supabase-js';
+import type { H3Event } from 'h3';
 
-const AUTH_ERROR_MARKERS = ['Auth session missing', 'Supabase', 'session', 'authentication'];
+const AUTH_ERROR_MARKERS = ['Auth session missing', 'auth session missing'];
 const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
 export interface UuidValidationOptions {
@@ -11,19 +12,48 @@ export interface UuidValidationOptions {
 }
 
 export function rethrowIfAuthError(error: any): void {
-  if (
-    error?.statusCode === 500 ||
-    error?.statusCode === 401 ||
-    (typeof error?.message === 'string' &&
-      AUTH_ERROR_MARKERS.some((marker) => error.message.includes(marker)))
-  ) {
-    throw createError({ statusCode: 401, statusMessage: 'Auth session missing!' });
-  }
+  // This function is deprecated - it's causing more problems than it solves
+  // Supabase client initialization errors with "Auth session missing" are being
+  // caught here and converted to generic auth errors, hiding the real issue
+  // Do not use this function - handle auth errors explicitly in each endpoint
 }
 
 /** @deprecated Use rethrowIfAuthError instead */
 export function handleSupabaseAuthErrors(error: any): void {
   rethrowIfAuthError(error);
+}
+
+/**
+ * Safely get the authenticated user from Supabase with proper error handling
+ * This wraps serverSupabaseUser to handle initialization errors gracefully
+ * @param event - H3 event object
+ * @param errorMessage - Custom error message for unauthenticated users
+ * @returns The authenticated user or throws an error
+ */
+export async function getAuthenticatedUser(
+  event: H3Event,
+  errorMessage = 'Authentication required'
+) {
+  const { serverSupabaseUser } = await import('#supabase/server');
+  
+  try {
+    const user = await serverSupabaseUser(event);
+    if (!user) {
+      throw createError({ statusCode: 401, statusMessage: errorMessage });
+    }
+    return user;
+  } catch (error: any) {
+    // If it's already a 401 error, rethrow it
+    if (error?.statusCode === 401) {
+      throw error;
+    }
+    // If it's a Supabase client initialization error, convert to 401
+    if (error?.message?.includes('Auth session missing') || error?.message?.includes('auth session missing')) {
+      throw createError({ statusCode: 401, statusMessage: errorMessage });
+    }
+    // Otherwise, rethrow the original error
+    throw error;
+  }
 }
 
 export function ensureAuthenticated<T>(user: T | null | undefined, message = 'Sign in to continue'): NonNullable<T> {

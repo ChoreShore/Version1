@@ -1,13 +1,10 @@
-import { serverSupabaseClient, serverSupabaseUser } from '#supabase/server';
+import { serverSupabaseClient } from '#supabase/server';
 import { MessagesResponseSchema } from '~/schemas/message';
-import { rethrowIfAuthError, ensureAuthenticated, ensureMessageParticipant } from '~/server/utils/api';
+import { getAuthenticatedUser, ensureMessageParticipant } from '~/server/utils/api';
 
 export default defineEventHandler(async (event) => {
   try {
-    const user = ensureAuthenticated(
-      await serverSupabaseUser(event),
-      'Sign in to view messages'
-    );
+    const user = await getAuthenticatedUser(event, 'Sign in to view messages');
 
     const jobId = getRouterParam(event, 'id');
 
@@ -57,7 +54,6 @@ export default defineEventHandler(async (event) => {
       return response;
     }
   } catch (error: any) {
-    rethrowIfAuthError(error);
     throw error;
   }
 });

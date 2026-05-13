@@ -1,5 +1,5 @@
 <template>
-  <article class="application-card">
+  <article class="application-card" :class="{ 'is-clickable': clickable }" @click="handleCardClick">
     <header class="application-card__header">
       <div>
         <p class="application-card__subheading">{{ jobTitle }}</p>
@@ -45,9 +45,25 @@
           v-if="perspective === 'worker' && application.status !== 'withdrawn'"
           type="button"
           class="application-card__withdraw-btn"
-          @click="emit('withdraw', application.id)"
+          @click.stop="emit('withdraw', application.id)"
         >
           Withdraw
+        </button>
+        <button
+          v-if="perspective === 'employer' && application.status === 'pending'"
+          type="button"
+          class="application-card__action-btn application-card__action-btn--accept"
+          @click.stop="emit('accept', application.id)"
+        >
+          Accept
+        </button>
+        <button
+          v-if="perspective === 'employer' && application.status === 'pending'"
+          type="button"
+          class="application-card__action-btn application-card__action-btn--reject"
+          @click.stop="emit('reject', application.id)"
+        >
+          Reject
         </button>
         <slot name="actions" />
       </div>
@@ -65,14 +81,18 @@ const props = withDefaults(
   defineProps<{
     application: ApplicationWithDetails & { job_title?: string; employer_name?: string; worker_name?: string };
     perspective?: 'employer' | 'worker';
+    clickable?: boolean;
   }>(),
   {
-    perspective: 'employer'
+    perspective: 'employer',
+    clickable: true
   }
 );
 
 const emit = defineEmits<{
   withdraw: [applicationId: string];
+  accept: [applicationId: string];
+  reject: [applicationId: string];
 }>();
 
 const statusVariantMap: Record<string, 'neutral' | 'info' | 'success' | 'warning' | 'danger'> = {
@@ -108,6 +128,12 @@ const withdrawalReasonLabel = computed(() => {
   const reason = props.application.withdrawal_reason;
   return reason ? (withdrawalReasonLabels[reason] ?? reason) : '';
 });
+
+const handleCardClick = () => {
+  if (props.clickable) {
+    navigateTo(`/applications/${props.application.id}`);
+  }
+};
 </script>
 
 <style scoped>
@@ -120,6 +146,15 @@ const withdrawalReasonLabel = computed(() => {
   display: flex;
   flex-direction: column;
   gap: var(--space-4);
+  position: relative;
+}
+
+.application-card.is-clickable {
+  cursor: pointer;
+}
+
+.application-card.is-clickable:hover {
+  box-shadow: var(--shadow-hover);
 }
 
 .application-card__header {
@@ -207,6 +242,38 @@ const withdrawalReasonLabel = computed(() => {
 }
 
 .application-card__withdraw-btn:hover {
+  background: var(--color-danger);
+  color: white;
+}
+
+.application-card__action-btn {
+  padding: 8px 16px;
+  border: 1px solid;
+  border-radius: var(--radius-md);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 150ms ease, color 150ms ease, border-color 150ms ease;
+}
+
+.application-card__action-btn--accept {
+  background: var(--color-success-600);
+  border-color: var(--color-success-600);
+  color: white;
+}
+
+.application-card__action-btn--accept:hover {
+  background: var(--color-success-700);
+  border-color: var(--color-success-700);
+}
+
+.application-card__action-btn--reject {
+  background: transparent;
+  border-color: var(--color-danger);
+  color: var(--color-danger);
+}
+
+.application-card__action-btn--reject:hover {
   background: var(--color-danger);
   color: white;
 }

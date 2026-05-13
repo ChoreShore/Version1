@@ -17,7 +17,15 @@
             <EmptyState 
               :title="role === 'employer' ? 'No jobs posted yet' : 'No jobs available'" 
               :description="role === 'employer' ? 'Create your first job posting to start hiring.' : 'Check back later for new opportunities.'" 
-            />
+              :explanation="role === 'employer' ? 'This list shows jobs you\'ve created. Post your first job to see it here.' : 'This list shows available jobs in your area. New opportunities appear as employers post them.'"
+              :tips="role === 'employer' ? ['Include a detailed description to attract quality applicants', 'Set a competitive budget based on market rates', 'Choose a clear deadline for the work'] : ['Use the location filter to find jobs near you', 'Apply to multiple jobs to increase your chances', 'Complete your profile to stand out to employers']"
+              icon="📋"
+            >
+              <template #actions>
+                <NuxtLink v-if="role === 'employer'" to="/jobs/new" class="empty-state__cta">Post your first job</NuxtLink>
+                <NuxtLink v-if="role === 'worker'" to="/jobs" class="empty-state__cta">Refresh jobs</NuxtLink>
+              </template>
+            </EmptyState>
           </li>
         </template>
         <template v-else>
@@ -38,7 +46,15 @@
             <EmptyState 
               :title="role === 'employer' ? 'No applications received' : 'No applications sent'" 
               :description="role === 'employer' ? 'Applications will show here as they arrive.' : 'Apply to jobs to see your submissions here.'" 
-            />
+              :explanation="role === 'employer' ? 'Applications appear when workers apply to your posted jobs.' : 'Your applications appear here after you submit them to job postings.'"
+              :tips="role === 'employer' ? ['Make your job descriptions detailed to attract applicants', 'Set competitive budgets to get more applications', 'Respond promptly to applications'] : ['Write a personalized cover letter for each application', 'Propose a rate that reflects your skills and experience', 'Follow up on pending applications']"
+              icon="📝"
+            >
+              <template #actions>
+                <NuxtLink v-if="role === 'employer'" to="/jobs/new" class="empty-state__cta">Post a job</NuxtLink>
+                <NuxtLink v-if="role === 'worker'" to="/jobs" class="empty-state__cta">Browse jobs</NuxtLink>
+              </template>
+            </EmptyState>
           </li>
         </template>
         <template v-else>
@@ -59,7 +75,15 @@
             <EmptyState
               title="No payment activity"
               description="Payments will appear here after you hire and pay a worker."
-            />
+              explanation="Payment events show when you pay workers or receive payouts as a worker."
+              :tips="['Payments are processed securely through our platform', 'You can view payment history and status here', 'Contact support if you have payment issues']"
+              icon="💳"
+            >
+              <template #actions>
+                <NuxtLink v-if="role === 'employer'" to="/jobs" class="empty-state__cta">Post a job</NuxtLink>
+                <NuxtLink v-if="role === 'worker'" to="/jobs" class="empty-state__cta">Find work</NuxtLink>
+              </template>
+            </EmptyState>
           </li>
         </template>
         <template v-else>
@@ -257,6 +281,21 @@ onActivated(() => {
   margin: 0;
   font-weight: 700;
   font-size: var(--text-lg);
+}
+
+.empty-state__cta {
+  display: inline-block;
+  padding: 10px 20px;
+  background: var(--color-primary-600);
+  color: white;
+  border-radius: var(--radius-md);
+  text-decoration: none;
+  font-weight: 600;
+  transition: background 150ms ease;
+}
+
+.empty-state__cta:hover {
+  background: var(--color-primary-700);
 }
 
 </style>

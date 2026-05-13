@@ -10,6 +10,10 @@
           </div>
         </NuxtLink>
       </slot>
+      <div class="nav-sidebar__role-badge" v-if="currentRole">
+        <span class="nav-sidebar__role-dot"></span>
+        <span class="nav-sidebar__role-label">{{ currentRoleLabel }}</span>
+      </div>
     </div>
 
     <ul class="nav-sidebar__list">
@@ -65,7 +69,7 @@ type LogoConfig = {
   initials?: string;
 };
 
-const props = defineProps<{ items: NavItem[]; footerItems?: NavItem[]; logo?: LogoConfig }>();
+const props = defineProps<{ items: NavItem[]; footerItems?: NavItem[]; logo?: LogoConfig; currentRole?: string }>();
 
 const route = useRoute();
 
@@ -79,6 +83,11 @@ const isActive = (item: NavItem) => {
   }
   return current.startsWith(item.to);
 };
+
+const currentRoleLabel = computed(() => {
+  if (!props.currentRole) return '';
+  return props.currentRole.charAt(0).toUpperCase() + props.currentRole.slice(1);
+});
 </script>
 
 <style scoped>
@@ -183,5 +192,25 @@ const isActive = (item: NavItem) => {
   margin-top: auto;
   padding-top: var(--space-4);
   border-top: 1px solid var(--border);
+}
+
+.nav-sidebar__role-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: var(--radius-pill);
+  background: var(--mint);
+  color: var(--teal);
+  font-size: var(--text-xs);
+  font-weight: 600;
+  margin-top: var(--space-2);
+}
+
+.nav-sidebar__role-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--teal);
 }
 </style>

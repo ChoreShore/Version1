@@ -1,7 +1,7 @@
-import { serverSupabaseClient, serverSupabaseUser } from '#supabase/server';
+import { serverSupabaseClient } from '#supabase/server';
 import { validateUpdateApplication } from '~/schemas/application';
 import { rateLimiters } from '~/server/utils/rateLimit';
-import { ensureAuthenticated, rethrowIfAuthError } from '~/server/utils/api';
+import { getAuthenticatedUser } from '~/server/utils/api';
 import {
   fetchApplication,
   authorizeAction,
@@ -21,10 +21,7 @@ export default defineEventHandler(async (event) => {
   try {
     const applicationId = getRouterParam(event, 'id');
     const body = await readBody(event);
-    const user = ensureAuthenticated(
-      await serverSupabaseUser(event),
-      'Sign in to update applications'
-    );
+    const user = await getAuthenticatedUser(event, 'Sign in to update applications');
 
     if (!applicationId) {
       throw createError({ statusCode: 400, statusMessage: 'Application ID is required' });
@@ -72,7 +69,6 @@ export default defineEventHandler(async (event) => {
 
     return buildResponse(updatedApp);
   } catch (error: any) {
-    rethrowIfAuthError(error);
     throw error;
   }
 });

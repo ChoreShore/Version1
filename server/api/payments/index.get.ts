@@ -1,16 +1,12 @@
-import { serverSupabaseClient, serverSupabaseUser } from '#supabase/server';
+import { serverSupabaseClient } from '#supabase/server';
 import { PaymentsListResponseSchema } from '~/schemas/payment';
+import { getAuthenticatedUser } from '~/server/utils/api';
 
 export default defineEventHandler(async (event) => {
   try {
-    const user = await serverSupabaseUser(event);
-
-    if (!user) {
-      throw createError({
-        statusCode: 401,
-        statusMessage: 'Sign in to view payments'
-      });
-    }
+    console.log('[payments/index.get] Starting request');
+    const user = await getAuthenticatedUser(event, 'Sign in to view payments');
+    console.log('[payments/index.get] User authenticated:', user.id);
 
     const query = getQuery(event);
     const role = query.role === 'worker' ? 'worker' : 'employer';
@@ -73,9 +69,7 @@ export default defineEventHandler(async (event) => {
 
     return PaymentsListResponseSchema.parse({ events });
   } catch (error: any) {
-    throw createError({
-      statusCode: error.statusCode || 500,
-      statusMessage: error.statusMessage || 'Failed to load payments'
-    });
+    console.error('[payments/index.get] Error:', error);
+    throw error;
   }
 });

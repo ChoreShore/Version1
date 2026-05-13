@@ -11,7 +11,14 @@
       v-else-if="error"
       title="Job unavailable"
       :description="error"
-    />
+      explanation="This job may have been deleted or you don't have permission to view it."
+      :tips="['The job might have been removed by the employer', 'Check if you have the correct job URL', 'Browse available jobs instead']"
+      icon="⚠️"
+    >
+      <template #actions>
+        <NuxtLink to="/jobs" class="empty-state__cta">Browse jobs</NuxtLink>
+      </template>
+    </EmptyState>
 
     <template v-else-if="job">
       <JobCard :job="job" />
@@ -87,7 +94,13 @@
         </template>
         <template v-else-if="!applications.length">
           <li>
-            <EmptyState title="No applications yet" description="Applications appear here when workers apply." />
+            <EmptyState 
+            title="No applications yet" 
+            description="Applications appear here when workers apply." 
+            explanation="Share your job posting to attract more applicants." 
+            :tips="['Share the job link with your network', 'Ensure your job description is clear', 'Set a competitive budget']"
+            icon="📝"
+          />
           </li>
         </template>
         <template v-else>

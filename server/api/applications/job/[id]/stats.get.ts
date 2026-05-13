@@ -1,18 +1,11 @@
-import { serverSupabaseClient, serverSupabaseUser } from '#supabase/server';
+import { serverSupabaseClient } from '#supabase/server';
 import { ApplicationStatsResponseSchema } from '~/schemas/application';
-import { rethrowIfAuthError } from '~/server/utils/api';
+import { getAuthenticatedUser } from '~/server/utils/api';
 
 export default defineEventHandler(async (event) => {
   try {
     const jobId = getRouterParam(event, 'id');
-    const user = await serverSupabaseUser(event);
-
-    if (!user) {
-      throw createError({ 
-        statusCode: 401, 
-        statusMessage: 'Sign in to view application statistics' 
-      });
-    }
+    const user = await getAuthenticatedUser(event, 'Sign in to view application statistics');
 
     if (!jobId) {
       throw createError({ statusCode: 400, statusMessage: 'Job ID is required' });
@@ -52,7 +45,6 @@ export default defineEventHandler(async (event) => {
       return stats;
     }
   } catch (error: any) {
-    rethrowIfAuthError(error);
     throw error;
   }
 });

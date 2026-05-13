@@ -1,5 +1,4 @@
 import { serverSupabaseClient } from '#supabase/server';
-import { rethrowIfAuthError } from '~/server/utils/api';
 
 export default defineEventHandler(async (event) => {
   try {
@@ -12,7 +11,6 @@ export default defineEventHandler(async (event) => {
 
     return { success: true };
   } catch (error: any) {
-    rethrowIfAuthError(error);
     throw error;
   }
 });

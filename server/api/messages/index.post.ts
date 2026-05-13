@@ -1,6 +1,6 @@
-import { serverSupabaseClient, serverSupabaseUser } from '#supabase/server';
+import { serverSupabaseClient } from '#supabase/server';
 import { validateCreateMessage, MessageResponseSchema } from '~/schemas/message';
-import { rethrowIfAuthError, ensureAuthenticated, ensureMessageParticipant } from '~/server/utils/api';
+import { getAuthenticatedUser, ensureMessageParticipant } from '~/server/utils/api';
 
 // Simple in-memory rate limiter (for production, use Redis-backed rate limiting)
 const rateLimitStore = new Map<string, number[]>();
@@ -40,10 +40,7 @@ function checkRateLimit(userId: string): boolean {
 
 export default defineEventHandler(async (event) => {
   try {
-    const user = ensureAuthenticated(
-      await serverSupabaseUser(event),
-      'Sign in to send messages'
-    );
+    const user = await getAuthenticatedUser(event, 'Sign in to send messages');
 
     // Check rate limit
     if (!checkRateLimit(user.id)) {
@@ -185,7 +182,6 @@ export default defineEventHandler(async (event) => {
       throw createError({ statusCode: 500, statusMessage: 'Invalid response format' });
     }
   } catch (error: any) {
-    rethrowIfAuthError(error);
     throw error;
   }
 });

@@ -1,13 +1,10 @@
-import { serverSupabaseClient, serverSupabaseUser } from '#supabase/server';
+import { serverSupabaseClient } from '#supabase/server';
 import { validateCreateContract, ContractResponseSchema } from '~/schemas/contract';
-import { ensureAuthenticated, rethrowIfAuthError, ensureJobEmployer } from '~/server/utils/api';
+import { getAuthenticatedUser, ensureJobEmployer } from '~/server/utils/api';
 
 export default defineEventHandler(async (event) => {
   try {
-    const user = ensureAuthenticated(
-      await serverSupabaseUser(event),
-      'Sign in to create a contract'
-    );
+    const user = await getAuthenticatedUser(event, 'Sign in to create a contract');
 
     const body = await readBody(event);
     const validation = validateCreateContract(body);
@@ -55,7 +52,6 @@ export default defineEventHandler(async (event) => {
       return { contract: data };
     }
   } catch (error: any) {
-    rethrowIfAuthError(error);
     throw error;
   }
 });

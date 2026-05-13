@@ -1,13 +1,10 @@
-import { serverSupabaseClient, serverSupabaseUser } from '#supabase/server';
+import { serverSupabaseClient } from '#supabase/server';
 import { JobResponseSchema } from '~/schemas/job';
-import { assertValidUuid, ensureAuthenticated, rethrowIfAuthError, ensureJobOwner } from '~/server/utils/api';
+import { assertValidUuid, getAuthenticatedUser, ensureJobOwner } from '~/server/utils/api';
 
 export default defineEventHandler(async (event) => {
   try {
-    const user = ensureAuthenticated(
-      await serverSupabaseUser(event),
-      'Sign in to view full job details'
-    );
+    const user = await getAuthenticatedUser(event, 'Sign in to view full job details');
     const jobId = assertValidUuid(getRouterParam(event, 'id'), {
       label: 'Job ID'
     });
@@ -52,7 +49,6 @@ export default defineEventHandler(async (event) => {
       throw createError({ statusCode: 500, statusMessage: 'Invalid response format' });
     }
   } catch (error: any) {
-    rethrowIfAuthError(error);
     throw error;
   }
 });

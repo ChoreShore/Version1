@@ -30,7 +30,17 @@
 
       <template v-else-if="error">
         <li>
-          <EmptyState title="Unable to load payments" :description="error" />
+          <EmptyState 
+            title="Unable to load payments" 
+            :description="error" 
+            explanation="There was a problem loading your payment history. This might be a temporary issue."
+            :tips="['Check your internet connection', 'Try refreshing the page', 'Contact support if the issue persists']"
+            icon="⚠️"
+          >
+            <template #actions>
+              <button type="button" class="empty-state__cta" @click="fetchEvents">Retry</button>
+            </template>
+          </EmptyState>
         </li>
       </template>
 
@@ -39,7 +49,14 @@
           <EmptyState
             title="No payment events"
             description="Payment activity will appear here after you pay or receive payouts."
-          />
+            explanation="Your payment history shows all transactions made through the platform."
+            :tips="['Complete jobs to generate payment events', 'Ensure payment methods are set up', 'Check payout settings for workers']"
+            icon="💳"
+          >
+            <template #actions>
+              <NuxtLink to="/jobs" class="empty-state__cta">Find work</NuxtLink>
+            </template>
+          </EmptyState>
         </li>
       </template>
 

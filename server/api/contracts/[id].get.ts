@@ -1,12 +1,9 @@
-import { serverSupabaseClient, serverSupabaseUser } from '#supabase/server';
-import { ensureAuthenticated, assertValidUuid, rethrowIfAuthError, ensureContractParticipant } from '~/server/utils/api';
+import { serverSupabaseClient } from '#supabase/server';
+import { assertValidUuid, getAuthenticatedUser, ensureContractParticipant } from '~/server/utils/api';
 
 export default defineEventHandler(async (event) => {
   try {
-    const user = ensureAuthenticated(
-      await serverSupabaseUser(event),
-      'Sign in to view contract details'
-    );
+    const user = await getAuthenticatedUser(event, 'Sign in to view contract details');
 
     const contractId = assertValidUuid(getRouterParam(event, 'id'), { label: 'Contract ID' });
     const client = await serverSupabaseClient(event);
@@ -46,7 +43,6 @@ export default defineEventHandler(async (event) => {
       }
     };
   } catch (error: any) {
-    rethrowIfAuthError(error);
     throw error;
   }
 });

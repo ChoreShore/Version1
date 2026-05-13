@@ -9,6 +9,13 @@
       <p v-if="eyebrow" class="empty-state__eyebrow">{{ eyebrow }}</p>
       <h2 class="empty-state__title">{{ title }}</h2>
       <p v-if="description" class="empty-state__description">{{ description }}</p>
+      <p v-if="explanation" class="empty-state__explanation">{{ explanation }}</p>
+      <div v-if="tips && tips.length" class="empty-state__tips">
+        <p class="empty-state__tips-title">💡 Tips:</p>
+        <ul class="empty-state__tips-list">
+          <li v-for="(tip, index) in tips" :key="index">{{ tip }}</li>
+        </ul>
+      </div>
       <div class="empty-state__actions">
         <slot name="actions" />
       </div>
@@ -23,10 +30,14 @@ withDefaults(
     description?: string;
     eyebrow?: string;
     icon?: string;
+    explanation?: string;
+    tips?: string[];
   }>(),
   {
     description: '',
-    eyebrow: ''
+    eyebrow: '',
+    explanation: '',
+    tips: () => []
   }
 );
 </script>
@@ -79,5 +90,38 @@ withDefaults(
   gap: var(--space-3);
   flex-wrap: wrap;
   justify-content: center;
+}
+
+.empty-state__explanation {
+  margin: var(--space-2) 0 0 0;
+  color: var(--muted);
+  font-size: var(--text-sm);
+  font-style: italic;
+}
+
+.empty-state__tips {
+  margin-top: var(--space-4);
+  text-align: left;
+  background: var(--hover);
+  padding: var(--space-3);
+  border-radius: var(--radius-md);
+}
+
+.empty-state__tips-title {
+  margin: 0 0 var(--space-2) 0;
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--text);
+}
+
+.empty-state__tips-list {
+  margin: 0;
+  padding-left: 1.2rem;
+  color: var(--muted);
+  font-size: var(--text-sm);
+}
+
+.empty-state__tips-list li {
+  margin-bottom: var(--space-1);
 }
 </style>

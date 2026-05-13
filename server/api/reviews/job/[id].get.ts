@@ -1,18 +1,11 @@
-import { serverSupabaseClient, serverSupabaseUser } from '#supabase/server';
+import { serverSupabaseClient } from '#supabase/server';
 import { ReviewResponseSchema } from '~/schemas/review';
 import { mapReview, reviewSelect } from '../utils';
-import { rethrowIfAuthError } from '~/server/utils/api';
+import { getAuthenticatedUser } from '~/server/utils/api';
 
 export default defineEventHandler(async (event) => {
   try {
-    const user = await serverSupabaseUser(event);
-
-    if (!user) {
-      throw createError({
-        statusCode: 401,
-        statusMessage: 'Sign in to view reviews'
-      });
-    }
+    const user = await getAuthenticatedUser(event, 'Sign in to view reviews');
 
     const jobId = getRouterParam(event, 'id');
 
@@ -52,7 +45,6 @@ export default defineEventHandler(async (event) => {
       return response;
     }
   } catch (error: any) {
-    rethrowIfAuthError(error);
     throw error;
   }
 });

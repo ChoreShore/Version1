@@ -181,7 +181,6 @@ const handleSubmit = async () => {
   border-radius: var(--radius-xl);
   box-shadow: var(--shadow-xl);
   padding: var(--space-8);
-  animation: slideUp 400ms var(--ease-out);
 }
 
 .auth-header {
@@ -227,7 +226,6 @@ const handleSubmit = async () => {
   border-radius: var(--radius-md);
   border: 1px solid var(--color-error-200);
   font-size: var(--text-sm);
-  animation: shake 400ms var(--ease-out);
 }
 
 .success-message {
@@ -240,7 +238,6 @@ const handleSubmit = async () => {
   display: flex;
   align-items: flex-start;
   gap: var(--space-3);
-  animation: slideUp 300ms var(--ease-out);
 }
 
 .success-icon {
@@ -255,7 +252,6 @@ const handleSubmit = async () => {
   font-size: var(--text-sm);
   font-weight: var(--font-bold);
   flex-shrink: 0;
-  animation: celebrate 500ms var(--ease-out);
 }
 
 .success-title {
@@ -295,53 +291,18 @@ const handleSubmit = async () => {
   text-decoration: underline;
 }
 
-@keyframes slideUp {
-  from {
-    opacity: 0;
-    transform: translateY(20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-@keyframes spin {
-  to {
-    transform: rotate(360deg);
-  }
-}
-
-@keyframes shake {
-  0%, 100% { transform: translateX(0); }
-  20% { transform: translateX(-4px); }
-  40% { transform: translateX(4px); }
-  60% { transform: translateX(-2px); }
-  80% { transform: translateX(2px); }
-}
-
-@keyframes celebrate {
-  0% { transform: scale(1); }
-  25% { transform: scale(1.2) rotate(-5deg); }
-  50% { transform: scale(1.1) rotate(5deg); }
-  75% { transform: scale(1.05) rotate(-2deg); }
-  100% { transform: scale(1) rotate(0); }
-}
-
 @media (prefers-reduced-motion: reduce) {
-  .auth-card,
-  .success-message,
-  .submit-error,
-  .success-icon {
-    animation: none;
+  .auth-container {
   }
-  
-  .auth-submit {
+
+  .auth-form__submit {
     transition: none;
   }
-  
-  .loading-spinner {
-    animation: none;
+
+  .auth-form__submit.is-loading {
+  }
+
+  .auth-form__success-icon {
   }
 }
 </style>

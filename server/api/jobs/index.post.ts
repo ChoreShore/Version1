@@ -1,17 +1,14 @@
-import { serverSupabaseClient, serverSupabaseUser } from '#supabase/server';
+import { serverSupabaseClient } from '#supabase/server';
 import type { CreateJobInput, JobResponseInput } from '~/schemas/job';
 import { validateCreateJob, JobResponseSchema } from '~/schemas/job';
-import { ensureAuthenticated, rethrowIfAuthError } from '~/server/utils/api';
+import { getAuthenticatedUser } from '~/server/utils/api';
 import { rateLimiters } from '~/server/utils/rateLimit';
 import { geocodePostcode } from '~/server/utils/geocoding';
 import { hasRole } from '~/server/utils/roles';
 
 export default defineEventHandler(async (event) => {
   try {
-    const user = ensureAuthenticated(
-      await serverSupabaseUser(event),
-      'Sign in to create jobs'
-    );
+    const user = await getAuthenticatedUser(event, 'Sign in to create jobs');
 
     // Apply rate limiting based on user ID
     rateLimiters.jobCreation(user.id);
@@ -157,7 +154,6 @@ export default defineEventHandler(async (event) => {
       throw createError({ statusCode: 500, statusMessage: 'Invalid response format' });
     }
   } catch (error: any) {
-    rethrowIfAuthError(error);
     throw error;
   }
 });

@@ -1,16 +1,10 @@
 import { validateAddRole } from '~/schemas/auth';
-import { serverSupabaseClient, serverSupabaseUser } from '#supabase/server';
-import { rethrowIfAuthError } from '~/server/utils/api';
+import { serverSupabaseClient } from '#supabase/server';
+import { getAuthenticatedUser } from '~/server/utils/api';
 
 export default defineEventHandler(async (event) => {
   try {
-    const user = await serverSupabaseUser(event);
-    if (!user) {
-      throw createError({ 
-        statusCode: 401, 
-        statusMessage: 'Sign in to update your roles' 
-      });
-    }
+    const user = await getAuthenticatedUser(event, 'Sign in to update your roles');
 
     const body = await readBody(event);
     
@@ -51,7 +45,6 @@ export default defineEventHandler(async (event) => {
 
     return { roles: Array.from(roles) };
   } catch (error: any) {
-    rethrowIfAuthError(error);
     throw error;
   }
 });

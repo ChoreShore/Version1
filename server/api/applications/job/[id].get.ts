@@ -1,14 +1,11 @@
-import { serverSupabaseClient, serverSupabaseUser } from '#supabase/server';
+import { serverSupabaseClient } from '#supabase/server';
 import { ApplicationWithDetailsSchema, ApplicationsResponseSchema } from '~/schemas/application';
-import { rethrowIfAuthError, ensureAuthenticated, ensureJobEmployer } from '~/server/utils/api';
+import { getAuthenticatedUser, ensureJobEmployer } from '~/server/utils/api';
 
 export default defineEventHandler(async (event) => {
   try {
     const jobId = getRouterParam(event, 'id');
-    const user = ensureAuthenticated(
-      await serverSupabaseUser(event),
-      'Sign in to view applications'
-    );
+    const user = await getAuthenticatedUser(event, 'Sign in to view applications');
 
     if (!jobId) {
       throw createError({ statusCode: 400, statusMessage: 'Job ID is required' });
@@ -67,7 +64,6 @@ export default defineEventHandler(async (event) => {
       return response;
     }
   } catch (error: any) {
-    rethrowIfAuthError(error);
     throw error;
   }
 });

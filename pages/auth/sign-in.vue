@@ -13,7 +13,7 @@
         @reset="handleFormReset"
       >
         <form class="auth-form" @submit.prevent="handleSignIn" novalidate>
-          <FormField id="email" :error="errors.email" :state="emailState">
+          <FormField id="email" :error="errors.email" :state="getFieldState('email')">
             <FormLabel for="email">Email</FormLabel>
             <FormControl>
               <input
@@ -24,12 +24,15 @@
                 placeholder="you@example.com"
                 :disabled="loading"
                 required
+                @input="validateField('email')"
+                @blur="validateField('email')"
               />
             </FormControl>
-            <FormError v-if="emailState === 'error'">Enter a valid email address.</FormError>
+            <FormError v-if="errors.email">{{ errors.email }}</FormError>
+            <FormSuccess v-if="!errors.email && email.length > 0">✓</FormSuccess>
           </FormField>
 
-          <FormField id="password" :error="errors.password" :state="passwordState">
+          <FormField id="password" :error="errors.password" :state="getFieldState('password')">
             <FormLabel for="password">Password</FormLabel>
             <FormControl>
               <input
@@ -40,12 +43,15 @@
                 placeholder="••••••••"
                 :disabled="loading"
                 required
+                @input="validateField('password')"
+                @blur="validateField('password')"
               />
             </FormControl>
-            <FormError v-if="passwordState === 'error'">Password must be at least 8 characters.</FormError>
+            <FormError v-if="errors.password">{{ errors.password }}</FormError>
             <FormHint>
               <NuxtLink to="/auth/reset-password" class="auth-link">Forgot your password?</NuxtLink>
             </FormHint>
+            <FormSuccess v-if="!errors.password && password.length >= 8">✓</FormSuccess>
           </FormField>
 
           <button class="auth-form__submit" type="submit" :disabled="loading || !canSubmit">
@@ -84,13 +90,14 @@ definePageMeta({
   title: 'Sign In - ChoreShore'
 });
 import { useSupabaseClient, useSupabaseUser } from '#imports';
-import { validateSignIn } from '~/schemas/auth';
+import { validateSignIn, SignInSchema } from '~/schemas/auth';
 import type { SignInInput } from '~/schemas/auth';
 import FormField from '~/components/primitives/form/FormField.vue';
 import FormLabel from '~/components/primitives/form/FormLabel.vue';
 import FormControl from '~/components/primitives/form/FormControl.vue';
 import FormError from '~/components/primitives/form/FormError.vue';
 import FormHint from '~/components/primitives/form/FormHint.vue';
+import FormSuccess from '~/components/primitives/form/FormSuccess.vue';
 import LoadingSkeleton from '~/components/primitives/LoadingSkeleton.vue';
 import FormErrorBoundary from '~/components/primitives/FormErrorBoundary.vue';
 
@@ -103,17 +110,37 @@ const loading = ref(false);
 const errorMessage = ref('');
 const errors = ref<Record<string, string>>({});
 
-const emailState = computed(() => {
-  if (!email.value) return undefined;
-  return email.value.includes('@') ? undefined : 'error';
-});
+const touchedFields = ref<Set<string>>(new Set());
 
-const passwordState = computed(() => {
-  if (!password.value) return undefined;
-  return password.value.length >= 8 ? undefined : 'error';
-});
+const getFieldState = (fieldName: string): 'default' | 'success' | 'error' => {
+  if (errors.value[fieldName]) return 'error';
+  if (touchedFields.value.has(fieldName) && !errors.value[fieldName]) {
+    const fieldValue = fieldName === 'email' ? email.value : password.value;
+    if (fieldValue && String(fieldValue).length > 0) return 'success';
+  }
+  return 'default';
+};
 
-const canSubmit = computed(() => !emailState.value && !passwordState.value && email.value && password.value);
+const validateField = (fieldName: 'email' | 'password') => {
+  touchedFields.value.add(fieldName);
+  
+  try {
+    const schema = fieldName === 'email' ? SignInSchema.shape.email : SignInSchema.shape.password;
+    const value = fieldName === 'email' ? email.value : password.value;
+    schema.parse(value);
+    delete errors.value[fieldName];
+  } catch (error: any) {
+    if (error.errors && error.errors[0]) {
+      errors.value[fieldName] = error.errors[0].message;
+    } else {
+      errors.value[fieldName] = 'Invalid value';
+    }
+  }
+};
+
+const canSubmit = computed(() => {
+  return !errors.value.email && !errors.value.password && email.value && password.value && password.value.length >= 8;
+});
 
 const handleSignIn = async () => {
   // Validate form with Zod

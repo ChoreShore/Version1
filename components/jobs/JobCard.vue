@@ -14,7 +14,15 @@
       </div>
     </header>
 
-    <p class="job-card__description">{{ job.description.slice(0, 180) }}…</p>
+    <p class="job-card__description" :class="{ 'is-expanded': isExpanded }">{{ isExpanded ? job.description : truncatedDescription }}</p>
+    <button 
+      v-if="job.description.length > 180" 
+      type="button" 
+      class="job-card__expand" 
+      @click.stop="toggleExpand"
+    >
+      {{ isExpanded ? 'Show less' : 'Show more' }}
+    </button>
 
     <dl class="job-card__meta">
       <div>
@@ -41,12 +49,23 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue';
+import { computed, ref } from 'vue';
 import type { JobWithDetailsInput } from '~/schemas/job';
 import InfoBadge from '~/components/primitives/InfoBadge.vue';
 import StatusPill from '~/components/primitives/StatusPill.vue';
 
-const props = defineProps<{ job: JobWithDetailsInput & { application_count?: number; has_applied?: boolean; distance_km?: number } }>();
+interface JobCardProps {
+  job: JobWithDetailsInput & { application_count?: number; has_applied?: boolean; distance_km?: number };
+  clickable?: boolean;
+}
+
+const props = withDefaults(defineProps<JobCardProps>(), {
+  clickable: true
+});
+
+const isExpanded = ref(false);
+
+const truncatedDescription = computed(() => props.job.description.slice(0, 180) + '…');
 
 const statusVariantMap: Record<string, 'neutral' | 'info' | 'success' | 'warning'> = {
   draft: 'neutral',
@@ -67,6 +86,16 @@ const budgetDisplay = computed(() =>
 );
 
 const deadlineDisplay = computed(() => new Date(props.job.deadline).toLocaleDateString());
+
+function handleCardClick() {
+  if (props.clickable) {
+    // handle card click logic here
+  }
+}
+
+function toggleExpand() {
+  isExpanded.value = !isExpanded.value;
+}
 </script>
 
 <style scoped>
@@ -76,12 +105,20 @@ const deadlineDisplay = computed(() => new Date(props.job.deadline).toLocaleDate
   border-radius: var(--radius-lg);
   padding: var(--space-5);
   box-shadow: var(--shadow);
-  transition: all 0.25s ease;
   position: relative;
   overflow: hidden;
   display: flex;
   flex-direction: column;
   gap: var(--space-4);
+}
+
+.job-card.is-clickable {
+  cursor: pointer;
+}
+
+.job-card.is-clickable:hover {
+  background: #fbfcfc;
+  box-shadow: var(--shadow-hover);
 }
 
 .job-card::before {
@@ -95,12 +132,6 @@ const deadlineDisplay = computed(() => new Date(props.job.deadline).toLocaleDate
   opacity: 0.8;
 }
 
-.job-card:hover,
-.job-card:focus-within {
-  transform: translateY(-4px);
-  background: #fbfcfc;
-  box-shadow: var(--shadow-hover);
-}
 
 .job-card__header {
   display: flex;
@@ -140,6 +171,30 @@ const deadlineDisplay = computed(() => new Date(props.job.deadline).toLocaleDate
 .job-card__description {
   margin: 0;
   color: var(--muted);
+  line-height: 1.6;
+}
+
+.job-card__description.is-expanded {
+  display: -webkit-box;
+  -webkit-line-clamp: unset;
+  -webkit-box-orient: vertical;
+  overflow: visible;
+}
+
+.job-card__expand {
+  background: none;
+  border: none;
+  color: var(--primary);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  cursor: pointer;
+  padding: 4px 0;
+  margin-top: var(--space-1);
+}
+
+.job-card__expand:hover {
+  color: var(--accent);
+  text-decoration: underline;
 }
 
 .job-card__meta {

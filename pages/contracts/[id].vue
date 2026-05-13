@@ -6,7 +6,18 @@
       <LoadingSkeleton variant="block" height="200px" />
     </div>
 
-    <EmptyState v-else-if="error" title="Contract unavailable" :description="error" />
+    <EmptyState 
+      v-else-if="error" 
+      title="Contract unavailable" 
+      :description="error" 
+      explanation="This contract may have been deleted or you don't have permission to view it."
+      :tips="['The contract might have been cancelled', 'Check if you have the correct contract URL', 'Contact support if you believe this is an error']"
+      icon="⚠️"
+    >
+      <template #actions>
+        <NuxtLink to="/contracts" class="empty-state__cta">View contracts</NuxtLink>
+      </template>
+    </EmptyState>
 
     <template v-else-if="contract">
       <header class="contract-detail__header">

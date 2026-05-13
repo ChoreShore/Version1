@@ -1,12 +1,9 @@
-import { serverSupabaseClient, serverSupabaseUser } from '#supabase/server';
-import { ensureAuthenticated, rethrowIfAuthError } from '~/server/utils/api';
+import { serverSupabaseClient } from '#supabase/server';
+import { getAuthenticatedUser } from '~/server/utils/api';
 
 export default defineEventHandler(async (event) => {
   try {
-    const user = ensureAuthenticated(
-      await serverSupabaseUser(event),
-      'Sign in to fix contract worker IDs'
-    );
+    const user = await getAuthenticatedUser(event, 'Sign in to fix contract worker IDs');
 
     const client = await serverSupabaseClient(event);
 
@@ -67,7 +64,6 @@ export default defineEventHandler(async (event) => {
       errors: errors.length > 0 ? errors : undefined
     };
   } catch (error: any) {
-    rethrowIfAuthError(error);
     throw error;
   }
 });

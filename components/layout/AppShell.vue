@@ -22,6 +22,9 @@
       <main class="app-shell__main">
         <slot />
       </main>
+      <nav class="app-shell__bottom-nav">
+        <slot name="bottom-nav" />
+      </nav>
     </div>
 
     <div class="app-shell__scrim" v-if="isSidebarOpen" @click="closeSidebar"></div>
@@ -103,12 +106,12 @@ defineExpose({ openSidebar, closeSidebar, toggleSidebar });
   border-right: 1px solid var(--border);
   overflow-y: auto;
   transform: translateX(-100%);
-  transition: transform 200ms cubic-bezier(0.4, 0, 0.2, 1);
   z-index: 50;
 }
 
 .app-shell__sidebar.is-open {
   transform: translateX(0);
+  /* transition removed for mobile */
 }
 
 .app-shell__content {
@@ -170,8 +173,36 @@ defineExpose({ openSidebar, closeSidebar, toggleSidebar });
     position: sticky;
   }
 
+  .app-shell__bottom-nav {
+    display: none;
+  }
+
   .app-shell__scrim {
     display: none;
+  }
+}
+
+.app-shell__bottom-nav {
+  display: none;
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: var(--surface);
+  border-top: 1px solid var(--border);
+  padding: var(--space-2) var(--space-4);
+  z-index: 50;
+}
+
+@media (max-width: 1023px) {
+  .app-shell__bottom-nav {
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+  }
+  
+  .app-shell__main {
+    padding-bottom: 70px;
   }
 }
 </style>

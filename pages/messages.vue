@@ -1,6 +1,16 @@
 <template>
   <section class="messages-page">
-    <aside class="messages-page__sidebar">
+    <button 
+      class="messages-page__mobile-menu-toggle" 
+      type="button" 
+      aria-label="Toggle conversations"
+      @click="toggleConversationList"
+    >
+      <span v-if="!showConversationList">💬</span>
+      <span v-else>✕</span>
+    </button>
+
+    <aside class="messages-page__sidebar" :class="{ 'is-open': showConversationList }">
       <div class="messages-page__sidebar-header">
         <h2>Conversations</h2>
         <p>Your recent chats across jobs</p>
@@ -19,14 +29,32 @@
         </template>
 
         <template v-else-if="conversationsError">
-          <EmptyState title="Could not load conversations" :description="conversationsError" />
+          <EmptyState 
+            title="Could not load conversations" 
+            :description="conversationsError" 
+            explanation="There was a problem loading your message threads. This might be a temporary issue."
+            :tips="['Check your internet connection', 'Try refreshing the page', 'Contact support if the issue persists']"
+            icon="⚠️"
+          >
+            <template #actions>
+              <button type="button" class="empty-state__cta" @click="fetchConversations">Retry</button>
+            </template>
+          </EmptyState>
         </template>
 
         <template v-else-if="!filteredConversations.length">
           <EmptyState 
             :title="role === 'employer' ? 'No conversations' : 'No conversations'"
             :description="role === 'employer' ? 'Start messaging applicants to see threads here.' : 'Apply to jobs and message employers to see conversations here.'"
-          />
+            :explanation="role === 'employer' ? 'Conversations appear when you message applicants or they message you about your jobs.' : 'Conversations appear when you apply to jobs or employers message you.'"
+            :tips="role === 'employer' ? ['Message applicants to discuss job details', 'Respond quickly to applicant inquiries', 'Keep communication professional'] : ['Apply to jobs to start conversations', 'Message employers with questions', 'Be responsive to employer messages']"
+            icon="💬"
+          >
+            <template #actions>
+              <NuxtLink v-if="role === 'employer'" to="/jobs/new" class="empty-state__cta">Post a job</NuxtLink>
+              <NuxtLink v-if="role === 'worker'" to="/jobs" class="empty-state__cta">Browse jobs</NuxtLink>
+            </template>
+          </EmptyState>
         </template>
 
         <template v-else>
@@ -34,8 +62,8 @@
             v-for="conversation in filteredConversations"
             :key="conversation.id"
             :conversation="formatConversationForItem(conversation)"
+            :is-active="conversation.id === selectedConversationId"
             @select="() => selectConversation(conversation.id as string)"
-            :class="{ 'is-active': conversation.id === selectedConversationId }"
           />
         </template>
       </div>
@@ -68,14 +96,27 @@
           </template>
 
           <template v-else-if="messagesError">
-            <EmptyState title="Unable to load messages" :description="messagesError" />
+            <EmptyState 
+              title="Unable to load messages" 
+              :description="messagesError" 
+              explanation="There was a problem loading this conversation thread. This might be a temporary issue."
+              :tips="['Check your internet connection', 'Try selecting a different conversation', 'Contact support if the issue persists']"
+              icon="⚠️"
+            >
+              <template #actions>
+                <button type="button" class="empty-state__cta" @click="() => activeConversation && loadMessages(activeConversation)">Retry</button>
+              </template>
+            </EmptyState>
           </template>
 
           <template v-else-if="!threadMessages.length">
             <EmptyState 
-            :title="role === 'employer' ? 'No messages yet' : 'No messages yet'"
-            :description="role === 'employer' ? 'Send the first message to start this conversation.' : 'Send a message to begin this conversation.'"
-          />
+              :title="role === 'employer' ? 'No messages yet' : 'No messages yet'"
+              :description="role === 'employer' ? 'Send the first message to start this conversation.' : 'Send a message to begin this conversation.'"
+              explanation="Be the first to break the ice! Send a message to start the conversation."
+              :tips="['Introduce yourself and mention the job', 'Ask relevant questions about the work', 'Keep messages clear and professional']"
+              icon="💬"
+            />
           </template>
 
           <div v-else class="messages-page__messages" role="log" aria-live="polite">
@@ -140,6 +181,7 @@ const conversationsError = ref<string | null>(null);
 const selectedConversationId = ref<string | null>(null);
 const searchQuery = ref('');
 const newConversationApplication = ref<any>(null);
+const showConversationList = ref(false);
 
 const thread = ref<MessageWithProfiles[]>([]);
 const messagesLoading = ref(false);
@@ -298,6 +340,14 @@ const threadMessages = computed(() => {
 
 const selectConversation = (conversationId: string) => {
   selectedConversationId.value = conversationId;
+  // Close conversation list on mobile after selection
+  if (window.innerWidth < 768) {
+    showConversationList.value = false;
+  }
+};
+
+const toggleConversationList = () => {
+  showConversationList.value = !showConversationList.value;
 };
 
 const handleSend = async () => {
@@ -314,33 +364,73 @@ const handleSend = async () => {
   sending.value = true;
   messagesError.value = null;
 
+  const messageBody = composer.value.trim();
+  const clientMessageId = crypto.randomUUID?.() || `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+  const currentUserId = user.value?.id;
+
+  // Optimistic update: show message immediately
+  const optimisticMessage: any = {
+    id: clientMessageId,
+    job_id: activeConversation.value.job_id,
+    application_id: activeConversation.value.application_id,
+    sender_id: currentUserId,
+    receiver_id: receiverId,
+    body: messageBody,
+    created_at: new Date().toISOString(),
+    sender: {
+      id: currentUserId,
+      first_name: 'You',
+      last_name: ''
+    },
+    is_optimistic: true
+  };
+
+  thread.value = [...thread.value, optimisticMessage];
+  composer.value = '';
+
+  // Update conversation sidebar optimistically
+  if (activeConversation.value) {
+    const activeId = activeConversation.value.id;
+    const conv = conversations.value.find(c => c.id === activeId);
+    if (conv) {
+      conv.last_message_preview = messageBody;
+      conv.last_message_at = new Date().toISOString();
+      conv.unread_count = 0;
+    }
+  }
+
   try {
-    const clientMessageId = crypto.randomUUID?.() || `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
     const response = await messagesApi.sendMessage({
       job_id: activeConversation.value.job_id,
       application_id: activeConversation.value.application_id,
       receiver_id: receiverId as string,
-      body: composer.value.trim(),
+      body: messageBody,
       client_message_id: clientMessageId
     });
 
+    // Replace optimistic message with server response
     if (response.message) {
-      thread.value = [...thread.value, response.message];
-      composer.value = '';
-
-      // Update the conversation in the sidebar to reflect the new message
-      if (activeConversation.value) {
-        const activeId = activeConversation.value.id;
-        const conv = conversations.value.find(c => c.id === activeId);
-        if (conv) {
-          conv.last_message_preview = response.message.body;
-          conv.last_message_at = new Date().toISOString();
-          conv.unread_count = 0;
-        }
+      const messageIndex = thread.value.findIndex(m => m.id === clientMessageId);
+      if (messageIndex !== -1) {
+        thread.value[messageIndex] = response.message;
       }
     }
   } catch (err: any) {
-    messagesError.value = err?.data?.statusMessage || 'Unable to send message.';
+    // Revert optimistic update on error
+    thread.value = thread.value.filter(m => m.id !== clientMessageId);
+    composer.value = messageBody;
+    messagesError.value = err?.data?.statusMessage || 'Unable to send message. Please try again.';
+    
+    // Revert conversation sidebar update
+    if (activeConversation.value) {
+      const activeId = activeConversation.value.id;
+      const conv = conversations.value.find(c => c.id === activeId);
+      if (conv && thread.value.length > 0) {
+        const lastMessage = thread.value[thread.value.length - 1];
+        conv.last_message_preview = (lastMessage.body || lastMessage.sender?.first_name) ?? '';
+        conv.last_message_at = (lastMessage.created_at || lastMessage.sent_at) ?? new Date().toISOString();
+      }
+    }
   } finally {
     sending.value = false;
   }
@@ -381,12 +471,66 @@ onUnmounted(() => {
   grid-template-columns: 1fr;
   gap: var(--space-4);
   min-height: calc(100vh - 180px);
+  position: relative;
 }
 
 @media (min-width: 900px) {
   .messages-page {
     grid-template-columns: minmax(260px, 320px) 1fr;
     gap: var(--space-5);
+  }
+}
+
+.messages-page__mobile-menu-toggle {
+  display: none;
+  position: fixed;
+  top: 80px;
+  left: var(--space-4);
+  z-index: 60;
+  width: 44px;
+  height: 44px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-sm);
+  font-size: 20px;
+  cursor: pointer;
+}
+
+.messages-page__mobile-menu-toggle:hover {
+  background: var(--hover);
+}
+
+@media (max-width: 899px) {
+  .messages-page__mobile-menu-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .messages-page__sidebar {
+    position: fixed;
+    top: 72px;
+    left: 0;
+    right: 0;
+    bottom: 70px;
+    z-index: 55;
+    transform: translateX(-100%);
+    border-radius: 0;
+    border-left: none;
+    border-right: none;
+    border-top: 1px solid var(--color-border);
+    border-bottom: 1px solid var(--color-border);
+  }
+
+  .messages-page__sidebar.is-open {
+    transform: translateX(0);
+  }
+
+  .messages-page__thread {
+    border: none;
+    border-radius: 0;
+    padding: var(--space-4);
   }
 }
 
@@ -398,6 +542,7 @@ onUnmounted(() => {
   display: flex;
   flex-direction: column;
   gap: var(--space-4);
+  overflow: hidden;
 }
 
 .messages-page__sidebar-header h2 {

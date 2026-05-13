@@ -46,12 +46,7 @@ export default defineEventHandler(async (event) => {
     return { user: data.user };
   } catch (error: any) {
     // Handle Supabase client initialization errors
-    if (error.message?.includes('Auth session missing') ||
-        error.message?.includes('Supabase') ||
-        error.message?.includes('session') ||
-        error.message?.includes('authentication') ||
-        error.statusCode === 500 ||
-        error.statusCode === 401) {
+    if (error.message?.includes('Auth session missing') || error.message?.includes('auth session missing')) {
       logDetailedError(error, 'signup-auth');
       throw createError({
         statusCode: 401,

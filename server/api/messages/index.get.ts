@@ -1,18 +1,12 @@
-import { serverSupabaseClient, serverSupabaseUser } from '#supabase/server';
+import { serverSupabaseClient } from '#supabase/server';
 import { ConversationsResponseSchema } from '~/schemas/message';
-import { rethrowIfAuthError } from '~/server/utils/api';
+import { getAuthenticatedUser } from '~/server/utils/api';
 
 export default defineEventHandler(async (event) => {
   try {
-    const user = await serverSupabaseUser(event);
-
-    if (!user) {
-      throw createError({
-        statusCode: 401,
-        statusMessage: 'Sign in to view conversations'
-      });
-    }
-
+    console.log('[messages/index.get] Starting request');
+    const user = await getAuthenticatedUser(event, 'Sign in to view conversations');
+    console.log('[messages/index.get] User authenticated:', user.id);
     const query = getQuery(event);
     const client = await serverSupabaseClient(event);
 
@@ -80,7 +74,7 @@ export default defineEventHandler(async (event) => {
       return response;
     }
   } catch (error: any) {
-    rethrowIfAuthError(error);
+    console.error('[messages/index.get] Error:', error);
     throw error;
   }
 });
