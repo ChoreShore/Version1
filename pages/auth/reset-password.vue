@@ -42,7 +42,7 @@
           <div v-if="success" role="status" class="success-message">
             <div class="success-icon" aria-hidden="true">✓</div>
             <div>
-              <p class="success-title">Reset link sent!</p>
+              <p class="success-title">Reset link sent</p>
               <p class="success-text">
                 Check your email for a password reset link. It may take a few minutes to arrive.
               </p>
@@ -78,7 +78,7 @@ import type { PasswordResetInput } from '~/schemas/auth';
 
 definePageMeta({
   layout: false,
-  title: 'Reset Password - ChoreShore'
+  title: 'Reset Password - HireBeHired'
 });
 
 // Form state

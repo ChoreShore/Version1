@@ -42,22 +42,25 @@
 
 @media (max-width: 768px) {
   .top-bar {
-    grid-template-columns: minmax(min-content, 1fr) auto;
-    grid-template-areas:
-      'left actions'
-      'center center';
-    row-gap: var(--space-3);
+    grid-template-columns: auto 1fr;
+    grid-template-areas: 'left actions';
     padding: var(--space-3) var(--space-4);
+    min-height: 56px;
   }
 
   .top-bar__center {
-    grid-area: center;
-    justify-content: flex-start;
+    display: none;
   }
 
   .top-bar__right {
     grid-area: actions;
-    flex-wrap: wrap;
+    justify-content: flex-end;
+    flex-wrap: nowrap;
+    gap: var(--space-2);
+  }
+
+  .top-bar__right > * {
+    flex-shrink: 0;
   }
 }
 </style>

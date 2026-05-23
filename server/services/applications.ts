@@ -4,6 +4,8 @@ import type { UpdateApplicationInput } from '~/schemas/application';
 import { ApplicationResponseSchema } from '~/schemas/application';
 import { ensureApplicationOwner, ensureJobEmployer } from '~/server/utils/api';
 
+import { logger } from '~/server/utils/logger';
+
 export async function fetchApplication(client: SupabaseClient, applicationId: string) {
   const { data, error } = await client
     .from('applications')
@@ -47,8 +49,8 @@ export async function fetchJob(client: SupabaseClient, jobId: string) {
 const VALID_TRANSITIONS: Record<string, string[]> = {
   pending: ['accepted', 'rejected', 'withdrawn'],
   accepted: [],
-  rejected: [],
-  withdrawn: []
+  rejected: ['pending'],
+  withdrawn: ['pending']
 };
 
 export function validateStatusTransition(currentStatus: string, newStatus?: string) {
@@ -261,8 +263,8 @@ export function buildResponse(application: unknown) {
   const response = { application };
   try {
     return ApplicationResponseSchema.parse(response);
-  } catch (validationError) {
-    console.error('Response validation failed:', validationError);
+  } catch (error) {
+    logger.error('Response validation failed', error, 'applications.service');
     throw createError({ statusCode: 500, statusMessage: 'Invalid response format' });
   }
 }

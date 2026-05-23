@@ -7,6 +7,14 @@
 
     <div class="settings-page__content">
       <section class="settings-section">
+        <PhotoSettingsSection />
+      </section>
+
+      <section class="settings-section">
+        <BioSettingsSection />
+      </section>
+
+      <section class="settings-section">
         <RoleManagement />
       </section>
 
@@ -86,6 +94,8 @@
 import RoleManagement from '~/components/profile/RoleManagement.vue';
 import RtwSettingsSection from '~/components/profile/RtwSettingsSection.vue';
 import IdentitySettingsSection from '~/components/profile/IdentitySettingsSection.vue';
+import PhotoSettingsSection from '~/components/profile/PhotoSettingsSection.vue';
+import BioSettingsSection from '~/components/profile/BioSettingsSection.vue';
 import UpdatePasswordForm from '~/components/profile/UpdatePasswordForm.vue';
 import DeleteAccountForm from '~/components/profile/DeleteAccountForm.vue';
 import StatusPill from '~/components/primitives/StatusPill.vue';
@@ -113,7 +123,7 @@ const fetchPaymentMethods = async () => {
     const response = await paymentMethodsApi.listMethods();
     paymentMethods.value = response.methods ?? [];
   } catch (error: any) {
-    paymentMethodsError.value = error?.data?.statusMessage || 'Failed to load payment methods';
+    paymentMethodsError.value = error?.data?.statusMessage || 'Unable to load payment methods. Please check your connection and try again.';
   } finally {
     paymentMethodsLoading.value = false;
   }
@@ -180,7 +190,7 @@ const connectMethod = async (role: Role, methodType: PaymentMethodType) => {
     });
     await fetchPaymentMethods();
   } catch (error: any) {
-    paymentMethodsError.value = error?.data?.statusMessage || 'Failed to connect method';
+    paymentMethodsError.value = error?.data?.statusMessage || 'Unable to connect payment method. Please check your connection and try again.';
   } finally {
     mutatingKey.value = null;
   }
@@ -193,7 +203,7 @@ const verifyMethod = async (role: Role, methodType: PaymentMethodType) => {
     await paymentMethodsApi.verifyMethod({ role, method_type: methodType });
     await fetchPaymentMethods();
   } catch (error: any) {
-    paymentMethodsError.value = error?.data?.statusMessage || 'Failed to verify method';
+    paymentMethodsError.value = error?.data?.statusMessage || 'Unable to verify payment method. Please check your connection and try again.';
   } finally {
     mutatingKey.value = null;
   }
@@ -206,7 +216,7 @@ const disconnectMethod = async (role: Role, methodType: PaymentMethodType) => {
     await paymentMethodsApi.disconnectMethod({ role, method_type: methodType });
     await fetchPaymentMethods();
   } catch (error: any) {
-    paymentMethodsError.value = error?.data?.statusMessage || 'Failed to disconnect method';
+    paymentMethodsError.value = error?.data?.statusMessage || 'Unable to disconnect payment method. Please check your connection and try again.';
   } finally {
     mutatingKey.value = null;
   }

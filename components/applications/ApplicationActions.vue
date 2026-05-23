@@ -118,7 +118,14 @@ onMounted(() => {
 
 // Error boundary handler
 const handleFormError = (error: Error, formName?: string) => {
-  console.error(`Form error in ${formName}:`, error);
+  handleError(error, formName);
+};
+
+const handleError = (error: unknown, formName?: string) => {
+  // Client-side error logging - console is acceptable in browser
+  if (import.meta.dev) {
+    console.error(`Form error in ${formName}:`, error);
+  }
   // You could also send this to your error monitoring service
 };
 

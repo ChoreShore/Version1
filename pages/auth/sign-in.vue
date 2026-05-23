@@ -3,7 +3,7 @@
     <section class="auth-card">
       <header class="auth-card__header">
         <p class="auth-card__eyebrow">Welcome back</p>
-        <h1>Sign in to ChoreShore</h1>
+        <h1>Sign in to HireBeHired</h1>
         <p class="auth-card__description">Continue managing jobs, applications, and conversations.</p>
       </header>
 
@@ -29,7 +29,7 @@
               />
             </FormControl>
             <FormError v-if="errors.email">{{ errors.email }}</FormError>
-            <FormSuccess v-if="!errors.email && email.length > 0">✓</FormSuccess>
+            <FormSuccess v-if="!errors.email && email.length > 0"><Check :size="16" class="success-icon" /></FormSuccess>
           </FormField>
 
           <FormField id="password" :error="errors.password" :state="getFieldState('password')">
@@ -51,7 +51,7 @@
             <FormHint>
               <NuxtLink to="/auth/reset-password" class="auth-link">Forgot your password?</NuxtLink>
             </FormHint>
-            <FormSuccess v-if="!errors.password && password.length >= 8">✓</FormSuccess>
+            <FormSuccess v-if="!errors.password && password.length >= 8"><Check :size="16" class="success-icon" /></FormSuccess>
           </FormField>
 
           <button class="auth-form__submit" type="submit" :disabled="loading || !canSubmit">
@@ -70,24 +70,16 @@
         </p>
       </footer>
     </section>
-    <div class="auth-visual">
-      <h2>Built for busy teams</h2>
-      <p>Track your jobs, review applications, message hires, and collect reviews—all in one clean workspace.</p>
-      <ul>
-        <li>Role aware dashboards</li>
-        <li>Realtime messaging</li>
-        <li>Rich application insights</li>
-      </ul>
-    </div>
   </div>
 </template>
 
 <script setup lang="ts">
 import { computed, ref } from 'vue';
+import { Check, Eye, EyeOff } from '@lucide/vue';
 
 definePageMeta({
   layout: false,
-  title: 'Sign In - ChoreShore'
+  title: 'Sign In - HireBeHired'
 });
 import { useSupabaseClient, useSupabaseUser } from '#imports';
 import { validateSignIn, SignInSchema } from '~/schemas/auth';
@@ -174,17 +166,52 @@ const handleSignIn = async () => {
   }
 
   if (user.value) {
-    navigateTo('/dashboard');
+    await checkPhotoAndRedirect();
   } else {
     await supabase.auth.getSession();
+    await checkPhotoAndRedirect();
+  }
+};
+
+const checkPhotoAndRedirect = async () => {
+  if (!user.value) {
+    navigateTo('/dashboard');
+    return;
+  }
+
+  try {
+    const { data, error } = await supabase
+      .from('profiles')
+      .select('photo_url')
+      .eq('id', user.value.id)
+      .single();
+
+    if (error || !data) {
+      navigateTo('/dashboard');
+      return;
+    }
+
+    // Redirect to complete profile if no photo
+    if (!data.photo_url) {
+      navigateTo('/auth/complete-profile');
+    } else {
+      navigateTo('/dashboard');
+    }
+  } catch (err) {
+    // If there's any error checking for photo, just go to dashboard
     navigateTo('/dashboard');
   }
 };
 
 // Error boundary handlers
-const handleFormError = (error: Error, formName?: string) => {
-  console.error(`Form error in ${formName}:`, error);
-  // You could also send this to your error monitoring service
+const handleError = (error: unknown) => {
+  if (import.meta.dev) {
+    console.error('Form error:', error);
+  }
+};
+
+const handleFormError = (error: Error) => {
+  handleError(error);
 };
 
 const handleFormReset = () => {
@@ -199,15 +226,11 @@ const handleFormReset = () => {
 <style scoped>
 .auth-shell {
   min-height: 100vh;
-  display: grid;
-  grid-template-columns: 1fr;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   background: var(--bg);
-}
-
-@media (min-width: 768px) {
-  .auth-shell {
-    grid-template-columns: 1fr 1fr;
-  }
+  padding: var(--space-4);
 }
 
 .auth-card {
@@ -306,12 +329,18 @@ const handleFormReset = () => {
   color: var(--teal);
   text-decoration: none;
   font-weight: 600;
-  transition: color 150ms ease-out;
+  transition: color 150ms ease;
 }
 
 .auth-link:hover {
   color: var(--accent);
   text-decoration: underline;
+}
+
+.success-icon {
+  display: inline-flex;
+  align-items: center;
+  color: var(--color-success-600);
 }
 
 @media (max-width: 768px) {

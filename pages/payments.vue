@@ -30,11 +30,9 @@
 
       <template v-else-if="error">
         <li>
-          <EmptyState 
-            title="Unable to load payments" 
-            :description="error" 
-            explanation="There was a problem loading your payment history. This might be a temporary issue."
-            :tips="['Check your internet connection', 'Try refreshing the page', 'Contact support if the issue persists']"
+          <EmptyState
+            title="Unable to load payments"
+            description="We were not able to fetch your payment history. There was a problem loading your payment history. This might be a temporary issue."
             icon="⚠️"
           >
             <template #actions>
@@ -48,9 +46,7 @@
         <li>
           <EmptyState
             title="No payment events"
-            description="Payment activity will appear here after you pay or receive payouts."
-            explanation="Your payment history shows all transactions made through the platform."
-            :tips="['Complete jobs to generate payment events', 'Ensure payment methods are set up', 'Check payout settings for workers']"
+            description="Payment activity will appear here after you pay or receive payouts. Your payment history shows all transactions made through the platform."
             icon="💳"
           >
             <template #actions>

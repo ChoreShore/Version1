@@ -9,8 +9,8 @@ export const reviewSelect = `
   comment,
   created_at,
   job:jobs(id,title),
-  reviewer:profiles!reviews_reviewer_id_fkey(id, first_name, last_name),
-  reviewed_user:profiles!reviews_reviewed_user_id_fkey(id, first_name, last_name)
+  reviewer:profiles!reviews_reviewer_id_fkey(username, id, first_name, last_name, bio),
+  reviewed_user:profiles!reviews_reviewed_user_id_fkey(username, id, first_name, last_name, bio)
 `;
 
 export type ReviewRow = {

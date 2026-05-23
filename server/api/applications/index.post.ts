@@ -1,15 +1,21 @@
 import { serverSupabaseClient } from '#supabase/server';
 import { validateCreateApplication, ApplicationResponseSchema } from '~/schemas/application';
-import { rateLimiters } from '~/server/utils/rateLimit';
 import { getAuthenticatedUser } from '~/server/utils/api';
+import { logger } from '~/server/utils/logger';
+import { rateLimiters } from '~/server/utils/rateLimit';
+import { getErrorMessage, logDetailedError } from '~/server/utils/errorMessages';
+import { requireCsrfProtection } from '~/server/utils/csrf';
 
 export default defineEventHandler(async (event) => {
   try {
+    // Apply CSRF protection
+    requireCsrfProtection(event);
+
     const body = await readBody(event);
     const user = await getAuthenticatedUser(event, 'Sign in to apply to jobs');
 
     // Apply rate limiting based on user ID
-    rateLimiters.applications(user.id);
+    await rateLimiters.applications(user.id);
 
     // Validate request body with Zod
     const validation = validateCreateApplication(body);
@@ -24,21 +30,21 @@ export default defineEventHandler(async (event) => {
     const validatedData = validation.data;
     const client = await serverSupabaseClient(event);
 
-    // Debug: Check job details
+    // Fetch job details for validation
     const { data: jobData } = await client
       .from('jobs')
       .select('id, status, employer_id, deadline')
       .eq('id', validatedData.job_id)
       .single();
 
-    // Debug: Check user profile
+    // Fetch user profile for role validation
     const { data: profileData } = await client
       .from('profiles')
       .select('id, roles')
       .eq('id', user.id)
       .single();
 
-    // Debug: Check existing application
+    // Check for existing application
     const { data: existingApp } = await client
       .from('applications')
       .select('id, status')
@@ -46,63 +52,43 @@ export default defineEventHandler(async (event) => {
       .eq('worker_id', user.id)
       .maybeSingle();
 
-    // Build detailed error message
-    let debugInfo = [];
-    if (!jobData) debugInfo.push('Job not found');
-    else if (jobData.status !== 'open') debugInfo.push(`Job status is '${jobData.status}', not 'open'`);
-    else if (new Date(jobData.deadline) < new Date()) debugInfo.push('Job deadline has passed');
-    else if (jobData.employer_id === user.id) debugInfo.push('You cannot apply to your own job');
+    // Build validation errors
+    let validationErrors = [];
+    if (!jobData) validationErrors.push('Job not found');
+    else if (jobData.status !== 'open') validationErrors.push(`Job status is '${jobData.status}', not 'open'`);
+    else if (new Date(jobData.deadline) < new Date()) validationErrors.push('Job deadline has passed');
+    else if (jobData.employer_id === user.id) validationErrors.push('You cannot apply to your own job');
     
-    if (existingApp && existingApp.status !== 'withdrawn') debugInfo.push('You have already applied to this job');
+    if (existingApp && existingApp.status !== 'withdrawn') validationErrors.push('You have already applied to this job');
     
     if (!profileData?.roles?.includes('worker')) {
-      debugInfo.push(`Your roles: [${profileData?.roles?.join(', ') || 'none'}]. Need 'worker' role.`);
+      validationErrors.push(`Your roles: [${profileData?.roles?.join(', ') || 'none'}]. Need 'worker' role.`);
     }
 
-    if (debugInfo.length > 0) {
+    if (validationErrors.length > 0) {
       throw createError({
         statusCode: 400,
-        statusMessage: `Cannot apply: ${debugInfo.join('; ')}`
+        statusMessage: `Cannot apply: ${validationErrors.join('; ')}`
       });
     }
 
-    // All validation checks passed, proceed with application creation or re-application
-    let data;
-    let error;
-
-    if (existingApp && existingApp.status === 'withdrawn') {
-      // Re-apply: update existing withdrawn application
-      const updateResult = await client
-        .from('applications')
-        .update({
-          status: 'pending',
-          cover_letter: validatedData.cover_letter || null,
-          proposed_rate: validatedData.proposed_rate || null,
-          withdrawal_reason: null,
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', existingApp.id)
-        .select()
-        .single();
-      
-      data = updateResult.data;
-      error = updateResult.error;
-    } else {
-      // New application
-      const insertResult = await client
-        .from('applications')
-        .insert({
-          job_id: validatedData.job_id,
-          worker_id: user.id,
-          cover_letter: validatedData.cover_letter || null,
-          proposed_rate: validatedData.proposed_rate || null
-        })
-        .select()
-        .single();
-      
-      data = insertResult.data;
-      error = insertResult.error;
-    }
+    // All validation checks passed, proceed with application creation using upsert
+    // This prevents race conditions with database-level unique constraint
+    const { data, error } = await client
+      .from('applications')
+      .upsert({
+        job_id: validatedData.job_id,
+        worker_id: user.id,
+        cover_letter: validatedData.cover_letter || null,
+        proposed_rate: validatedData.proposed_rate || null,
+        status: 'pending',
+        withdrawal_reason: null
+      }, {
+        onConflict: 'job_id,worker_id',
+        ignoreDuplicates: false
+      })
+      .select()
+      .single();
 
     if (error) {
       // Check for unique constraint violation (already applied)
@@ -126,13 +112,12 @@ export default defineEventHandler(async (event) => {
 
     const response = { application: data };
     
-    // Validate response with Zod schema (safe validation)
+    // Validate response with Zod schema
     try {
       return ApplicationResponseSchema.parse(response);
     } catch (validationError) {
-      console.error('API Response validation failed:', validationError);
-      // Return unvalidated response to prevent breaking the application
-      return response;
+      logger.error('Response validation failed', validationError, 'applications/index.post');
+      throw createError({ statusCode: 500, statusMessage: 'Invalid response format' });
     }
   } catch (error: any) {
     throw error;

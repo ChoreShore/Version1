@@ -151,8 +151,14 @@ const handleDialogCancel = () => {
   showConfirmDialog.value = false;
 };
 
+const handleError = (error: unknown, formName?: string) => {
+  if (import.meta.dev) {
+    console.error(`Form error in ${formName}:`, error);
+  }
+};
+
 const handleFormError = (error: Error, formName?: string) => {
-  console.error(`Form error in ${formName}:`, error);
+  handleError(error, formName);
 };
 
 const handleFormReset = () => {

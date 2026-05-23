@@ -45,7 +45,7 @@ export default defineEventHandler(async (event) => {
       dob,
       forename,
       surname,
-      company_name: 'ChoreShore'
+      company_name: 'HireBeHired'
     });
 
     const apiResponse = await $fetch(
@@ -60,8 +60,11 @@ export default defineEventHandler(async (event) => {
       }
     );
 
+    console.log('API Response:', JSON.stringify(apiResponse, null, 2));
+
     const parsed = RtwApiResponseSchema.safeParse(apiResponse);
     if (!parsed.success) {
+      console.error('Schema validation error:', parsed.error);
       throw createError({ statusCode: 502, statusMessage: 'Unexpected response from RTW service' });
     }
 

@@ -7,7 +7,7 @@ export const JobStatusSchema = z.enum(['draft', 'open', 'closed', 'completed']);
 // Job creation schema - matches your current CreateJobPayload
 export const CreateJobSchema = z.object({
   title: z.string()
-    .min(1, 'Job title is required')
+    .min(1, 'Please enter a job title')
     .max(100, 'Job title must be less than 100 characters')
     .trim(),
   
@@ -27,18 +27,27 @@ export const CreateJobSchema = z.object({
   budget_type: BudgetTypeSchema,
   
   budget_amount: z.number()
-    .positive('Budget amount must be positive')
+    .positive('Please enter a positive budget amount')
     .max(10000, 'Budget amount too large'),
   
   deadline: z.string()
-    .min(1, 'Deadline is required')
+    .min(1, 'Please select a deadline')
     .refine((date) => {
       const parsed = new Date(date);
       return !isNaN(parsed.getTime());
-    }, { message: 'Invalid deadline format' })
+    }, { message: 'Please enter a valid deadline' })
     .refine((date) => new Date(date) > new Date(), {
       message: 'Deadline must be in the future'
     }),
+
+  estimated_hours: z.number()
+    .int('Estimated hours must be a whole number')
+    .min(1, 'Estimated hours must be at least 1')
+    .max(30, 'Estimated hours cannot exceed 30')
+    .optional()
+    .nullable(),
+
+  is_recurring: z.boolean().optional().default(false),
 
   client_request_id: z.string().optional()
 });
@@ -61,6 +70,9 @@ export const JobSchema = z.object({
   budget_type: z.union([z.literal('fixed'), z.literal('hourly')]),
   budget_amount: z.number(),
   deadline: z.string(),
+  estimated_hours: z.number().nullable().optional(),
+  is_recurring: z.boolean().optional(),
+  is_urgent: z.boolean().optional(),
   status: z.union([z.literal('draft'), z.literal('open'), z.literal('closed'), z.literal('completed')]),
   created_at: z.string(),
   updated_at: z.string()
@@ -120,8 +132,51 @@ export const NearJobsResponseSchema = z.object({
   jobs: z.array(z.object({
     job_id: z.string().uuid(),
     title: z.string(),
+    postcode_area: z.string(),
     distance_km: z.number()
   }))
+});
+
+// Public landing page preview — minimal, safe data for unauthenticated visitors
+export const PublicJobPreviewSchema = z.object({
+  id: z.string(),
+  title: z.string(),
+  description: z.string(),
+  category_id: z.string(),
+  category_name: z.string(),
+  postcode_area: z.string(),
+  budget_type: z.union([z.literal('fixed'), z.literal('hourly')]),
+  budget_amount: z.number(),
+  created_at: z.string(),
+  posted_at_relative: z.string(),
+  employer: z.object({
+    display_name: z.string(),
+    average_rating: z.number().nullable(),
+    total_jobs_posted: z.number()
+  }),
+  application_count: z.number(),
+  tags: z.string().array()
+});
+
+export const PublicJobsResponseSchema = z.object({
+  jobs: PublicJobPreviewSchema.array()
+});
+
+// Public jobs board — distance-sorted browseable listings
+export const JobsBoardJobSchema = z.object({
+  id: z.string(),
+  title: z.string(),
+  budget_type: z.union([z.literal('fixed'), z.literal('hourly')]),
+  budget_amount: z.number(),
+  distance_miles: z.number(),
+  posted_at_relative: z.string(),
+  category_name: z.string(),
+  postcode_area: z.string()
+});
+
+export const JobsBoardResponseSchema = z.object({
+  jobs: JobsBoardJobSchema.array(),
+  total: z.number()
 });
 
 // Type exports - can be used alongside existing types initially
@@ -137,6 +192,10 @@ export type JobsResponseInput = z.infer<typeof JobsResponseSchema>;
 export type JobResponseInput = z.infer<typeof JobResponseSchema>;
 export type CategoriesResponseInput = z.infer<typeof CategoriesResponseSchema>;
 export type NearJobsResponseInput = z.infer<typeof NearJobsResponseSchema>;
+export type PublicJobPreviewInput = z.infer<typeof PublicJobPreviewSchema>;
+export type PublicJobsResponseInput = z.infer<typeof PublicJobsResponseSchema>;
+export type JobsBoardJobInput = z.infer<typeof JobsBoardJobSchema>;
+export type JobsBoardResponseInput = z.infer<typeof JobsBoardResponseSchema>;
 
 // Validation helper functions
 export const validateCreateJob = (data: unknown) => {

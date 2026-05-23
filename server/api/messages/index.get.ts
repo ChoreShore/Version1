@@ -1,12 +1,13 @@
 import { serverSupabaseClient } from '#supabase/server';
 import { ConversationsResponseSchema } from '~/schemas/message';
+import { logger } from '~/server/utils/logger';
 import { getAuthenticatedUser } from '~/server/utils/api';
 
 export default defineEventHandler(async (event) => {
   try {
-    console.log('[messages/index.get] Starting request');
+    logger.debug('Starting request', 'messages/index.get');
     const user = await getAuthenticatedUser(event, 'Sign in to view conversations');
-    console.log('[messages/index.get] User authenticated:', user.id);
+    logger.debug('User authenticated:', user.id, 'messages/index.get');
     const query = getQuery(event);
     const client = await serverSupabaseClient(event);
 
@@ -65,16 +66,15 @@ export default defineEventHandler(async (event) => {
 
     const response = { conversations: conversationsWithUnread };
 
-    // Validate response with Zod schema (safe validation)
+    // Validate response with Zod schema
     try {
       return ConversationsResponseSchema.parse(response);
     } catch (validationError) {
-      console.error('API Response validation failed:', validationError);
-      // Return unvalidated response to prevent breaking the application
-      return response;
+      logger.error('Response validation failed', validationError, 'messages/index.get');
+      throw createError({ statusCode: 500, statusMessage: 'Invalid response format' });
     }
   } catch (error: any) {
-    console.error('[messages/index.get] Error:', error);
+    logger.error('Request failed', error, 'messages/index.get');
     throw error;
   }
 });

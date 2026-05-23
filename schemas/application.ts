@@ -69,6 +69,8 @@ export const ApplicationWithDetailsSchema = ApplicationSchema.extend({
   employer_last_name: z.string().optional(),
   worker_first_name: z.string().optional(),
   worker_last_name: z.string().optional(),
+  worker_username: z.string().nullable().optional(),
+  worker_bio: z.string().nullable().optional(),
   // Additional fields for compatibility
   availability_notes: z.string().nullable().optional(),
   employer_name: z.string().optional(),

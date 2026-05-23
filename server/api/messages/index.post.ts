@@ -1,54 +1,21 @@
 import { serverSupabaseClient } from '#supabase/server';
 import { validateCreateMessage, MessageResponseSchema } from '~/schemas/message';
-import { getAuthenticatedUser, ensureMessageParticipant } from '~/server/utils/api';
-
-// Simple in-memory rate limiter (for production, use Redis-backed rate limiting)
-const rateLimitStore = new Map<string, number[]>();
-const RATE_LIMIT_WINDOW = 60000; // 1 minute in ms
-const RATE_LIMIT_MAX = 30; // 30 messages per minute per user
-
-function checkRateLimit(userId: string): boolean {
-  const now = Date.now();
-  const userRequests = rateLimitStore.get(userId) || [];
-  
-  // Filter out requests outside the time window
-  const recentRequests = userRequests.filter(timestamp => now - timestamp < RATE_LIMIT_WINDOW);
-  
-  if (recentRequests.length >= RATE_LIMIT_MAX) {
-    return false; // Rate limit exceeded
-  }
-  
-  // Add current request timestamp
-  recentRequests.push(now);
-  rateLimitStore.set(userId, recentRequests);
-  
-  // Clean up old entries periodically
-  if (rateLimitStore.size > 1000) {
-    const cutoff = now - RATE_LIMIT_WINDOW;
-    for (const [uid, timestamps] of rateLimitStore.entries()) {
-      const filtered = timestamps.filter(t => t > cutoff);
-      if (filtered.length === 0) {
-        rateLimitStore.delete(uid);
-      } else {
-        rateLimitStore.set(uid, filtered);
-      }
-    }
-  }
-  
-  return true;
-}
+import { getAuthenticatedUser } from '~/server/utils/api';
+import { ensureMessageParticipant } from '~/server/utils/api';
+import { logger } from '~/server/utils/logger';
+import { rateLimiters } from '~/server/utils/rateLimit';
+import { getErrorMessage, logDetailedError } from '~/server/utils/errorMessages';
+import { requireCsrfProtection } from '~/server/utils/csrf';
 
 export default defineEventHandler(async (event) => {
   try {
+    // Apply CSRF protection
+    requireCsrfProtection(event);
+
     const user = await getAuthenticatedUser(event, 'Sign in to send messages');
 
-    // Check rate limit
-    if (!checkRateLimit(user.id)) {
-      throw createError({
-        statusCode: 429,
-        statusMessage: 'Too many messages. Please wait a moment before sending another.'
-      });
-    }
+    // Apply rate limiting based on user ID
+    await rateLimiters.messages(user.id);
 
     const body = await readBody(event);
 
@@ -132,8 +99,8 @@ export default defineEventHandler(async (event) => {
         .from('messages')
         .select(`
           *,
-          sender:profiles!messages_sender_id_fkey(id, first_name, last_name),
-          receiver:profiles!messages_receiver_id_fkey(id, first_name, last_name)
+          sender:profiles!messages_sender_id_fkey(username, id, first_name, last_name, bio),
+          receiver:profiles!messages_receiver_id_fkey(username, id, first_name, last_name, bio)
         `)
         .eq('client_message_id', validatedData.client_message_id)
         .eq('sender_id', user.id)
@@ -144,7 +111,7 @@ export default defineEventHandler(async (event) => {
         try {
           return MessageResponseSchema.parse(response);
         } catch (validationError) {
-          console.error('Response validation failed:', validationError);
+          logger.error('Response validation failed', validationError, 'messages/index.post');
           throw createError({ statusCode: 500, statusMessage: 'Invalid response format' });
         }
       }
@@ -163,8 +130,8 @@ export default defineEventHandler(async (event) => {
       })
       .select(`
         *,
-        sender:profiles!messages_sender_id_fkey(id, first_name, last_name),
-        receiver:profiles!messages_receiver_id_fkey(id, first_name, last_name)
+        sender:profiles!messages_sender_id_fkey(username, id, first_name, last_name, bio),
+        receiver:profiles!messages_receiver_id_fkey(username, id, first_name, last_name, bio)
       `)
       .single();
 
@@ -178,7 +145,7 @@ export default defineEventHandler(async (event) => {
     try {
       return MessageResponseSchema.parse(response);
     } catch (validationError) {
-      console.error('Response validation failed:', validationError);
+      logger.error('Response validation failed', validationError, 'messages/index.post');
       throw createError({ statusCode: 500, statusMessage: 'Invalid response format' });
     }
   } catch (error: any) {

@@ -63,8 +63,10 @@ describe('SignUpFormSchema', () => {
     email: 'user@example.com',
     password: 'Password1',
     confirmPassword: 'Password1',
+    username: 'testuser',
     first_name: 'Jane',
     last_name: 'Doe',
+    postcode: 'SW1A 1AA',
     role: 'worker' as const
   };
 
@@ -154,22 +156,6 @@ describe('SignUpFormSchema', () => {
       expect(result.success).toBe(false);
     });
   });
-
-  describe('phone (optional)', () => {
-    it('is valid when omitted', () => {
-      const { phone: _p, ...withoutPhone } = { ...valid, phone: undefined };
-      expect(SignUpFormSchema.safeParse(withoutPhone).success).toBe(true);
-    });
-
-    it('accepts a valid phone number', () => {
-      expect(SignUpFormSchema.safeParse({ ...valid, phone: '07700900000' }).success).toBe(true);
-    });
-
-    it('rejects a phone over 20 characters', () => {
-      const result = SignUpFormSchema.safeParse({ ...valid, phone: '1'.repeat(21) });
-      expect(result.success).toBe(false);
-    });
-  });
 });
 
 // ─── SignUpSchema (API variant, no confirmPassword) ───────────────────────────
@@ -178,8 +164,10 @@ describe('SignUpSchema', () => {
   const valid = {
     email: 'user@example.com',
     password: 'Password1',
+    username: 'testuser',
     first_name: 'Jane',
     last_name: 'Doe',
+    postcode: 'SW1A 1AA',
     role: 'worker' as const
   };
 
@@ -382,8 +370,10 @@ describe('validateSignUpForm', () => {
     email: 'user@example.com',
     password: 'Password1',
     confirmPassword: 'Password1',
+    username: 'testuser',
     first_name: 'Jane',
     last_name: 'Doe',
+    postcode: 'SW1A 1AA',
     role: 'worker'
   };
 
@@ -410,8 +400,10 @@ describe('validateSignUp', () => {
   const valid = {
     email: 'user@example.com',
     password: 'Password1',
+    username: 'testuser',
     first_name: 'Jane',
     last_name: 'Doe',
+    postcode: 'SW1A 1AA',
     role: 'worker'
   };
 

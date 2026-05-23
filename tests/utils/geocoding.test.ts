@@ -36,6 +36,8 @@ describe('geocodePostcode', () => {
   });
 
   it('should return error for invalid postcode format', async () => {
+    global.fetch = vi.fn();
+    
     const result = await geocodePostcode('12');
 
     expect(result.success).toBe(false);

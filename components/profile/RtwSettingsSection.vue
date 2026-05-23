@@ -45,6 +45,7 @@
 import { ref, computed, onMounted } from 'vue';
 import { useRtw } from '~/composables/useRtw';
 import { useActiveRole } from '~/composables/useActiveRole';
+import { formatDate } from '~/server/utils/dateFormat';
 import RtwVerificationModal from '~/components/profile/RtwVerificationModal.vue';
 
 const { isWorker } = useActiveRole();

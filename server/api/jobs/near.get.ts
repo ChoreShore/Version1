@@ -1,8 +1,15 @@
 import { serverSupabaseClient } from '#supabase/server';
+import { logger } from '~/server/utils/logger';
+import { getRequestIP } from 'h3';
+import { rateLimiters } from '~/server/utils/rateLimit';
 import { NearJobsResponseSchema } from '~/schemas/job';
 
 export default defineEventHandler(async (event) => {
   try {
+    // Rate limit by IP to prevent mass scraping of location data
+    const clientIp = getRequestIP(event, { xForwardedFor: true }) ?? 'unknown';
+    await rateLimiters.general(clientIp, event);
+
     const query = getQuery(event);
     
     const lat = parseFloat(query.lat as string);
@@ -34,7 +41,7 @@ export default defineEventHandler(async (event) => {
       .rpc('find_jobs_near', { 
         search_lat: lat, 
         search_lng: lng, 
-        distance_km: distance 
+        max_distance_km: distance 
       });
 
     if (error) {
@@ -47,7 +54,7 @@ export default defineEventHandler(async (event) => {
     try {
       return NearJobsResponseSchema.parse(response);
     } catch (validationError) {
-      console.error('API Response validation failed:', validationError);
+      logger.error('Response validation failed', validationError, 'jobs/near.get');
       throw createError({ statusCode: 500, statusMessage: 'Invalid response format' });
     }
   } catch (error: any) {

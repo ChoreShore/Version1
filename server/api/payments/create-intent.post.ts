@@ -64,29 +64,28 @@ export default defineEventHandler(async (event) => {
       });
     }
 
-    if (idempotency_key) {
-      const { data: existingIntent } = await client
-        .from('payment_transactions')
-        .select('payment_intent_id, amount, status, occurred_at, metadata')
-        .eq('idempotency_key', idempotency_key)
-        .eq('event_type', 'employer_payment')
-        .maybeSingle();
+    // Check for existing payment intent with the same idempotency key
+    const { data: existingIntent } = await client
+      .from('payment_transactions')
+      .select('payment_intent_id, amount, status, occurred_at, metadata')
+      .eq('idempotency_key', idempotency_key)
+      .eq('event_type', 'employer_payment')
+      .maybeSingle();
 
-      if (existingIntent?.payment_intent_id) {
-        const existingPlatformFee = Number(existingIntent.metadata?.platform_fee ?? 0);
-        const existingPayoutAmount = Number(existingIntent.metadata?.payout_amount ?? 0);
-        return PaymentIntentResponseSchema.parse({
-          success: true,
-          payment_intent_id: existingIntent.payment_intent_id,
-          client_secret: `${existingIntent.payment_intent_id}_secret_mock`,
-          amount: Number(existingIntent.amount),
-          platform_fee: existingPlatformFee,
-          payout_amount: existingPayoutAmount,
-          status: existingIntent.status,
-          occurred_at: existingIntent.occurred_at,
-          idempotency_key
-        });
-      }
+    if (existingIntent?.payment_intent_id) {
+      const existingPlatformFee = Number(existingIntent.metadata?.platform_fee ?? 0);
+      const existingPayoutAmount = Number(existingIntent.metadata?.payout_amount ?? 0);
+      return PaymentIntentResponseSchema.parse({
+        success: true,
+        payment_intent_id: existingIntent.payment_intent_id,
+        client_secret: `${existingIntent.payment_intent_id}_secret_mock`,
+        amount: Number(existingIntent.amount),
+        platform_fee: existingPlatformFee,
+        payout_amount: existingPayoutAmount,
+        status: existingIntent.status,
+        occurred_at: existingIntent.occurred_at,
+        idempotency_key
+      });
     }
 
     const baseAmount = Number(application.job?.budget_amount ?? 0);
@@ -113,7 +112,7 @@ export default defineEventHandler(async (event) => {
         amount: escrowAmount,
         currency: 'GBP',
         payment_intent_id: paymentIntentId,
-        idempotency_key: idempotency_key ?? null,
+        idempotency_key: idempotency_key,
         occurred_at: occurredAt,
         metadata: {
           platform_fee: platformFee,

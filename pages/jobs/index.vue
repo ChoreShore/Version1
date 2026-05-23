@@ -14,7 +14,7 @@
           :disabled="geoLoading"
           @click="handleFindNearby"
         >
-          {{ geoLoading ? 'Getting location...' : 'Find jobs near me' }}
+          {{ geoLoading ? 'Locating...' : 'Find jobs near me' }}
         </button>
         <NuxtLink v-if="role === 'employer'" to="/jobs/new" class="jobs-page__cta">Post a job</NuxtLink>
       </div>
@@ -36,15 +36,13 @@
 
     <EmptyState
       v-else-if="!filteredJobs.length"
-      :title="role === 'employer' ? 'No jobs yet' : 'No jobs available'"
-      :description="role === 'employer' ? 'Post your first job to see it here.' : 'Check back later for new job opportunities.'"
-      :explanation="role === 'employer' ? 'Jobs you create will appear in this list. Start by posting your first job.' : 'Available jobs matching your criteria will appear here. Try adjusting filters or check back later.'"
-      :tips="role === 'employer' ? ['Be specific about the work needed', 'Set a fair budget to attract quality workers', 'Include location for local job matching'] : ['Use location filter to find nearby jobs', 'Filter by category to find relevant work', 'Apply to jobs that match your skills']"
+      :title="role === 'employer' ? 'No jobs posted' : 'No jobs found'"
+      :description="role === 'employer' ? 'Jobs you create will appear in this list. Start by posting your first job.' : 'Available jobs matching your criteria will appear here. Try adjusting filters or check back later.'"
       icon="📋"
     >
       <template #actions>
         <NuxtLink v-if="role === 'employer'" to="/jobs/new" class="empty-state__cta">Post a job</NuxtLink>
-        <NuxtLink v-if="role === 'worker'" to="/jobs" class="empty-state__cta">Refresh jobs</NuxtLink>
+        <NuxtLink v-if="role === 'worker'" to="/jobs" class="empty-state__cta">Refresh</NuxtLink>
       </template>
     </EmptyState>
 
@@ -153,7 +151,10 @@ const loadApplications = async () => {
       const response = await useApplications().listMyApplications('worker');
       myApplications.value = response.applications ?? [];
     } catch (error) {
-      console.error('Failed to load applications:', error);
+      // Client-side error logging - console is acceptable in browser
+      if (import.meta.dev) {
+        console.error('Failed to load applications:', error);
+      }
       myApplications.value = [];
     }
   } else {

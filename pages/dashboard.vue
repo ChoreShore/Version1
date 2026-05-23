@@ -14,16 +14,14 @@
         </template>
         <template v-else-if="!jobs.length">
           <li>
-            <EmptyState 
-              :title="role === 'employer' ? 'No jobs posted yet' : 'No jobs available'" 
-              :description="role === 'employer' ? 'Create your first job posting to start hiring.' : 'Check back later for new opportunities.'" 
-              :explanation="role === 'employer' ? 'This list shows jobs you\'ve created. Post your first job to see it here.' : 'This list shows available jobs in your area. New opportunities appear as employers post them.'"
-              :tips="role === 'employer' ? ['Include a detailed description to attract quality applicants', 'Set a competitive budget based on market rates', 'Choose a clear deadline for the work'] : ['Use the location filter to find jobs near you', 'Apply to multiple jobs to increase your chances', 'Complete your profile to stand out to employers']"
-              icon="📋"
+            <EmptyState
+              :title="role === 'employer' ? 'No jobs posted yet' : 'No jobs available'"
+              :description="role === 'employer' ? 'Jobs you create will be listed here. This list shows jobs you\'ve created. Post your first job to see it here.' : 'Jobs in your area will appear here. This list shows available jobs in your area. New opportunities appear as employers post them.'"
+              :icon="ClipboardList"
             >
               <template #actions>
                 <NuxtLink v-if="role === 'employer'" to="/jobs/new" class="empty-state__cta">Post your first job</NuxtLink>
-                <NuxtLink v-if="role === 'worker'" to="/jobs" class="empty-state__cta">Refresh jobs</NuxtLink>
+                <NuxtLink v-if="role === 'worker'" to="/jobs" class="empty-state__cta">Refresh</NuxtLink>
               </template>
             </EmptyState>
           </li>
@@ -43,16 +41,14 @@
         </template>
         <template v-else-if="!applications.length">
           <li>
-            <EmptyState 
-              :title="role === 'employer' ? 'No applications received' : 'No applications sent'" 
-              :description="role === 'employer' ? 'Applications will show here as they arrive.' : 'Apply to jobs to see your submissions here.'" 
-              :explanation="role === 'employer' ? 'Applications appear when workers apply to your posted jobs.' : 'Your applications appear here after you submit them to job postings.'"
-              :tips="role === 'employer' ? ['Make your job descriptions detailed to attract applicants', 'Set competitive budgets to get more applications', 'Respond promptly to applications'] : ['Write a personalized cover letter for each application', 'Propose a rate that reflects your skills and experience', 'Follow up on pending applications']"
+            <EmptyState
+              :title="role === 'employer' ? 'No applications received' : 'No applications sent'"
+              :description="role === 'employer' ? 'Applications will show here as they arrive. Applications appear when workers apply to your posted jobs.' : 'Apply to jobs to see your submissions here. Your applications appear here after you submit them to job postings.'"
               icon="📝"
             >
               <template #actions>
                 <NuxtLink v-if="role === 'employer'" to="/jobs/new" class="empty-state__cta">Post a job</NuxtLink>
-                <NuxtLink v-if="role === 'worker'" to="/jobs" class="empty-state__cta">Browse jobs</NuxtLink>
+                <NuxtLink v-if="role === 'worker'" to="/jobs" class="empty-state__cta">Find jobs</NuxtLink>
               </template>
             </EmptyState>
           </li>
@@ -74,10 +70,8 @@
           <li>
             <EmptyState
               title="No payment activity"
-              description="Payments will appear here after you hire and pay a worker."
-              explanation="Payment events show when you pay workers or receive payouts as a worker."
-              :tips="['Payments are processed securely through our platform', 'You can view payment history and status here', 'Contact support if you have payment issues']"
-              icon="💳"
+              description="Payments will appear here after you hire and pay a worker. Payment events show when you pay workers or receive payouts as a worker."
+              :icon="CreditCard"
             >
               <template #actions>
                 <NuxtLink v-if="role === 'employer'" to="/jobs" class="empty-state__cta">Post a job</NuxtLink>
@@ -122,6 +116,7 @@ import { usePayments } from '~/composables/usePayments';
 import { useActiveRole } from '~/composables/useActiveRole';
 import StatusPill from '~/components/primitives/StatusPill.vue';
 import type { PaymentEventInput } from '~/schemas/payment';
+import { ClipboardList, CreditCard } from '@lucide/vue';
 
 const { role } = useActiveRole();
 
@@ -140,20 +135,25 @@ const stats = computed(() => {
     const openJobs = jobs.value.filter((job) => job.status === 'open').length;
     const pendingApps = applications.value.filter((app) => app.status === 'pending').length;
     const pendingPayments = paymentEvents.value.filter((evt) => evt.status === 'pending').length;
+    const totalApps = applications.value.length;
+    const acceptedApps = applications.value.filter((app) => app.status === 'accepted').length;
+    const acceptanceRate = totalApps > 0 ? Math.round((acceptedApps / totalApps) * 100) : 0;
     return [
-      { title: 'Open jobs', value: openJobs.toString() },
-      { title: 'Applications', value: applications.value.length.toString() },
-      { title: 'Pending decisions', value: pendingApps.toString() },
-      { title: 'Pending payments', value: pendingPayments.toString() }
+      { title: 'Open jobs', value: openJobs.toString(), description: 'Active listings' },
+      { title: 'Applications', value: totalApps.toString(), description: `${acceptanceRate}% accepted`, trend: { value: '↑ 2', label: 'from last week', variant: 'up' as const } },
+      { title: 'Pending decisions', value: pendingApps.toString(), description: 'Requires attention' },
+      { title: 'Pending payments', value: pendingPayments.toString(), description: 'This month' }
     ];
   } else {
     const pendingApps = applications.value.filter((app) => app.status === 'pending').length;
     const acceptedApps = applications.value.filter((app) => app.status === 'accepted').length;
+    const totalApps = applications.value.length;
+    const acceptanceRate = totalApps > 0 ? Math.round((acceptedApps / totalApps) * 100) : 0;
     return [
-      { title: 'Applications sent', value: applications.value.length.toString() },
-      { title: 'Pending', value: pendingApps.toString() },
-      { title: 'Accepted', value: acceptedApps.toString() },
-      { title: 'Avg. rating', value: '4.8★' }
+      { title: 'Applications sent', value: totalApps.toString(), description: 'This month' },
+      { title: 'Pending', value: pendingApps.toString(), description: 'Awaiting response' },
+      { title: 'Accepted', value: acceptedApps.toString(), description: `${acceptanceRate}% acceptance rate`, trend: { value: '↑ 1', label: 'from last week', variant: 'up' as const } },
+      { title: 'Avg. rating', value: '4.8★', description: 'Based on reviews' }
     ];
   }
 });
@@ -184,7 +184,8 @@ const loadPayments = async () => {
   try {
     const response = await usePayments().listEvents(role.value);
     paymentEvents.value = response.events ?? [];
-  } catch {
+  } catch (error) {
+    console.error('Failed to load payments:', error);
     paymentEvents.value = [];
   } finally {
     paymentsLoading.value = false;

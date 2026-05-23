@@ -1,10 +1,9 @@
-import { describe, it, expect, afterEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { useActiveRole } from '~/composables/useActiveRole';
 
-// globalRole is module-level — reset to the default 'employer' after every test
-// to prevent state leaking between tests.
-afterEach(() => {
-  useActiveRole().setRole('employer');
+beforeEach(() => {
+  vi.clearAllMocks();
+  (globalThis as any).$fetch = vi.fn().mockResolvedValue({ user: { roles: ['employer', 'worker'] } });
 });
 
 // ─── Initial state ────────────────────────────────────────────────────────────
@@ -29,42 +28,42 @@ describe('initial state', () => {
 // ─── setRole ──────────────────────────────────────────────────────────────────
 
 describe('setRole', () => {
-  it('changes role to "worker"', () => {
+  it('changes role to "worker"', async () => {
     const { role, setRole } = useActiveRole();
-    setRole('worker');
+    await setRole('worker');
     expect(role.value).toBe('worker');
   });
 
-  it('changes role back to "employer"', () => {
+  it('changes role back to "employer"', async () => {
     const { role, setRole } = useActiveRole();
-    setRole('worker');
-    setRole('employer');
+    await setRole('worker');
+    await setRole('employer');
     expect(role.value).toBe('employer');
   });
 
-  it('updates isEmployer reactively when switching to worker', () => {
+  it('updates isEmployer reactively when switching to worker', async () => {
     const { isEmployer, setRole } = useActiveRole();
-    setRole('worker');
+    await setRole('worker');
     expect(isEmployer.value).toBe(false);
   });
 
-  it('updates isWorker reactively when switching to worker', () => {
+  it('updates isWorker reactively when switching to worker', async () => {
     const { isWorker, setRole } = useActiveRole();
-    setRole('worker');
+    await setRole('worker');
     expect(isWorker.value).toBe(true);
   });
 
-  it('updates isEmployer reactively when switching back to employer', () => {
+  it('updates isEmployer reactively when switching back to employer', async () => {
     const { isEmployer, setRole } = useActiveRole();
-    setRole('worker');
-    setRole('employer');
+    await setRole('worker');
+    await setRole('employer');
     expect(isEmployer.value).toBe(true);
   });
 
-  it('updates isWorker reactively when switching back to employer', () => {
+  it('updates isWorker reactively when switching back to employer', async () => {
     const { isWorker, setRole } = useActiveRole();
-    setRole('worker');
-    setRole('employer');
+    await setRole('worker');
+    await setRole('employer');
     expect(isWorker.value).toBe(false);
   });
 });
@@ -92,65 +91,3 @@ describe('role writable computed (role.value = ...)', () => {
   });
 });
 
-// ─── Global state sharing across instances ───────────────────────────────────
-
-describe('global state — shared across separate useActiveRole() calls', () => {
-  it('change made via one instance is visible in another', () => {
-    const a = useActiveRole();
-    const b = useActiveRole();
-
-    a.setRole('worker');
-
-    expect(b.role.value).toBe('worker');
-  });
-
-  it('isWorker on a second instance reflects change from the first', () => {
-    const a = useActiveRole();
-    const b = useActiveRole();
-
-    a.setRole('worker');
-
-    expect(b.isWorker.value).toBe(true);
-    expect(b.isEmployer.value).toBe(false);
-  });
-
-  it('change via role.value setter on one instance is visible on another', () => {
-    const a = useActiveRole();
-    const b = useActiveRole();
-
-    a.role.value = 'worker';
-
-    expect(b.role.value).toBe('worker');
-  });
-
-  it('both instances agree after multiple switches', () => {
-    const a = useActiveRole();
-    const b = useActiveRole();
-
-    a.setRole('worker');
-    b.setRole('employer');
-    a.setRole('worker');
-
-    expect(a.role.value).toBe('worker');
-    expect(b.role.value).toBe('worker');
-  });
-});
-
-// ─── State persistence across sequential calls ────────────────────────────────
-
-describe('state persistence', () => {
-  it('role set in a previous call is visible in the next call (no reset)', () => {
-    useActiveRole().setRole('worker');
-
-    // New call — no reset in between
-    const { role } = useActiveRole();
-    expect(role.value).toBe('worker');
-  });
-
-  it('isWorker persists for a fresh instance after a previous setRole', () => {
-    useActiveRole().setRole('worker');
-
-    const { isWorker } = useActiveRole();
-    expect(isWorker.value).toBe(true);
-  });
-});

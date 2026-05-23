@@ -5,7 +5,8 @@ import type {
   JobsResponseInput,
   JobResponseInput,
   CategoriesResponseInput,
-  NearJobsResponseInput
+  NearJobsResponseInput,
+  PublicJobsResponseInput
 } from '~/schemas/job';
 import type { Role } from '~/schemas/role';
 
@@ -54,9 +55,38 @@ export const useJobs = () => {
     return await $fetch<NearJobsResponseInput>('/api/jobs/near', { params });
   };
 
+  const getPublicJob = async (jobId: string) => {
+    return await $fetch<{
+      job: any;
+      employer: any;
+      application_count: number;
+      other_jobs: any[];
+    }>(`/api/public/jobs/${jobId}`);
+  };
+
+  const listPublicJobs = async (limit?: number, category?: string) => {
+    return await $fetch<PublicJobsResponseInput>('/api/public/jobs', {
+      params: {
+        ...(limit ? { limit: limit.toString() } : {}),
+        ...(category ? { category } : {})
+      }
+    });
+  };
+
+  const getPublicStats = async () => {
+    return await $fetch<{
+      jobs_completed_this_week: number;
+      jobs_posted_today: number;
+      escrow_protected_payments: number;
+    }>('/api/public/stats');
+  };
+
   return {
     listJobs,
     getJob,
+    getPublicJob,
+    listPublicJobs,
+    getPublicStats,
     createJob,
     updateJob,
     deleteJob,

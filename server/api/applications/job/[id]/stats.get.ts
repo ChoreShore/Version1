@@ -1,4 +1,5 @@
 import { serverSupabaseClient } from '#supabase/server';
+import { logger } from '~/server/utils/logger';
 import { ApplicationStatsResponseSchema } from '~/schemas/application';
 import { getAuthenticatedUser } from '~/server/utils/api';
 
@@ -36,13 +37,12 @@ export default defineEventHandler(async (event) => {
       rejected: applications?.filter(app => app.status === 'rejected').length ?? 0
     };
 
-    // Validate response with Zod schema (safe validation)
+    // Validate response with Zod schema
     try {
       return ApplicationStatsResponseSchema.parse(stats);
     } catch (validationError) {
-      console.error('API Response validation failed:', validationError);
-      // Return unvalidated response to prevent breaking the application
-      return stats;
+      logger.error('Response validation failed', validationError, 'applications/job/[id]/stats.get');
+      throw createError({ statusCode: 500, statusMessage: 'Invalid response format' });
     }
   } catch (error: any) {
     throw error;

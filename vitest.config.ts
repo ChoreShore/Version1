@@ -12,6 +12,8 @@ export default defineConfig({
   resolve: {
     alias: {
       '#supabase/server': path.resolve(__dirname, 'tests/mocks/supabase-server.ts'),
+      '#imports': path.resolve(__dirname, 'tests/mocks/nuxt-imports.ts'),
+      'ofetch': path.resolve(__dirname, 'tests/mocks/ofetch.ts'),
       '~': path.resolve(__dirname),
       '@': path.resolve(__dirname),
     },

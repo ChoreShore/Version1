@@ -3,7 +3,7 @@ import { defineConfig } from 'cypress'
 export default defineConfig({
   e2e: {
     // Use your deployed website URL
-    baseUrl: 'https://version1-seven.vercel.app', // Your deployed ChoreShore app
+    baseUrl: 'https://version1-seven.vercel.app', // Your deployed HireBeHired app
     supportFile: 'cypress/support/e2e.ts',
     specPattern: 'cypress/e2e/**/*.cy.{js,jsx,ts,tsx}',
     video: true,

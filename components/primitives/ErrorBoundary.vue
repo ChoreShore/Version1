@@ -69,8 +69,15 @@ const emit = defineEmits<{
 const hasError = ref(false);
 const error: Ref<Error | null> = ref(null);
 
+const handleError = (error: unknown) => {
+  // Client-side error logging - console is acceptable in browser
+  if (import.meta.dev) {
+    console.error('ErrorBoundary caught an error:', error);
+  }
+};
+
 onErrorCaptured((err: Error, instance: any, info: string) => {
-  console.error('ErrorBoundary caught an error:', err);
+  handleError(err);
   
   hasError.value = true;
   error.value = err;

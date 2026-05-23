@@ -23,10 +23,8 @@ withDefaults(
   gap: 6px;
   padding: 0.25rem 0.75rem;
   border-radius: var(--radius-pill);
-  font-size: var(--text-xs);
+  font-size: var(--text-sm);
   font-weight: 600;
-  letter-spacing: 0.02em;
-  text-transform: uppercase;
   background: var(--hover);
   color: var(--muted);
 }

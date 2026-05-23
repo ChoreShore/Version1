@@ -20,13 +20,15 @@
 </template>
 
 <script setup lang="ts">
+import { computed } from 'vue';
+import { formatDate } from '~/server/utils/dateFormat';
 import type { ReviewInput } from '~/schemas/review';
 
 const props = defineProps<{ review: ReviewInput }>();
 
 const jobTitle = computed(() => props.review.job_title ?? 'Job');
 const reviewerName = computed(() => props.review.reviewer_first_name ?? 'Employer');
-const createdAt = computed(() => new Date(props.review.created_at).toLocaleDateString());
+const createdAt = computed(() => formatDate(props.review.created_at));
 </script>
 
 <style scoped>

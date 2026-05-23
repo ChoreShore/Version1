@@ -38,12 +38,13 @@ const emit = defineEmits<{
   reset: [];
 }>();
 
-const handleError = (error: Error, instance: any, info: string) => {
-  // Log form-specific errors
-  console.error(`Form Error Boundary (${props.formName || 'unknown'}):`, error);
-  
+const handleError = (error: unknown) => {
+  // Client-side error logging - console is acceptable in browser
+  if (import.meta.dev) {
+    console.error(`Form Error Boundary (${props.formName || 'unknown'}):`, error);
+  }
   // Emit form-specific error event
-  emit('form-error', error, props.formName);
+  emit('form-error', error as Error, props.formName);
   
   // You could also send error reports to your monitoring service here
   // reportError(error, { formName: props.formName, component: info });

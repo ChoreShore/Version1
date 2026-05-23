@@ -26,6 +26,8 @@
           :class="{ 'is-active': isActive(item) }"
           :target="item.external ? '_blank' : undefined"
           :rel="item.external ? 'noopener noreferrer' : undefined"
+          :aria-label="item.label"
+          :aria-current="isActive(item) ? 'page' : undefined"
         >
           <span class="nav-sidebar__icon" aria-hidden="true">
             <slot name="icon" :item="item">
@@ -33,15 +35,15 @@
             </slot>
           </span>
           <span class="nav-sidebar__label">{{ item.label }}</span>
-          <span class="nav-sidebar__badge" v-if="item.badge">{{ item.badge }}</span>
+          <span class="nav-sidebar__badge" v-if="item.badge" :aria-label="`${item.badge} notifications`">{{ item.badge }}</span>
         </component>
       </li>
     </ul>
 
-    <div class="nav-sidebar__footer" v-if="footerItems?.length">
+    <div class="nav-sidebar__footer" v-if="footerItems?.length" role="group" aria-label="Footer navigation">
       <ul>
         <li v-for="item in footerItems" :key="item.to">
-          <NuxtLink :to="item.to" class="nav-sidebar__link">
+          <NuxtLink :to="item.to" class="nav-sidebar__link" :aria-label="item.label">
             <span>{{ item.label }}</span>
           </NuxtLink>
         </li>
@@ -129,7 +131,7 @@ const currentRoleLabel = computed(() => {
   margin: 0;
   font-size: var(--text-base);
   font-weight: 700;
-  color: var(--teal);
+  color: var(--color-teal);
 }
 
 .nav-sidebar__brand-subtitle {
@@ -163,11 +165,17 @@ const currentRoleLabel = computed(() => {
 
 .nav-sidebar__link:hover,
 .nav-sidebar__link.is-active {
-  background-color: var(--hover);
+  background-color: var(--color-hover);
 }
 
 .nav-sidebar__link.is-active {
-  color: var(--teal);
+  color: var(--color-teal);
+}
+
+.nav-sidebar__link:focus-visible {
+  outline: 2px solid var(--color-teal);
+  outline-offset: 2px;
+  border-radius: var(--radius-md);
 }
 
 .nav-sidebar__icon {
@@ -182,8 +190,8 @@ const currentRoleLabel = computed(() => {
   margin-left: auto;
   padding: 2px 8px;
   border-radius: var(--radius-pill);
-  background-color: var(--mint);
-  color: var(--teal);
+  background-color: var(--color-mint);
+  color: var(--color-teal);
   font-size: var(--text-xs);
   font-weight: 600;
 }
@@ -200,8 +208,8 @@ const currentRoleLabel = computed(() => {
   gap: 6px;
   padding: 4px 10px;
   border-radius: var(--radius-pill);
-  background: var(--mint);
-  color: var(--teal);
+  background: var(--color-mint);
+  color: var(--color-teal);
   font-size: var(--text-xs);
   font-weight: 600;
   margin-top: var(--space-2);
@@ -211,6 +219,6 @@ const currentRoleLabel = computed(() => {
   width: 6px;
   height: 6px;
   border-radius: 50%;
-  background: var(--teal);
+  background: var(--color-teal);
 }
 </style>

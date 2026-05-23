@@ -6,12 +6,10 @@
       <LoadingSkeleton variant="block" height="200px" />
     </div>
 
-    <EmptyState 
-      v-else-if="error" 
-      title="Contract unavailable" 
-      :description="error" 
-      explanation="This contract may have been deleted or you don't have permission to view it."
-      :tips="['The contract might have been cancelled', 'Check if you have the correct contract URL', 'Contact support if you believe this is an error']"
+    <EmptyState
+      v-else-if="error"
+      title="Contract not found"
+      description="We were not able to fetch this contract. This contract may have been deleted or you don't have permission to view it."
       icon="⚠️"
     >
       <template #actions>
@@ -40,7 +38,11 @@
           </li>
           <li>
             <span>Worker</span>
-            <strong>{{ contract.worker_first_name }} {{ contract.worker_last_name }}</strong>
+            <strong>{{ contract.worker_username || `${contract.worker_first_name} ${contract.worker_last_name}` }}</strong>
+          </li>
+          <li v-if="contract.worker_bio">
+            <span>Bio</span>
+            <strong>{{ contract.worker_bio }}</strong>
           </li>
           <li>
             <span>Created</span>

@@ -1,17 +1,23 @@
 import { serverSupabaseClient } from '#supabase/server';
-import type { CreateJobInput, JobResponseInput } from '~/schemas/job';
+import type { CreateJobInput } from '~/schemas/job';
 import { validateCreateJob, JobResponseSchema } from '~/schemas/job';
 import { getAuthenticatedUser } from '~/server/utils/api';
-import { rateLimiters } from '~/server/utils/rateLimit';
-import { geocodePostcode } from '~/server/utils/geocoding';
 import { hasRole } from '~/server/utils/roles';
+import { geocodePostcode } from '~/server/utils/geocoding';
+import { logger } from '~/server/utils/logger';
+import { rateLimiters } from '~/server/utils/rateLimit';
+import { getErrorMessage, logDetailedError } from '~/server/utils/errorMessages';
+import { requireCsrfProtection } from '~/server/utils/csrf';
 
 export default defineEventHandler(async (event) => {
   try {
+    // Apply CSRF protection
+    requireCsrfProtection(event);
+
     const user = await getAuthenticatedUser(event, 'Sign in to create jobs');
 
     // Apply rate limiting based on user ID
-    rateLimiters.jobCreation(user.id);
+    await rateLimiters.jobCreation(user.id);
 
     const body = await readBody<CreateJobInput>(event);
     
@@ -56,7 +62,7 @@ export default defineEventHandler(async (event) => {
       .single();
 
     if (categoryError) {
-      console.error('Category query failed:', categoryError);
+      logger.error('Category query failed', categoryError, 'jobs/index.post');
       throw createError({ statusCode: 500, statusMessage: 'Failed to query category' });
     }
 
@@ -65,7 +71,7 @@ export default defineEventHandler(async (event) => {
     }
 
     // Deduplication: prevent double-submit by checking for an identical job created recently
-    const thirtySecondsAgo = new Date(Date.now() - 30 * 1000).toISOString();
+    const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000).toISOString();
     const { data: recentDuplicate } = await client
       .from('jobs')
       .select('id')
@@ -77,7 +83,9 @@ export default defineEventHandler(async (event) => {
       .eq('budget_amount', body.budget_amount)
       .eq('deadline', body.deadline)
       .eq('postcode', body.postcode)
-      .gte('created_at', thirtySecondsAgo)
+      .eq('estimated_hours', body.estimated_hours)
+      .eq('is_recurring', body.is_recurring)
+      .gte('created_at', fiveMinutesAgo)
       .order('created_at', { ascending: false })
       .limit(1)
       .maybeSingle();
@@ -99,7 +107,7 @@ export default defineEventHandler(async (event) => {
         try {
           return JobResponseSchema.parse(response);
         } catch (validationError) {
-          console.error('Response validation failed:', validationError);
+          logger.error('Response validation failed', validationError, 'jobs/index.post');
           throw createError({ statusCode: 500, statusMessage: 'Invalid response format' });
         }
       }
@@ -114,7 +122,7 @@ export default defineEventHandler(async (event) => {
       latitude = geocodingResult.latitude;
       longitude = geocodingResult.longitude;
     } else {
-      console.warn(`Failed to geocode postcode: ${body.postcode}`, geocodingResult.error);
+      logger.warn(`Failed to geocode postcode: ${body.postcode}`, undefined, 'jobs/index.post', geocodingResult.error);
     }
 
     const { data, error } = await client
@@ -128,6 +136,8 @@ export default defineEventHandler(async (event) => {
         budget_amount: body.budget_amount,
         deadline: body.deadline,
         postcode: body.postcode,
+        estimated_hours: body.estimated_hours,
+        is_recurring: body.is_recurring,
         latitude,
         longitude,
         status: 'open'
@@ -140,7 +150,7 @@ export default defineEventHandler(async (event) => {
       .single();
 
     if (error) {
-      console.error('Job creation failed:', error);
+      logger.error('Job creation failed', error, 'jobs/index.post');
       throw createError({ statusCode: 500, statusMessage: 'Failed to create job' });
     }
 
@@ -150,7 +160,7 @@ export default defineEventHandler(async (event) => {
     try {
       return JobResponseSchema.parse(response);
     } catch (validationError) {
-      console.error('Response validation failed:', validationError);
+      logger.error('Response validation failed', validationError, 'jobs/index.post');
       throw createError({ statusCode: 500, statusMessage: 'Invalid response format' });
     }
   } catch (error: any) {

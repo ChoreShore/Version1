@@ -1,14 +1,19 @@
 import { validateSignIn } from '~/schemas/auth';
 import { serverSupabaseClient } from '#supabase/server';
+import { logger } from '~/server/utils/logger';
 import { rateLimiters } from '~/server/utils/rateLimit';
 import { getErrorMessage, logDetailedError } from '~/server/utils/errorMessages';
+import { requireCsrfProtection } from '~/server/utils/csrf';
 
 export default defineEventHandler(async (event) => {
   try {
+    // Apply CSRF protection
+    requireCsrfProtection(event);
+
     const body = await readBody(event);
 
     // Apply rate limiting based on email
-    rateLimiters.auth(body.email);
+    await rateLimiters.auth(body.email);
 
     // Validate request body with Zod
     const validation = validateSignIn(body);

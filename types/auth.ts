@@ -6,9 +6,10 @@ export type { Role };
 export interface SignUpPayload {
   email: string;
   password: string;
+  username: string;
   first_name: string;
   last_name: string;
-  phone?: string;
+  postcode: string;
   role: Role;
 }
 
@@ -19,10 +20,12 @@ export interface SignInPayload {
 
 export interface Profile {
   id: string;
+  username: string;
   first_name: string | null;
   last_name: string | null;
-  phone: string | null;
   roles: Role[];
+  photo_url: string | null;
+  bio: string | null;
   created_at: string;
   updated_at: string;
   rtw_status: 'unverified' | 'verified' | 'rejected';

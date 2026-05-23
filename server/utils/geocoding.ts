@@ -1,3 +1,5 @@
+import { logger } from '~/server/utils/logger';
+
 interface PostcodeIOResponse {
   status: number;
   result?: {
@@ -14,9 +16,16 @@ interface GeocodingResult {
   error?: string;
 }
 
-// Simple in-memory cache with TTL
-const geocodingCache = new Map<string, { result: GeocodingResult; timestamp: number }>();
+interface CacheEntry {
+  result: GeocodingResult;
+  timestamp: number;
+  lastAccessed: number;
+}
+
+// Simple in-memory cache with TTL and size limit
+const geocodingCache = new Map<string, CacheEntry>();
 const CACHE_TTL_MS = 24 * 60 * 60 * 1000; // 24 hours
+const CACHE_MAX_SIZE = 1000; // Maximum number of entries
 
 function normalizePostcode(postcode: string): string {
   return postcode.toLowerCase().replace(/\s/g, '');
@@ -25,15 +34,44 @@ function normalizePostcode(postcode: string): string {
 function getCachedResult(postcode: string): GeocodingResult | null {
   const normalized = normalizePostcode(postcode);
   const cached = geocodingCache.get(normalized);
-  if (cached && Date.now() - cached.timestamp < CACHE_TTL_MS) {
+  const now = Date.now();
+  
+  if (cached && now - cached.timestamp < CACHE_TTL_MS) {
+    // Update last accessed time for LRU
+    cached.lastAccessed = now;
     return cached.result;
   }
+  
+  // Remove expired entries
+  if (cached && now - cached.timestamp >= CACHE_TTL_MS) {
+    geocodingCache.delete(normalized);
+  }
+  
   return null;
 }
 
 function setCachedResult(postcode: string, result: GeocodingResult): void {
   const normalized = normalizePostcode(postcode);
-  geocodingCache.set(normalized, { result, timestamp: Date.now() });
+  const now = Date.now();
+  
+  // If cache is full, remove least recently used entry
+  if (geocodingCache.size >= CACHE_MAX_SIZE) {
+    let lruKey: string | null = null;
+    let lruTime = now;
+    
+    for (const [key, entry] of geocodingCache.entries()) {
+      if (entry.lastAccessed < lruTime) {
+        lruTime = entry.lastAccessed;
+        lruKey = key;
+      }
+    }
+    
+    if (lruKey) {
+      geocodingCache.delete(lruKey);
+    }
+  }
+  
+  geocodingCache.set(normalized, { result, timestamp: now, lastAccessed: now });
 }
 
 /**
@@ -89,7 +127,7 @@ export async function geocodePostcode(postcode: string): Promise<GeocodingResult
     return result;
 
   } catch (error) {
-    console.error('Geocoding error:', error);
+    logger.error('Geocoding error', error, 'geocoding');
     return { success: false, error: 'Geocoding service unavailable' };
   }
 }

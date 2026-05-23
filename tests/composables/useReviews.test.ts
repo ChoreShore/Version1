@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { useReviews } from '~/composables/useReviews';
 import type { ReviewsResponseInput, ReviewResponseInput } from '~/schemas/review';
+import type { ReviewsResponse, ReviewResponse } from '~/types/review';
 
 const reviewsComposable = useReviews();
 const mockFetch = vi.fn();

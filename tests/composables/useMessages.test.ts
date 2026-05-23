@@ -52,7 +52,7 @@ describe('useMessages composable', () => {
     const result = await messagesComposable.getJobMessages('job-1');
 
     expect(result).toBe(response);
-    expect(mockFetch).toHaveBeenCalledWith('/api/messages/job-1', undefined);
+    expect(mockFetch).toHaveBeenCalledWith('/api/messages/job-1', { signal: undefined });
   });
 
   it('getJobMessages fetches messages with AbortSignal', async () => {

@@ -5,8 +5,8 @@ import { useAuth } from '~/composables/useAuth';
 const mockFetch = vi.fn();
 const mockUser = ref({ id: 'user-1', email: 'test@example.com' });
 
-// Stub Nuxt auto-imports on globalThis before the composable is called
-(globalThis as any).$fetch = mockFetch;
+// Mock $fetch via Vitest's stubGlobal for proper interception
+vi.stubGlobal('$fetch', mockFetch);
 (globalThis as any).useSupabaseUser = vi.fn(() => mockUser);
 
 beforeEach(() => {
@@ -33,8 +33,10 @@ describe('signup', () => {
     const payload = {
       email: 'new@example.com',
       password: 'Password1',
+      username: 'janedoe',
       first_name: 'Jane',
       last_name: 'Doe',
+      postcode: 'SW1A 1AA',
       role: 'worker' as const
     };
 
@@ -51,8 +53,10 @@ describe('signup', () => {
     await auth.signup({
       email: 'a@b.com',
       password: 'Password1',
+      username: 'ab',
       first_name: 'A',
       last_name: 'B',
+      postcode: 'SW1A 1AA',
       role: 'employer' as const
     });
     expect(mockFetch).toHaveBeenCalledTimes(1);
@@ -63,8 +67,10 @@ describe('signup', () => {
     await expect(auth.signup({
       email: 'a@b.com',
       password: 'Password1',
+      username: 'ab',
       first_name: 'A',
       last_name: 'B',
+      postcode: 'SW1A 1AA',
       role: 'worker' as const
     })).rejects.toThrow('Network error');
   });
@@ -108,17 +114,17 @@ describe('addRole', () => {
   it('returns the roles array from the response', async () => {
     mockFetch.mockResolvedValue({ roles: ['employer', 'worker'] });
 
-    const roles = await auth.addRole('worker');
+    const result = await auth.addRole('worker');
 
-    expect(roles).toEqual(['employer', 'worker']);
+    expect(result).toEqual({ roles: ['employer', 'worker'] });
   });
 
   it('works for the "employer" role', async () => {
     mockFetch.mockResolvedValue({ roles: ['employer'] });
 
-    const roles = await auth.addRole('employer');
+    const result = await auth.addRole('employer');
 
-    expect(roles).toEqual(['employer']);
+    expect(result).toEqual({ roles: ['employer'] });
     expect(mockFetch).toHaveBeenCalledWith('/api/auth/add-role', {
       method: 'POST',
       body: { role: 'employer' }
@@ -218,15 +224,16 @@ describe('deleteAccount', () => {
 
 describe('signout', () => {
   it('POSTs to /api/auth/signout with no body', async () => {
-    mockFetch.mockResolvedValue(undefined);
+    mockFetch.mockResolvedValue({ success: true });
 
-    await auth.signout();
+    const result = await auth.signout();
 
     expect(mockFetch).toHaveBeenCalledWith('/api/auth/signout', { method: 'POST' });
+    expect(result).toEqual({ success: true });
   });
 
   it('calls fetch exactly once', async () => {
-    mockFetch.mockResolvedValue(undefined);
+    mockFetch.mockResolvedValue({ success: true });
     await auth.signout();
     expect(mockFetch).toHaveBeenCalledTimes(1);
   });

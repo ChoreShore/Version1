@@ -27,6 +27,12 @@ export const SignUpFormSchema = z.object({
   confirmPassword: z.string()
     .min(1, 'Please confirm your password'),
   
+  username: z.string()
+    .min(1, 'Username is required')
+    .max(12, 'Username must be at most 12 characters')
+    .trim()
+    .regex(/^[a-zA-Z0-9_-]+$/, 'Username can only contain letters, numbers, underscores, and hyphens'),
+  
   first_name: z.string()
     .min(1, 'First name is required')
     .max(50, 'First name must be less than 50 characters')
@@ -36,16 +42,33 @@ export const SignUpFormSchema = z.object({
     .min(1, 'Last name is required')
     .max(50, 'Last name must be less than 50 characters')
     .trim(),
-  
-  phone: z.string()
-    .min(1, 'Phone number is required')
-    .max(20, 'Phone number must be less than 20 characters')
-    .trim()
-    .optional(),
+
+  postcode: z.string()
+    .min(4, 'Postcode must be at least 4 characters')
+    .max(10, 'Postcode must be less than 10 characters')
+    .trim(),
 
   role: z.enum(['employer', 'worker'], {
     message: 'Role is required'
-  })
+  }),
+
+  age_confirmation: z.boolean()
+    .refine((val) => val === true, {
+      message: 'You must confirm you are 18+ and legally allowed to use this platform'
+    })
+    .optional(),
+
+  terms_agreement: z.boolean()
+    .refine((val) => val === true, {
+      message: 'You must agree to the Terms of Service and Privacy Policy'
+    })
+    .optional(),
+
+  tax_responsibility: z.boolean()
+    .refine((val) => val === true, {
+      message: 'You must understand your responsibility for complying with UK laws and tax obligations'
+    })
+    .optional()
 }).refine((data) => data.password === data.confirmPassword, {
   message: "Passwords don't match",
   path: ["confirmPassword"]
@@ -64,6 +87,12 @@ export const SignUpSchema = z.object({
     .regex(/[a-z]/, 'Password must contain at least one lowercase letter')
     .regex(/[0-9]/, 'Password must contain at least one number'),
   
+  username: z.string()
+    .min(1, 'Username is required')
+    .max(12, 'Username must be at most 12 characters')
+    .trim()
+    .regex(/^[a-zA-Z0-9_-]+$/, 'Username can only contain letters, numbers, underscores, and hyphens'),
+  
   first_name: z.string()
     .min(1, 'First name is required')
     .max(50, 'First name must be less than 50 characters')
@@ -73,13 +102,12 @@ export const SignUpSchema = z.object({
     .min(1, 'Last name is required')
     .max(50, 'Last name must be less than 50 characters')
     .trim(),
-  
-  phone: z.string()
-    .min(1, 'Phone number is required')
-    .max(20, 'Phone number must be less than 20 characters')
-    .trim()
-    .optional(),
-  
+
+  postcode: z.string()
+    .min(4, 'Postcode must be at least 4 characters')
+    .max(10, 'Postcode must be less than 10 characters')
+    .trim(),
+
   role: z.enum(['employer', 'worker'], {
     message: 'Role must be either employer or worker'
   })

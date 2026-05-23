@@ -9,16 +9,16 @@
       <p class="application-form__status-text">
         Current status: <strong>{{ workerApplication.status }}</strong>
       </p>
-      <p class="application-form__hint">We'll email you when the employer responds.</p>
+      <p class="application-form__hint">We'll notify you when the employer responds.</p>
     </div>
     <form v-else @submit.prevent="handleSubmit" class="application-form">
       <header>
-        <p class="application-form__label">Ready to help?</p>
-        <h3>Apply to this job</h3>
+        <p class="application-form__label">Apply to this job</p>
+        <h3>Submit your application</h3>
       </header>
 
       <label class="application-form__field">
-        <span>Cover letter (optional)</span>
+        <span>Cover letter (optional) — Introduce yourself and explain why you're a great fit</span>
         <textarea
           v-model="form.cover_letter"
           rows="5"
@@ -36,10 +36,10 @@
         <input
           v-model="form.proposed_rate"
           type="number"
-          min="20"
-          max="30"
+          :min="rateLimits.min"
+          :max="rateLimits.max"
           step="1"
-          placeholder="e.g. 25"
+          :placeholder="`e.g. ${Math.round(rateLimits.max * 0.5)}`"
           :class="{ 'application-form__input--error': fieldErrors.proposed_rate }"
         />
         <p v-if="fieldErrors.proposed_rate" class="application-form__field-error">
@@ -52,7 +52,7 @@
       <p v-if="success" class="application-form__success">{{ success }}</p>
 
       <button type="submit" class="application-form__button" :disabled="submitting || !isFormValid">
-        {{ submitting ? 'Submitting...' : 'Submit application' }}
+        {{ submitting ? 'Sending...' : 'Submit application' }}
       </button>
     </form>
   </FormErrorBoundary>
@@ -60,7 +60,7 @@
   <ConfirmDialog
     :is-open="showConfirmDialog"
     title="Unsaved Changes"
-    message="You have unsaved changes. Are you sure you want to cancel your application?"
+    message="You haven't submitted your application yet. Are you sure you want to leave?"
     confirm-text="Cancel Application"
     cancel-text="Continue"
     @confirm="handleDialogConfirm"
@@ -76,18 +76,18 @@ import FormErrorBoundary from '~/components/primitives/FormErrorBoundary.vue';
 import ConfirmDialog from '~/components/primitives/ConfirmDialog.vue';
 import { useDirtyForm } from '~/composables/useDirtyForm';
 
-// Form validation schema using Zod
-const applicationFormSchema = z.object({
+// Form validation schema using Zod (dynamic based on rate limits)
+const applicationFormSchema = computed(() => z.object({
   cover_letter: z.string()
     .min(10, 'Cover letter must be at least 10 characters')
     .max(1000, 'Cover letter must be less than 1000 characters')
     .trim()
     .optional(),
   proposed_rate: z.number()
-    .min(20, 'Rate must be at least £20')
-    .max(30, 'Rate must be no more than £30')
+    .min(rateLimits.value.min, `Rate must be at least £${rateLimits.value.min}`)
+    .max(rateLimits.value.max, `Rate must be no more than £${rateLimits.value.max.toFixed(2)}`)
     .optional()
-});
+}));
 
 const props = defineProps<{
   jobId: string;
@@ -95,6 +95,9 @@ const props = defineProps<{
   submitting: boolean;
   error: string | null;
   success: string | null;
+  budgetType?: 'fixed' | 'hourly';
+  budgetAmount?: number;
+  estimatedHours?: number | null;
 }>();
 
 const emit = defineEmits<{
@@ -111,6 +114,30 @@ const form = ref({
 
 const showConfirmDialog = ref(false);
 
+// Calculate dynamic rate limits based on job budget
+const rateLimits = computed(() => {
+  const minRate = 1; // Minimum floor
+  let maxRate = 1000; // Default high ceiling
+
+  if (props.budgetType === 'hourly' && props.budgetAmount) {
+    if (props.estimatedHours && props.estimatedHours > 0) {
+      // For hourly jobs with estimated hours, max rate shouldn't exceed budget/hours
+      maxRate = props.budgetAmount / props.estimatedHours;
+    } else {
+      // For hourly jobs without estimated hours, use budget as ceiling
+      maxRate = props.budgetAmount;
+    }
+  } else if (props.budgetType === 'fixed' && props.budgetAmount) {
+    // For fixed jobs, use a reasonable percentage of budget as ceiling
+    maxRate = props.budgetAmount;
+  }
+
+  return {
+    min: minRate,
+    max: Math.max(minRate, maxRate)
+  };
+});
+
 // Use dirty form composable
 const { isDirty, resetDirty } = useDirtyForm({
   formData: form.value,
@@ -120,17 +147,17 @@ const { isDirty, resetDirty } = useDirtyForm({
 
 // Computed property for field validation errors
 const fieldErrors = computed(() => {
-  const result = applicationFormSchema.safeParse({
+  const result = applicationFormSchema.value.safeParse({
     cover_letter: form.value.cover_letter,
     proposed_rate: form.value.proposed_rate ? Number(form.value.proposed_rate) : undefined
   });
   
   if (!result.success) {
-    return result.error.issues.reduce((acc, issue) => {
+    return result.error.issues.reduce((acc: Record<string, string>, issue) => {
       const field = issue.path[0] as string;
       acc[field] = issue.message;
       return acc;
-    }, {} as Record<string, string>);
+    }, {});
   }
   
   return {};
@@ -143,7 +170,7 @@ const isFormValid = computed(() => {
 
 const handleSubmit = () => {
   // Clear any existing errors first
-  const validation = applicationFormSchema.safeParse({
+  const validation = applicationFormSchema.value.safeParse({
     cover_letter: form.value.cover_letter,
     proposed_rate: form.value.proposed_rate ? Number(form.value.proposed_rate) : undefined
   });
@@ -179,7 +206,10 @@ const handleDialogCancel = () => {
 
 // Error boundary handlers
 const handleFormError = (error: Error, formName?: string) => {
-  console.error(`Form error in ${formName}:`, error);
+  // Client-side error logging - console is acceptable in browser
+  if (import.meta.dev) {
+    console.error(`Form error in ${formName}:`, error);
+  }
   // You could also send this to your error monitoring service
 };
 

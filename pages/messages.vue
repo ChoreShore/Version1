@@ -29,11 +29,9 @@
         </template>
 
         <template v-else-if="conversationsError">
-          <EmptyState 
-            title="Could not load conversations" 
-            :description="conversationsError" 
-            explanation="There was a problem loading your message threads. This might be a temporary issue."
-            :tips="['Check your internet connection', 'Try refreshing the page', 'Contact support if the issue persists']"
+          <EmptyState
+            title="Could not load conversations"
+            :description="conversationsError + '. There was a problem loading your message threads. This might be a temporary issue.'"
             icon="⚠️"
           >
             <template #actions>
@@ -43,16 +41,14 @@
         </template>
 
         <template v-else-if="!filteredConversations.length">
-          <EmptyState 
+          <EmptyState
             :title="role === 'employer' ? 'No conversations' : 'No conversations'"
-            :description="role === 'employer' ? 'Start messaging applicants to see threads here.' : 'Apply to jobs and message employers to see conversations here.'"
-            :explanation="role === 'employer' ? 'Conversations appear when you message applicants or they message you about your jobs.' : 'Conversations appear when you apply to jobs or employers message you.'"
-            :tips="role === 'employer' ? ['Message applicants to discuss job details', 'Respond quickly to applicant inquiries', 'Keep communication professional'] : ['Apply to jobs to start conversations', 'Message employers with questions', 'Be responsive to employer messages']"
+            :description="role === 'employer' ? 'Start messaging applicants to see threads here. Conversations appear when you message applicants or they message you about your jobs.' : 'Apply to jobs and message employers to see conversations here. Conversations appear when you apply to jobs or employers message you.'"
             icon="💬"
           >
             <template #actions>
               <NuxtLink v-if="role === 'employer'" to="/jobs/new" class="empty-state__cta">Post a job</NuxtLink>
-              <NuxtLink v-if="role === 'worker'" to="/jobs" class="empty-state__cta">Browse jobs</NuxtLink>
+              <NuxtLink v-if="role === 'worker'" to="/jobs" class="empty-state__cta">Find jobs</NuxtLink>
             </template>
           </EmptyState>
         </template>
@@ -84,7 +80,7 @@
             <h1>{{ activeConversation.other_participant_name }}</h1>
           </div>
           <NuxtLink :to="`/jobs/${activeConversation.job_id}`" class="messages-page__thread-link">
-            View job
+            View details
           </NuxtLink>
         </header>
 
@@ -96,11 +92,9 @@
           </template>
 
           <template v-else-if="messagesError">
-            <EmptyState 
-              title="Unable to load messages" 
-              :description="messagesError" 
-              explanation="There was a problem loading this conversation thread. This might be a temporary issue."
-              :tips="['Check your internet connection', 'Try selecting a different conversation', 'Contact support if the issue persists']"
+            <EmptyState
+              title="Unable to load messages"
+              :description="messagesError + '. There was a problem loading this conversation thread. This might be a temporary issue.'"
               icon="⚠️"
             >
               <template #actions>
@@ -110,11 +104,9 @@
           </template>
 
           <template v-else-if="!threadMessages.length">
-            <EmptyState 
+            <EmptyState
               :title="role === 'employer' ? 'No messages yet' : 'No messages yet'"
-              :description="role === 'employer' ? 'Send the first message to start this conversation.' : 'Send a message to begin this conversation.'"
-              explanation="Be the first to break the ice! Send a message to start the conversation."
-              :tips="['Introduce yourself and mention the job', 'Ask relevant questions about the work', 'Keep messages clear and professional']"
+              :description="role === 'employer' ? 'Send the first message to start this conversation. Be the first to break the ice!' : 'Send a message to begin this conversation. Be the first to break the ice!'"
               icon="💬"
             />
           </template>
@@ -138,7 +130,7 @@
             </FormControl>
             <div class="messages-page__composer-hint">
               <FormHint>Shift + Enter for a new line</FormHint>
-              <span class="char-count" :class="{ 'is-over': composer.length > 2000 }">
+              <span class="char-count" :class="charCountClass">
                 {{ composer.length }}/2000
               </span>
             </div>
@@ -157,7 +149,7 @@ definePageMeta({
   layout: 'default'
 });
 import { computed, onMounted, ref, watch } from 'vue';
-import { useSupabaseUser } from '#imports';
+import { useSupabaseUser, useRoute, onUnmounted } from '#imports';
 import ConversationItem from '~/components/messages/ConversationItem.vue';
 import MessageBubble from '~/components/messages/MessageBubble.vue';
 import EmptyState from '~/components/primitives/EmptyState.vue';
@@ -190,6 +182,14 @@ const composer = ref('');
 const sending = ref(false);
 const abortController = ref<AbortController | null>(null);
 let pollingInterval: ReturnType<typeof setInterval> | null = null;
+
+const charCountClass = computed(() => {
+  const length = composer.value.length;
+  if (length > 2000) return 'is-over';
+  if (length >= 1900) return 'danger';
+  if (length >= 1800) return 'warning';
+  return '';
+});
 
 const normalizeConversation = (conversation: any): ConversationSummary => {
   const fullName =
@@ -230,7 +230,7 @@ const fetchConversations = async () => {
       selectedConversationId.value = normalized[0].id ?? null;
     }
   } catch (err: any) {
-    conversationsError.value = err?.data?.statusMessage || 'We were not able to fetch conversations.';
+    conversationsError.value = err?.data?.statusMessage || 'Unable to load conversations. Please check your internet connection and try again.';
   } finally {
     conversationsLoading.value = false;
   }
@@ -243,11 +243,14 @@ const fetchApplicationForNewConversation = async (applicationId: string) => {
       newConversationApplication.value = response.application;
       selectedConversationId.value = applicationId;
     } else {
-      conversationsError.value = 'Could not load application details';
+      conversationsError.value = 'Unable to load application details. Please try again or contact support if the issue persists.';
     }
   } catch (err: any) {
-    console.error('Failed to fetch application:', err);
-    conversationsError.value = err?.data?.statusMessage || 'Could not load application details';
+    // Client-side error logging - console is acceptable in browser
+    if (import.meta.dev) {
+      console.error('Failed to fetch application:', err);
+    }
+    conversationsError.value = err?.data?.statusMessage || 'Unable to load application details. Please try again or contact support if the issue persists.';
   }
 };
 
@@ -310,7 +313,7 @@ const loadMessages = async (conversation: ConversationSummary) => {
   } catch (err: any) {
     // Ignore errors from aborted requests
     if (err.name === 'AbortError' || err.message?.includes('abort')) return;
-    messagesError.value = err?.data?.statusMessage || 'Unable to load this thread.';
+    messagesError.value = err?.data?.statusMessage || 'Unable to load messages. Please check your connection and try again.';
   } finally {
     messagesLoading.value = false;
   }
@@ -419,7 +422,7 @@ const handleSend = async () => {
     // Revert optimistic update on error
     thread.value = thread.value.filter(m => m.id !== clientMessageId);
     composer.value = messageBody;
-    messagesError.value = err?.data?.statusMessage || 'Unable to send message. Please try again.';
+    messagesError.value = err?.data?.statusMessage || 'Unable to send message. Please check your connection and try again.';
     
     // Revert conversation sidebar update
     if (activeConversation.value) {
@@ -657,8 +660,17 @@ onUnmounted(() => {
   color: var(--color-text-subtle);
 }
 
+.char-count.warning {
+  color: var(--color-warning);
+}
+
+.char-count.danger {
+  color: var(--color-error);
+}
+
 .char-count.is-over {
   color: var(--color-error);
+  font-weight: 600;
 }
 
 </style>

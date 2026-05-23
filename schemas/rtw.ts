@@ -3,23 +3,23 @@ import { z } from 'zod';
 export const RtwVerifySchema = z.object({
   code: z
     .string()
-    .min(1, 'Share code is required')
+    .min(1, 'Please enter a share code')
     .toUpperCase()
     .refine((val) => val.startsWith('W'), {
       message: "Right to work share codes start with 'W'"
     }),
   dob: z
     .string()
-    .min(1, 'Date of birth is required')
+    .min(1, 'Please enter your date of birth')
     .regex(/^\d{2}-\d{2}-\d{4}$/, 'Date must be in dd-mm-yyyy format'),
   forename: z
     .string()
-    .min(1, 'First name is required')
+    .min(1, 'Please enter your first name')
     .max(100, 'First name must be less than 100 characters')
     .trim(),
   surname: z
     .string()
-    .min(1, 'Last name is required')
+    .min(1, 'Please enter your last name')
     .max(100, 'Last name must be less than 100 characters')
     .trim()
 });

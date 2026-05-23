@@ -1,4 +1,5 @@
 import { serverSupabaseClient } from '#supabase/server';
+import { logger } from '~/server/utils/logger';
 import { ReviewResponseSchema } from '~/schemas/review';
 import { mapReview, reviewSelect } from '../utils';
 import { getAuthenticatedUser } from '~/server/utils/api';
@@ -36,13 +37,12 @@ export default defineEventHandler(async (event) => {
 
     const response = { review: mapReview(data) };
     
-    // Validate response with Zod schema (safe validation)
+    // Validate response with Zod schema
     try {
       return ReviewResponseSchema.parse(response);
     } catch (validationError) {
-      console.error('API Response validation failed:', validationError);
-      // Return unvalidated response to prevent breaking the application
-      return response;
+      logger.error('Response validation failed', validationError, 'reviews/job/[id].get');
+      throw createError({ statusCode: 500, statusMessage: 'Invalid response format' });
     }
   } catch (error: any) {
     throw error;

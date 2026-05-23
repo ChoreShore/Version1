@@ -1,9 +1,13 @@
 import { validateAddRole } from '~/schemas/auth';
 import { serverSupabaseClient } from '#supabase/server';
 import { getAuthenticatedUser } from '~/server/utils/api';
+import { requireCsrfProtection } from '~/server/utils/csrf';
 
 export default defineEventHandler(async (event) => {
   try {
+    // Apply CSRF protection
+    requireCsrfProtection(event);
+
     const user = await getAuthenticatedUser(event, 'Sign in to update your roles');
 
     const body = await readBody(event);

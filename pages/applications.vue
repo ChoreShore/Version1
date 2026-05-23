@@ -38,9 +38,7 @@
         <li>
           <EmptyState 
             title="Could not load applications" 
-            :description="error" 
-            explanation="There was a problem loading your applications. This might be a temporary issue."
-            :tips="['Check your internet connection', 'Try refreshing the page', 'Contact support if the issue persists']"
+            :description="error + '. There was a problem loading your applications. This might be a temporary issue.'" 
             icon="⚠️"
           >
             <template #actions>
@@ -54,14 +52,12 @@
         <li>
           <EmptyState
             :title="role === 'employer' ? 'No applications received' : 'No applications sent'"
-            :description="role === 'employer' ? 'Applications for your jobs will appear here.' : 'Apply to jobs to track your submissions here.'"
-            :explanation="role === 'employer' ? 'When workers apply to your jobs, they\'ll appear in this list with their details.' : 'Your job applications will be tracked here after you submit them.'"
-            :tips="role === 'employer' ? ['Post jobs with clear descriptions to attract applicants', 'Set competitive budgets', 'Respond quickly to applications'] : ['Write personalized cover letters', 'Apply to jobs matching your skills', 'Follow up on pending applications']"
+            :description="role === 'employer' ? 'Applications for your jobs will appear here. When workers apply to your jobs, they\'ll appear in this list with their details.' : 'Apply to jobs to track your submissions here. Your job applications will be tracked here after you submit them.'"
             icon="📝"
           >
             <template #actions>
               <NuxtLink v-if="role === 'employer'" to="/jobs/new" class="empty-state__cta">Post a job</NuxtLink>
-              <NuxtLink v-if="role === 'worker'" to="/jobs" class="empty-state__cta">Browse jobs</NuxtLink>
+              <NuxtLink v-if="role === 'worker'" to="/jobs" class="empty-state__cta">Find jobs</NuxtLink>
             </template>
           </EmptyState>
         </li>
@@ -183,7 +179,7 @@ const doWithdraw = async (applicationId: string, reason?: WithdrawalReason) => {
   } catch (err: any) {
     // Revert optimistic update on error
     applications.value[appIndex] = originalApplication;
-    error.value = err?.data?.statusMessage || 'Could not withdraw application. Please try again.';
+    error.value = err?.data?.statusMessage || 'Could not withdraw application. Please check your connection and try again, or contact support if the issue persists.';
     
     // Show clear error notification
     setTimeout(() => {
@@ -199,7 +195,7 @@ const fetchApplications = async () => {
     const response = await applicationsApi.listMyApplications(role.value);
     applications.value = response.applications ?? [];
   } catch (err: any) {
-    error.value = err?.data?.statusMessage || 'Something went wrong.';
+    error.value = err?.data?.statusMessage || 'Unable to load applications. Please check your internet connection and try again.';
   } finally {
     loading.value = false;
   }

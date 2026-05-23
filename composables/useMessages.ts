@@ -14,7 +14,9 @@ export const useMessages = () => {
   };
 
   const getJobMessages = async (jobId: string, options?: { signal?: AbortSignal }) => {
-    return await $fetch<MessagesResponseInput>(`/api/messages/${jobId}`, options);
+    return await $fetch<MessagesResponseInput>(`/api/messages/${jobId}`, {
+      signal: options?.signal
+    });
   };
 
   const sendMessage = async (payload: CreateMessageInput) => {

@@ -1,20 +1,26 @@
-import { serverSupabaseClient } from '#supabase/server';
+import { serverSupabaseClient, serverSupabaseUser } from '#supabase/server';
+import { logger } from '~/server/utils/logger';
+import { getRequestIP } from 'h3';
 import type { JobsQueryInput } from '~/schemas/job';
-import { JobsResponseSchema, JobsQuerySchema } from '~/schemas/job';
+import { JobsResponseSchema } from '~/schemas/job';
 import { fetchPreviewJobs } from '~/server/utils/preview';
-import { getAuthenticatedUser } from '~/server/utils/api';
+import { rateLimiters } from '~/server/utils/rateLimit';
 import { hasRole } from '~/server/utils/roles';
 
 export default defineEventHandler(async (event) => {
   try {
-    console.log('[jobs/index.get] Starting request');
-    const user = await getAuthenticatedUser(event);
-    console.log('[jobs/index.get] User authenticated:', user?.id);
+    logger.debug('Starting request', 'jobs/index.get');
+    const user = await serverSupabaseUser(event);
+    logger.debug('User:', 'jobs/index.get', user?.id ?? 'anonymous');
     const client = await serverSupabaseClient(event);
     const query = getQuery(event) as JobsQueryInput & { role?: string; scope?: string };
 
     if (!user) {
-      console.log('[jobs/index.get] No user, fetching preview jobs');
+      // Rate limit public job browsing to prevent scraping
+      const clientIp = getRequestIP(event, { xForwardedFor: true }) ?? 'unknown';
+      await rateLimiters.general(clientIp, event);
+
+      logger.debug('No user, fetching preview jobs', 'jobs/index.get');
       return await fetchPreviewJobs(client, query);
     }
 
@@ -93,7 +99,7 @@ export default defineEventHandler(async (event) => {
       throw createError({ statusCode: 500, statusMessage: 'Invalid response format' });
     }
   } catch (error: any) {
-    console.error('[jobs/index.get] Error:', error);
+    logger.error('Request failed', error, 'jobs/index.get');
     throw error;
   }
 });

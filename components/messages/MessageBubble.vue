@@ -10,6 +10,7 @@
 
 <script setup lang="ts">
 import { computed } from 'vue';
+import { formatTime } from '~/server/utils/dateFormat';
 
 const props = defineProps<{
   message: {
@@ -23,10 +24,8 @@ const props = defineProps<{
 const variant = computed(() => (props.message.is_mine ? 'outbound' : 'inbound'));
 const senderLabel = computed(() => props.message.sender_name ?? (props.message.is_mine ? 'You' : 'Participant'));
 const timestamp = computed(() => {
-  const d = props.message.created_at ? new Date(props.message.created_at) : null;
-  return d && !isNaN(d.getTime())
-    ? d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-    : '';
+  if (!props.message.created_at) return '';
+  return formatTime(props.message.created_at);
 });
 </script>
 

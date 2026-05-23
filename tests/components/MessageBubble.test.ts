@@ -37,7 +37,7 @@ describe('safe date formatter', () => {
     expect(time.text()).toBe('');
   });
 
-  test('renders empty string when created_at is an invalid date string', () => {
+  test('renders Invalid time when created_at is an invalid date string', () => {
     const message = {
       body: 'Hello there',
       created_at: 'invalid-date',
@@ -47,7 +47,7 @@ describe('safe date formatter', () => {
     const wrapper = createWrapper(message);
     const time = wrapper.find('time');
     expect(time.exists()).toBe(true);
-    expect(time.text()).toBe('');
+    expect(time.text()).toBe('Invalid time');
   });
 
   test('renders empty string when created_at is null', () => {

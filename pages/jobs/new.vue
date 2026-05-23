@@ -9,18 +9,43 @@
     </header>
 
     <!-- Progress Indicator -->
-    <div class="form-progress">
-      <div v-for="(step, index) in steps" :key="index" class="form-progress__step" :class="{ 'is-active': currentStep === index, 'is-completed': currentStep > index }">
-        <div class="form-progress__step-number">{{ currentStep > index ? '✓' : index + 1 }}</div>
-        <span class="form-progress__step-label">{{ step.label }}</span>
+    <div class="form-progress" role="navigation" aria-label="Form progress">
+      <div 
+        v-for="(step, index) in steps" 
+        :key="index" 
+        class="form-progress__step" 
+        :class="{ 
+          'is-active': currentStep === index, 
+          'is-completed': currentStep > index,
+          'has-errors': stepHasErrors(index)
+        }"
+        :aria-current="currentStep === index ? 'step' : undefined"
+        :aria-label="`${step.label}: ${step.description}. ${stepFieldCount(index)} fields. ${stepCompletedFields(index)} of ${stepFieldCount(index)} completed${stepHasErrors(index) ? ', has errors' : ''}`"
+      >
+        <div class="form-progress__step-number" :aria-hidden="true">
+          {{ currentStep > index ? '✓' : index + 1 }}
+        </div>
+        <div class="form-progress__step-content">
+          <span class="form-progress__step-label">{{ step.label }}</span>
+          <span class="form-progress__step-description">{{ step.description }}</span>
+          <span v-if="stepFieldCount(index) > 0" class="form-progress__step-status">
+            {{ stepCompletedFields(index) }}/{{ stepFieldCount(index) }}
+          </span>
+          <span v-if="stepHasErrors(index) && currentStep !== index" class="form-progress__step-error" aria-label="Step has errors">
+            ⚠️
+          </span>
+        </div>
       </div>
     </div>
 
-    <FormErrorBoundary 
+    <FormErrorBoundary
       form-name="job-creation-form"
       @form-error="handleFormError"
       @reset="handleFormReset"
     >
+      <div v-if="genericError" class="job-form__generic-error">
+        {{ genericError }}
+      </div>
       <form class="job-form" @submit.prevent="handleSubmit">
         <!-- Step 1: Basic -->
         <div v-if="currentStep === 0" class="form-step">
@@ -40,7 +65,7 @@
                 />
               </FormControl>
               <FormHint v-if="errors.title">{{ errors.title }}</FormHint>
-              <FormSuccess v-if="!errors.title && form.title.length > 0">✓</FormSuccess>
+              <FormSuccess v-if="!errors.title && form.title.length > 0">&#10003;</FormSuccess>
             </FormField>
 
             <FormField id="category" :error="errors.category_id" :state="getFieldState('category_id')">
@@ -54,7 +79,7 @@
                 </select>
               </FormControl>
               <FormHint v-if="errors.category_id">{{ errors.category_id }}</FormHint>
-              <FormSuccess v-if="!errors.category_id && form.category_id">✓</FormSuccess>
+              <FormSuccess v-if="!errors.category_id && form.category_id">&#10003;</FormSuccess>
             </FormField>
           </div>
         </div>
@@ -79,7 +104,7 @@
               <FormHint v-if="errors.description">{{ errors.description }}</FormHint>
               <span class="char-count">{{ form.description.length }}/2000</span>
             </div>
-            <FormSuccess v-if="!errors.description && form.description.length >= 10">✓</FormSuccess>
+            <FormSuccess v-if="!errors.description && form.description.length >= 10">&#10003;</FormSuccess>
           </FormField>
         </div>
 
@@ -97,12 +122,12 @@
                 </select>
               </FormControl>
               <FormHint v-if="errors.budget_type">{{ errors.budget_type }}</FormHint>
-              <FormSuccess v-if="!errors.budget_type && form.budget_type">✓</FormSuccess>
+              <FormSuccess v-if="!errors.budget_type && form.budget_type">&#10003;</FormSuccess>
             </FormField>
 
             <FormField id="budget_amount" :error="errors.budget_amount" :state="getFieldState('budget_amount')">
               <FormLabel for="budget_amount">
-                {{ form.budget_type === 'hourly' ? 'Hourly Rate ($)' : 'Budget Amount ($)' }}
+                {{ form.budget_type === 'hourly' ? 'Hourly Rate (£)' : 'Budget Amount (£)' }}
               </FormLabel>
               <FormControl>
                 <input
@@ -118,7 +143,7 @@
                 />
               </FormControl>
               <FormHint v-if="errors.budget_amount">{{ errors.budget_amount }}</FormHint>
-              <FormSuccess v-if="!errors.budget_amount && form.budget_amount > 0">✓</FormSuccess>
+              <FormSuccess v-if="!errors.budget_amount && form.budget_amount > 0">&#10003;</FormSuccess>
             </FormField>
 
             <FormField id="deadline" :error="errors.deadline" :state="getFieldState('deadline')">
@@ -135,7 +160,50 @@
                 />
               </FormControl>
               <FormHint v-if="errors.deadline">{{ errors.deadline }}</FormHint>
-              <FormSuccess v-if="!errors.deadline && form.deadline">✓</FormSuccess>
+              <FormSuccess v-if="!errors.deadline && form.deadline">&#10003;</FormSuccess>
+            </FormField>
+
+            <FormField 
+              v-if="form.budget_type === 'hourly'" 
+              id="estimated_hours" 
+              :error="errors.estimated_hours" 
+              :state="getFieldState('estimated_hours')"
+              class="job-form__full-width"
+            >
+              <FormLabel for="estimated_hours">Estimated Number of Hours (Optional)</FormLabel>
+              <FormControl>
+                <input
+                  id="estimated_hours"
+                  v-model.number="form.estimated_hours"
+                  type="number"
+                  min="1"
+                  max="30"
+                  step="1"
+                  placeholder="e.g. 5"
+                  @input="validateField('estimated_hours')"
+                  @blur="validateField('estimated_hours')"
+                />
+              </FormControl>
+              <FormHint v-if="errors.estimated_hours">{{ errors.estimated_hours }}</FormHint>
+              <FormHint v-else>Optional: Estimate between 1-30 hours. Helps workers understand the scope of work.</FormHint>
+              <FormSuccess v-if="!errors.estimated_hours && form.estimated_hours">&#10003;</FormSuccess>
+            </FormField>
+
+            <FormField 
+              id="is_recurring" 
+              class="job-form__full-width"
+            >
+              <FormControl>
+                <label class="checkbox-label">
+                  <input
+                    id="is_recurring"
+                    v-model="form.is_recurring"
+                    type="checkbox"
+                  />
+                  <span>Recurring/ongoing work</span>
+                </label>
+              </FormControl>
+              <FormHint>Optional: Check if this is recurring or ongoing work</FormHint>
             </FormField>
           </div>
         </div>
@@ -157,7 +225,7 @@
               />
             </FormControl>
             <FormHint v-if="errors.postcode">{{ errors.postcode }}</FormHint>
-            <FormSuccess v-if="!errors.postcode && form.postcode.length >= 4">✓</FormSuccess>
+            <FormSuccess v-if="!errors.postcode && form.postcode.length >= 4">&#10003;</FormSuccess>
           </FormField>
         </div>
 
@@ -177,8 +245,10 @@
             <div class="form-review__section">
               <h3>Budget & Timeline</h3>
               <p><strong>Budget Type:</strong> {{ form.budget_type }}</p>
-              <p><strong>Budget Amount:</strong> ${{ form.budget_amount }}</p>
+              <p><strong>Budget Amount:</strong> £{{ form.budget_amount }}</p>
+              <p v-if="form.budget_type === 'hourly' && form.estimated_hours"><strong>Estimated Hours:</strong> {{ form.estimated_hours }}</p>
               <p><strong>Deadline:</strong> {{ form.deadline }}</p>
+              <p v-if="form.is_recurring"><strong>Recurring/ongoing work:</strong> Yes</p>
             </div>
             <div class="form-review__section">
               <h3>Location</h3>
@@ -195,10 +265,10 @@
             Next
           </button>
           <button v-if="currentStep === 4" type="submit" class="job-form__submit" :disabled="submitting">
-            {{ submitting ? 'Creating Job...' : 'Post Job' }}
+            {{ submitting ? 'Creating job...' : 'Post a job' }}
           </button>
           <button type="button" class="job-form__save-draft" @click="saveDraft" :disabled="savingDraft">
-            {{ savingDraft ? 'Saving...' : 'Save Draft' }}
+            {{ savingDraft ? 'Saving...' : 'Save draft' }}
           </button>
           <button type="button" class="job-form__cancel" @click="handleCancel">
             Cancel
@@ -236,6 +306,7 @@ import { useJobs } from '~/composables/useJobs';
 import { useDirtyForm } from '~/composables/useDirtyForm';
 import type { CreateJobInput } from '~/schemas/job';
 import { validateCreateJob, CreateJobSchema } from '~/schemas/job';
+import { useSupabaseUser } from '#imports';
 
 function generateRequestId(): string {
   if (typeof crypto !== 'undefined' && crypto.randomUUID) {
@@ -246,6 +317,12 @@ function generateRequestId(): string {
 
 const jobsApi = useJobs();
 
+const user = useSupabaseUser();
+
+const draftKey = computed(() => {
+  return user.value ? `job-draft-${user.value.id}` : 'job-draft';
+});
+
 const form = ref<CreateJobInput & { category_id: string }>({
   title: '',
   description: '',
@@ -253,22 +330,42 @@ const form = ref<CreateJobInput & { category_id: string }>({
   budget_type: 'fixed',
   budget_amount: 0,
   deadline: '',
-  postcode: ''
+  postcode: '',
+  estimated_hours: null,
+  is_recurring: false
 });
 
 const errors = ref<Record<string, string>>({});
+const genericError = ref<string | null>(null);
 const currentStep = ref(0);
 const steps = [
-  { label: 'Basic', fields: ['title', 'category_id'] },
-  { label: 'Details', fields: ['description'] },
-  { label: 'Budget', fields: ['budget_type', 'budget_amount', 'deadline'] },
-  { label: 'Location', fields: ['postcode'] },
-  { label: 'Review', fields: [] }
+  { label: 'Basic Info', fields: ['title', 'category_id'], description: 'Job title and category' },
+  { label: 'Description', fields: ['description'], description: 'Job details' },
+  { label: 'Budget & Timing', fields: ['budget_type', 'budget_amount', 'deadline', 'estimated_hours', 'is_recurring'], description: 'Payment and schedule' },
+  { label: 'Location', fields: ['postcode'], description: 'Work location' },
+  { label: 'Review', fields: [], description: 'Confirm details' }
 ];
 const submitting = ref(false);
 const savingDraft = ref(false);
 const categories = ref<Array<{ id: string; name: string }>>([]);
 const showConfirmDialog = ref(false);
+
+const stepHasErrors = (stepIndex: number) => {
+  const stepFields = steps[stepIndex].fields;
+  return stepFields.some(field => errors.value[field]);
+};
+
+const stepFieldCount = (stepIndex: number) => {
+  return steps[stepIndex].fields.length;
+};
+
+const stepCompletedFields = (stepIndex: number) => {
+  const stepFields = steps[stepIndex].fields;
+  return stepFields.filter(field => {
+    const value = form.value[field as keyof typeof form.value];
+    return value !== '' && value !== null && value !== undefined;
+  }).length;
+};
 
 // Use dirty form composable
 const { isDirty, resetDirty, confirmNavigation } = useDirtyForm({
@@ -324,23 +421,26 @@ const saveDraft = async () => {
   savingDraft.value = true;
   try {
     // Save to localStorage
-    localStorage.setItem('job-draft', JSON.stringify(form.value));
-    alert('Draft saved successfully!');
+    localStorage.setItem(draftKey.value, JSON.stringify(form.value));
+    alert('Draft saved successfully');
   } catch (err) {
-    alert('Failed to save draft');
+    alert('Failed to save draft. Please check your connection and try again.');
   } finally {
     savingDraft.value = false;
   }
 };
 
 const loadDraft = () => {
-  const saved = localStorage.getItem('job-draft');
+  const saved = localStorage.getItem(draftKey.value);
   if (saved) {
     try {
       const draft = JSON.parse(saved);
       form.value = { ...form.value, ...draft };
     } catch (err) {
-      console.error('Failed to load draft', err);
+      // Client-side error logging - console is acceptable in browser
+      if (import.meta.dev) {
+        console.error('Failed to load draft', err);
+      }
     }
   }
 };
@@ -376,7 +476,10 @@ const loadCategories = async () => {
     const response = await jobsApi.listCategories();
     categories.value = response.categories || [];
   } catch (error) {
-    console.error('Failed to load categories:', error);
+    // Client-side error logging - console is acceptable in browser
+    if (import.meta.dev) {
+      console.error('Failed to load categories:', error);
+    }
   }
 };
 
@@ -432,6 +535,7 @@ const handleSubmit = async () => {
   if (!validateForm()) return;
 
   submitting.value = true;
+  genericError.value = null;
 
   try {
     const payload: CreateJobInput & { client_request_id: string } = {
@@ -442,18 +546,58 @@ const handleSubmit = async () => {
       budget_amount: form.value.budget_amount,
       deadline: form.value.deadline,
       postcode: form.value.postcode.trim(),
+      estimated_hours: form.value.estimated_hours,
+      is_recurring: form.value.is_recurring,
       client_request_id: generateRequestId()
     };
     
     await jobsApi.createJob(payload);
     resetDirty();
-    localStorage.removeItem('job-draft'); // Clear draft after successful submission
+    localStorage.removeItem(draftKey.value); // Clear draft after successful submission
     navigateTo('/jobs');
   } catch (err: any) {
-    errors.value = err?.data?.statusMessage || 'Failed to create job. Please try again.';
+    // Preserve field-specific validation errors from API response
+    if (err?.data?.data?.errors) {
+      errors.value = err.data.data.errors;
+      genericError.value = err.data.statusMessage || 'Validation failed. Please check the form for errors.';
+    } else {
+      // Provide specific error messages based on error type
+      const errorMessage = getErrorMessage(err);
+      genericError.value = errorMessage;
+    }
   } finally {
     submitting.value = false;
   }
+};
+
+const getErrorMessage = (err: any): string => {
+  // Network errors
+  if (err?.message?.includes('fetch') || err?.message?.includes('network')) {
+    return 'Network error. Please check your internet connection and try again.';
+  }
+  
+  // Authentication errors
+  if (err?.statusCode === 401 || err?.status === 401) {
+    return 'You need to sign in to create a job. Please sign in and try again.';
+  }
+  
+  // Rate limiting
+  if (err?.statusCode === 429 || err?.status === 429) {
+    return 'You are creating jobs too quickly. Please wait a moment and try again.';
+  }
+  
+  // Server errors
+  if (err?.statusCode >= 500 || err?.status >= 500) {
+    return 'Server error. Our team has been notified. Please try again in a few minutes.';
+  }
+  
+  // Validation errors
+  if (err?.statusCode === 400 || err?.status === 400) {
+    return 'Invalid data. Please check that all fields are filled correctly.';
+  }
+  
+  // Default error message
+  return err?.data?.statusMessage || 'Unable to create job. Please check your connection and try again, or contact support if the issue persists.';
 };
 
 const handleCancel = () => {
@@ -479,9 +623,15 @@ onMounted(() => {
 });
 
 // Error boundary handlers
-const handleFormError = (error: Error, formName?: string) => {
-  console.error(`Form error in ${formName}:`, error);
-  // You could also send this to your error monitoring service
+const handleError = (error: unknown) => {
+  // Client-side error logging - console is acceptable in browser
+  if (import.meta.dev) {
+    console.error('Form error:', error);
+  }
+};
+
+const handleFormError = (error: Error) => {
+  handleError(error);
 };
 
 const handleFormReset = () => {
@@ -493,7 +643,9 @@ const handleFormReset = () => {
     budget_type: 'fixed',
     budget_amount: 0,
     deadline: '',
-    postcode: ''
+    postcode: '',
+    estimated_hours: null,
+    is_recurring: false
   };
   errors.value = {};
 };
@@ -525,6 +677,16 @@ const handleFormReset = () => {
   border: 1px solid var(--color-border);
   border-radius: var(--radius-lg);
   padding: var(--space-6);
+}
+
+.job-form__generic-error {
+  background: var(--color-error-light);
+  color: var(--color-error-600);
+  border: 1px solid var(--color-error-300);
+  border-radius: var(--radius-md);
+  padding: var(--space-4);
+  margin-bottom: var(--space-4);
+  font-size: var(--text-sm);
 }
 
 .job-form__grid {
@@ -630,6 +792,7 @@ const handleFormReset = () => {
   align-items: center;
   gap: var(--space-2);
   flex: 1;
+  position: relative;
 }
 
 .form-progress__step-number {
@@ -643,11 +806,13 @@ const handleFormReset = () => {
   justify-content: center;
   font-weight: 600;
   font-size: var(--text-sm);
+  flex-shrink: 0;
 }
 
 .form-progress__step.is-active .form-progress__step-number {
   background: var(--color-primary-600);
   color: white;
+  box-shadow: 0 0 0 3px var(--color-primary-100);
 }
 
 .form-progress__step.is-completed .form-progress__step-number {
@@ -655,9 +820,52 @@ const handleFormReset = () => {
   color: white;
 }
 
+.form-progress__step.has-errors .form-progress__step-number {
+  background: var(--color-error-600);
+  color: white;
+}
+
+.form-progress__step-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  text-align: center;
+}
+
 .form-progress__step-label {
   font-size: var(--text-xs);
+  font-weight: 600;
   color: var(--color-text-subtle);
+}
+
+.form-progress__step.is-active .form-progress__step-label {
+  color: var(--color-primary-600);
+}
+
+.form-progress__step-description {
+  font-size: 10px;
+  color: var(--color-text-muted);
+  max-width: 80px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.form-progress__step-status {
+  font-size: 10px;
+  color: var(--color-text-muted);
+  font-weight: 500;
+}
+
+.form-progress__step.is-active .form-progress__step-status {
+  color: var(--color-primary-600);
+}
+
+.form-progress__step-error {
+  font-size: 12px;
+  color: var(--color-error-600);
+  margin-top: 2px;
 }
 
 .form-progress__step.is-active .form-progress__step-label {
@@ -710,6 +918,19 @@ const handleFormReset = () => {
 .form-review__section p {
   margin: var(--space-1) 0;
   color: var(--color-text);
+}
+
+.checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  cursor: pointer;
+}
+
+.checkbox-label input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  cursor: pointer;
 }
 
 @media (max-width: 768px) {

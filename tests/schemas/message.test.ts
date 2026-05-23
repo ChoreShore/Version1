@@ -54,7 +54,7 @@ describe('CreateMessageSchema', () => {
     it('rejects an empty body', () => {
       const result = CreateMessageSchema.safeParse({ ...validMessage(), body: '' });
       expect(result.success).toBe(false);
-      if (!result.success) expect(result.error.issues[0].message).toMatch(/required/i);
+      if (!result.success) expect(result.error.issues[0].message).toBe('Please enter a message');
     });
 
     it('rejects a body over 2000 characters', () => {
@@ -71,10 +71,10 @@ describe('CreateMessageSchema', () => {
   });
 
   describe('attachment_url', () => {
-    it('accepts a valid URL', () => {
+    it('accepts a valid URL from trusted domain', () => {
       const result = CreateMessageSchema.safeParse({ 
         ...validMessage(), 
-        attachment_url: 'https://example.com/file.pdf' 
+        attachment_url: 'https://your-bucket.supabase.co/file.pdf' 
       });
       expect(result.success).toBe(true);
     });

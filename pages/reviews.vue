@@ -44,11 +44,9 @@
 
       <template v-else-if="error">
         <li>
-          <EmptyState 
-            title="Unable to load reviews" 
-            :description="error" 
-            explanation="There was a problem loading reviews. This might be a temporary issue."
-            :tips="['Check your internet connection', 'Try refreshing the page', 'Contact support if the issue persists']"
+          <EmptyState
+            title="Unable to load reviews"
+            :description="error"
             icon="⚠️"
           >
             <template #actions>
@@ -62,9 +60,7 @@
         <li>
           <EmptyState
             :title="reviewType === 'received' ? (role === 'employer' ? 'No reviews received' : 'No reviews received') : 'No reviews given'"
-            :description="reviewType === 'received' ? (role === 'employer' ? 'Complete jobs to receive feedback from workers.' : 'Complete jobs to collect feedback from employers.') : 'Leave reviews for completed jobs to help the community.'"
-            :explanation="reviewType === 'received' ? 'Reviews appear after jobs are completed and both parties have had a chance to leave feedback.' : 'Your reviews of completed jobs help others make informed decisions.'"
-            :tips="reviewType === 'received' ? ['Complete jobs to become eligible for reviews', 'Provide good service to encourage positive feedback', 'Check back after job completion'] : ['Leave honest and constructive reviews', 'Rate your experience fairly', 'Help improve the community']"
+            :description="reviewType === 'received' ? (role === 'employer' ? 'Complete jobs to receive feedback from workers. Reviews appear after jobs are completed and both parties have had a chance to leave feedback.' : 'Complete jobs to collect feedback from employers. Reviews appear after jobs are completed and both parties have had a chance to leave feedback.') : 'Leave reviews for completed jobs to help the community. Your reviews of completed jobs help others make informed decisions.'"
             icon="⭐"
           >
             <template #actions>

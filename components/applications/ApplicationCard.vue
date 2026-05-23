@@ -9,7 +9,11 @@
     </header>
 
     <p v-if="application.cover_letter" class="application-card__excerpt">
-      “{{ application.cover_letter.slice(0, 200) }}”
+      "{{ application.cover_letter.slice(0, 200) }}"
+    </p>
+
+    <p v-if="perspective === 'employer' && application.worker_bio" class="application-card__bio">
+      {{ application.worker_bio }}
     </p>
 
     <dl class="application-card__meta">
@@ -73,6 +77,7 @@
 
 <script setup lang="ts">
 import { computed } from 'vue';
+import { formatDateTime } from '~/server/utils/dateFormat';
 import type { ApplicationWithDetails } from '~/schemas/application';
 import StatusPill from '~/components/primitives/StatusPill.vue';
 import InfoBadge from '~/components/primitives/InfoBadge.vue';
@@ -108,7 +113,7 @@ const statusLabel = computed(() => props.application.status.replace('_', ' '));
 const jobTitle = computed(() => props.application.job_title ?? 'Untitled job');
 const primaryName = computed(() =>
   props.perspective === 'employer'
-    ? props.application.worker_name ?? 'Applicant'
+    ? props.application.worker_username ?? props.application.worker_name ?? 'Applicant'
     : props.application.employer_name ?? 'Employer'
 );
 
@@ -117,7 +122,7 @@ const proposedRate = computed(() => {
   return `$${props.application.proposed_rate.toLocaleString()}`;
 });
 
-const submittedAt = computed(() => new Date(props.application.created_at).toLocaleString());
+const submittedAt = computed(() => formatDateTime(props.application.created_at));
 
 const withdrawalReasonLabels: Record<string, string> = {
   found_another_job: 'Found another job',
@@ -180,6 +185,16 @@ const handleCardClick = () => {
   margin: 0;
   color: var(--color-text-muted);
   font-style: italic;
+}
+
+.application-card__bio {
+  margin: 0;
+  color: var(--color-text);
+  font-size: var(--text-sm);
+  line-height: 1.5;
+  padding: var(--space-2);
+  background: var(--color-surface-muted);
+  border-radius: var(--radius-md);
 }
 
 .application-card__meta {

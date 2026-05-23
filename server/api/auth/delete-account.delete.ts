@@ -1,18 +1,17 @@
 import { DeleteAccountSchema } from '~/schemas/auth';
 import { serverSupabaseClient, serverSupabaseUser } from '#supabase/server';
+import { logger } from '~/server/utils/logger';
+import { getAuthenticatedUser } from '~/server/utils/api';
+import { getErrorMessage, logDetailedError } from '~/server/utils/errorMessages';
+import { requireCsrfProtection } from '~/server/utils/csrf';
 
 export default defineEventHandler(async (event) => {
   try {
-    const user = await serverSupabaseUser(event);
-    
-    if (!user) {
-      throw createError({
-        statusCode: 401,
-        statusMessage: 'Unauthorized - Please sign in'
-      });
-    }
+    // Apply CSRF protection
+    requireCsrfProtection(event);
 
     const body = await readBody(event);
+
     
     const validation = DeleteAccountSchema.safeParse(body);
     if (!validation.success) {
@@ -22,6 +21,7 @@ export default defineEventHandler(async (event) => {
       });
     }
 
+    const user = await getAuthenticatedUser(event, 'Sign in to delete your account');
     const client = await serverSupabaseClient(event);
     
     const { error: signInError } = await client.auth.signInWithPassword({

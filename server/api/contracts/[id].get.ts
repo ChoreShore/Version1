@@ -17,7 +17,7 @@ export default defineEventHandler(async (event) => {
         *,
         job:jobs(title, budget_amount),
         employer:profiles!contracts_employer_id_fkey(first_name, last_name),
-        worker:profiles!contracts_worker_id_fkey(first_name, last_name)
+        worker:profiles!contracts_worker_id_fkey(username, first_name, last_name, bio)
       `)
       .eq('id', contractId)
       .single();
@@ -29,19 +29,21 @@ export default defineEventHandler(async (event) => {
       throw createError({ statusCode: 400, statusMessage: error.message });
     }
 
-    const { job, employer, worker, ...contractData } = contract as any;
-
-    return {
+    const response = {
       contract: {
-        ...contractData,
-        job_title: job?.title,
-        job_budget_amount: job?.budget_amount ?? null,
-        employer_first_name: employer?.first_name,
-        employer_last_name: employer?.last_name,
-        worker_first_name: worker?.first_name,
-        worker_last_name: worker?.last_name
+        ...contract,
+        job_title: contract.job?.title,
+        job_budget_amount: contract.job?.budget_amount,
+        employer_first_name: contract.employer?.first_name,
+        employer_last_name: contract.employer?.last_name,
+        worker_first_name: contract.worker?.first_name,
+        worker_last_name: contract.worker?.last_name,
+        worker_username: contract.worker?.username || null,
+        worker_bio: contract.worker?.bio || null
       }
     };
+
+    return response;
   } catch (error: any) {
     throw error;
   }

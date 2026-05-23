@@ -30,7 +30,9 @@ export const ContractWithDetailsSchema = ContractSchema.extend({
   employer_first_name: z.string().optional(),
   employer_last_name: z.string().optional(),
   worker_first_name: z.string().optional(),
-  worker_last_name: z.string().optional()
+  worker_last_name: z.string().optional(),
+  worker_username: z.string().nullable().optional(),
+  worker_bio: z.string().nullable().optional()
 });
 
 export const ContractResponseSchema = z.object({

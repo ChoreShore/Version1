@@ -1,6 +1,9 @@
-import { serverSupabaseClient } from '#supabase/server';
 import { UpdateJobInput, JobResponseSchema, validateUpdateJob } from '~/schemas/job';
-import { assertValidUuid, getAuthenticatedUser, ensureJobOwner } from '~/server/utils/api';
+import { serverSupabaseClient } from '#supabase/server';
+import { getAuthenticatedUser, assertValidUuid, ensureJobOwner } from '~/server/utils/api';
+import { logger } from '~/server/utils/logger';
+import { getErrorMessage, logDetailedError } from '~/server/utils/errorMessages';
+import { requireCsrfProtection } from '~/server/utils/csrf';
 
 const VALID_STATUS_TRANSITIONS: Record<string, string[]> = {
   draft: ['open'],
@@ -143,6 +146,7 @@ export default defineEventHandler(async (event) => {
     try {
       return JobResponseSchema.parse(response);
     } catch (validationError) {
+      logger.error('Response validation failed', validationError, 'jobs/[id].patch');
       throw createError({ statusCode: 500, statusMessage: 'Invalid response format' });
     }
   } catch (error: any) {

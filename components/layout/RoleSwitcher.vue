@@ -1,7 +1,18 @@
 <template>
   <div class="role-switcher" role="group" :aria-label="ariaLabel">
-    <div class="role-switcher__tooltip" :class="{ 'is-visible': showTooltip }">
+    <button
+      class="role-switcher__help"
+      @click="toggleHelp"
+      aria-label="Show help about role switching"
+      :aria-expanded="showHelp"
+    >
+      <HelpCircle :size="16" />
+    </button>
+    <div class="role-switcher__tooltip" :class="{ 'is-visible': showTooltip || showHelp }">
       Switch between Employer and Worker views to manage jobs or find work
+      <button class="role-switcher__tooltip-close" @click="showHelp = false" aria-label="Close help">
+        <X :size="14" />
+      </button>
     </div>
     <button
       v-for="option in normalizedOptions"
@@ -10,6 +21,7 @@
       class="role-switcher__option"
       :class="{ 'is-active': currentValue === option.value }"
       :aria-pressed="currentValue === option.value"
+      :aria-label="`Switch to ${option.label} view${option.description ? `: ${option.description}` : ''}`"
       @click="select(option.value)"
       @mouseenter="showTooltip = true"
       @mouseleave="showTooltip = false"
@@ -26,6 +38,7 @@
 
 <script setup lang="ts">
 import { computed, ref } from 'vue';
+import { HelpCircle, X } from '@lucide/vue';
 
 type RoleOption = {
   label: string;
@@ -73,6 +86,12 @@ const select = (value: string) => {
 };
 
 const showTooltip = ref(false);
+const showHelp = ref(false);
+
+const toggleHelp = () => {
+  showHelp.value = !showHelp.value;
+  showTooltip.value = false;
+};
 </script>
 
 <style scoped>
@@ -87,6 +106,30 @@ const showTooltip = ref(false);
   width: 100%;
   max-width: 280px;
   min-width: 0;
+}
+
+.role-switcher__help {
+  background: none;
+  border: none;
+  color: var(--color-muted);
+  cursor: pointer;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-md);
+  transition: color 150ms ease, background 150ms ease;
+  flex-shrink: 0;
+}
+
+.role-switcher__help:hover {
+  color: var(--color-text);
+  background: var(--color-hover);
+}
+
+.role-switcher__help:focus-visible {
+  outline: 2px solid var(--color-teal);
+  outline-offset: 2px;
 }
 
 .role-switcher__option {
@@ -104,10 +147,16 @@ const showTooltip = ref(false);
   background-color: var(--hover);
 }
 
+.role-switcher__option:focus-visible {
+  outline: 2px solid var(--color-teal);
+  outline-offset: 2px;
+  z-index: 1;
+}
+
 .role-switcher__option.is-active {
-  background: var(--mint);
-  color: var(--teal);
-  box-shadow: inset 0 0 0 1px var(--border);
+  background: var(--color-mint);
+  color: var(--color-teal);
+  box-shadow: inset 0 0 0 1px var(--color-border);
 }
 
 .role-switcher__label {
@@ -140,6 +189,33 @@ const showTooltip = ref(false);
   transition: opacity 150ms ease, visibility 150ms ease;
   pointer-events: none;
   z-index: 100;
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.role-switcher__tooltip.is-visible {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+}
+
+.role-switcher__tooltip-close {
+  background: none;
+  border: none;
+  color: var(--white);
+  cursor: pointer;
+  padding: 2px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 2px;
+  opacity: 0.7;
+  transition: opacity 150ms ease;
+}
+
+.role-switcher__tooltip-close:hover {
+  opacity: 1;
 }
 
 .role-switcher__tooltip::after {
@@ -178,7 +254,8 @@ const showTooltip = ref(false);
   }
   
   .role-switcher__tooltip {
-    display: none;
+    white-space: normal;
+    max-width: 200px;
   }
 }
 </style>

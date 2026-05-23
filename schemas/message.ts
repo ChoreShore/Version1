@@ -6,15 +6,23 @@ export const CreateMessageSchema = z.object({
   application_id: z.string().uuid('Invalid application ID format'),
   receiver_id: z.string().uuid('Invalid receiver ID format'),
   body: z.string()
-    .min(1, 'Message body is required')
+    .min(1, 'Please enter a message')
     .max(2000, 'Message must be less than 2000 characters')
     .trim(),
   attachment_url: z.string().url('Invalid attachment URL').optional().refine(
     (url) => {
       if (!url) return true;
-      // In production, validate against your CDN domain
-      // Example: return url.includes('your-cdn-domain.com') || url.includes('your-storage-bucket.s3.amazonaws.com');
-      return true; // Allow all URLs for now - add domain validation in production
+      // Validate against trusted domains to prevent malicious URLs
+      const trustedDomains = process.env.TRUSTED_ATTACHMENT_DOMAINS 
+        ? process.env.TRUSTED_ATTACHMENT_DOMAINS.split(',').map(d => d.trim())
+        : ['supabase.co', 'amazonaws.com', 'cloudflare.com'];
+      
+      try {
+        const urlObj = new URL(url);
+        return trustedDomains.some(domain => urlObj.hostname.endsWith(domain));
+      } catch {
+        return false;
+      }
     },
     'Attachment URL must be from a trusted source'
   ),

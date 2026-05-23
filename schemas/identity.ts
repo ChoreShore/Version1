@@ -2,7 +2,7 @@ import { z } from 'zod';
 
 export const IdentityRecordSchema = z.object({
   status: z.enum(['verified', 'in_review', 'declined']),
-  sessionId: z.string().min(1, 'Session ID is required'),
+  sessionId: z.string().min(1, 'Please enter a session ID'),
   verifiedAt: z.string().datetime().optional()
 });
 

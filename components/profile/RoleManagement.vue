@@ -76,7 +76,12 @@ const fetchUserRoles = async () => {
     
     userRoles.value = (data as Profile | null)?.roles || [];
   } catch (err: any) {
-    console.error('Failed to fetch roles:', err);
+    const handleError = (error: unknown) => {
+      if (import.meta.dev) {
+        console.error('Failed to fetch roles:', err);
+      }
+    };
+    handleError(err);
   }
 };
 
@@ -88,7 +93,7 @@ const addRole = async (role: Role) => {
   try {
     const result = await addRoleApi(role);
     userRoles.value = result;
-    success.value = `${role.charAt(0).toUpperCase() + role.slice(1)} role added successfully!`;
+    success.value = `${role.charAt(0).toUpperCase() + role.slice(1)} role added successfully`;
     
     setTimeout(() => {
       success.value = null;

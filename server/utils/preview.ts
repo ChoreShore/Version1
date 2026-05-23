@@ -1,4 +1,5 @@
 // server/utils/jobs/preview.ts
+import { getPostcodeArea } from '~/server/utils/jobValidation';
 import type { JobsQueryInput, JobsResponseInput, JobPreviewInput } from '~/schemas/job';
 
 export async function fetchPreviewJobs(
@@ -47,7 +48,7 @@ export async function fetchPreviewJobs(
     description_preview: `${job.description.slice(0, 100)}...`,
     category_id: job.category_id,
     category_name: job.category?.name ?? 'Unknown',
-    postcode_area: job.postcode.slice(0, 4),
+    postcode_area: getPostcodeArea(job.postcode),
     budget_type: job.budget_type,
     budget_display: job.budget_type === 'fixed' ? 'Fixed price' : 'Hourly rate',
     created_at: job.created_at,

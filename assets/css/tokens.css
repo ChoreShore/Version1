@@ -1,51 +1,51 @@
 :root {
   color-scheme: light;
 
-  /* CORE BRAND (REFINED PALETTE) */
-  --teal: #14453D;
-  --mint: #E8F3F1;
-  --terracotta: #D4745E;
+  /* CORE BRAND (FROM TEMPLATES) */
+  --teal: #0d9488;
+  --mint: #f0fdfa;
+  --terracotta: #c2410c;
 
   /* SUPPORTING COLORS */
-  --dark: #1A1A1A;
-  --grey: #666666;
+  --dark: #111;
+  --grey: #777;
   --white: #ffffff;
 
-  /* SYSTEM COLORS (SEO + UX OPTIMISED) */
-  --bg: #F7FAF9;
+  /* SYSTEM COLORS (FROM TEMPLATES) */
+  --bg: #f7f8fa;
   --surface: #ffffff;
-  --hover: #F0F7F5;
-  --border: #E5E7EB;
+  --hover: #f5f5f5;
+  --border: #eee;
 
   /* TEXT SYSTEM */
-  --text: #1A1A1A;
-  --muted: #6B7280;
+  --text: #111;
+  --muted: #666;
 
   /* ACTION COLORS */
   --primary: var(--teal);
-  --accent: var(--terracotta);
-  --success: #2E7D6B;
+  --accent: #f97316;
+  --success: #16a34a;
 
   /* UI */
   --shadow: 0 8px 22px rgba(0, 0, 0, 0.08);
   --shadow-hover: 0 12px 28px rgba(0, 0, 0, 0.10);
 
   /* Backward-compatible aliases for existing components */
-  --color-primary-100: var(--mint);
-  --color-primary-200: #d0e8e3;
-  --color-primary-300: #a3d4ca;
-  --color-primary-400: #5c9d90;
-  --color-primary-500: var(--success);
+  --color-primary-100: #f8fafc;
+  --color-primary-200: #f5f5f5;
+  --color-primary-300: #f3f4f6;
+  --color-primary-400: #eef1f4;
+  --color-primary-500: #fafafa;
   --color-primary-600: var(--teal);
-  --color-primary-700: #0f342e;
+  --color-primary-700: #0f766e;
 
   --color-primary: var(--teal);
   --color-success: var(--success);
-  --color-success-light: var(--mint);
-  --color-warning: var(--terracotta);
-  --color-warning-light: #fce8e2;
-  --color-danger: #c0392b;
-  --color-danger-light: #f9d6d3;
+  --color-success-light: #dcfce7;
+  --color-warning: #f59e0b;
+  --color-warning-light: #fffbeb;
+  --color-danger: #dc2626;
+  --color-danger-light: #fee2e2;
 
   --color-bg: var(--bg);
   --color-surface: var(--surface);
@@ -53,22 +53,22 @@
   --color-border: var(--border);
   --color-text: var(--text);
   --color-text-muted: var(--muted);
-  --color-text-subtle: var(--muted);
+  --color-text-subtle: #777;
 
   /* Extended aliases for auth pages and other components */
-  --color-primary-50: #f4faf8;
-  --color-secondary-50: #fdf8f6;
+  --color-primary-50: #f7f8fa;
+  --color-secondary-50: #fafafa;
   --color-gray-900: var(--text);
   --color-gray-600: var(--muted);
-  --color-gray-300: var(--border);
-  --color-gray-200: var(--border);
+  --color-gray-300: #ddd;
+  --color-gray-200: #eee;
   --color-error-50: #fef2f2;
   --color-error-200: #fecaca;
-  --color-error-500: #ef4444;
+  --color-error-500: #dc2626;
   --color-error-700: #b91c1c;
-  --color-success-50: #f0fdf4;
+  --color-success-50: #dcfce7;
   --color-success-200: #bbf7d0;
-  --color-success-600: var(--success);
+  --color-success-600: #16a34a;
   --color-success-700: #145c4e;
 
   --radius-xl: 20px;
@@ -110,8 +110,18 @@
   --text-2xl: 1.5rem;
 
   /* Focus ring */
-  --focus-ring-color: rgba(20, 69, 61, 0.35);
+  --focus-ring-color: rgba(13, 148, 136, 0.35);
   --focus-ring: 0 0 0 3px var(--focus-ring-color);
+
+  /* Migration aliases - map bare tokens to --color-* convention */
+  /* These allow gradual migration from --teal, --muted, etc. to --color-* */
+  --color-teal: var(--teal);
+  --color-mint: var(--mint);
+  --color-muted: var(--muted);
+  --color-hover: var(--hover);
+  --color-dark: var(--dark);
+  --color-grey: var(--grey);
+  --color-white: var(--white);
 }
 
 * {
@@ -176,7 +186,7 @@ textarea {
 .job-form select:focus {
   outline: none;
   border-color: var(--primary);
-  box-shadow: 0 0 0 3px var(--mint);
+  box-shadow: 0 0 0 3px #f5f5f5;
 }
 
 button {
@@ -184,15 +194,32 @@ button {
 }
 
 :focus-visible {
-  outline: 2px solid var(--color-primary-500);
+  outline: 2px solid var(--teal);
   outline-offset: 2px;
+  border-radius: 2px;
+}
+
+/* Skip link for keyboard navigation */
+.skip-link {
+  position: absolute;
+  top: -40px;
+  left: 0;
+  background: var(--dark);
+  color: white;
+  padding: 8px 16px;
+  z-index: 100;
+  transition: top 0.3s;
+}
+
+.skip-link:focus {
+  top: 0;
 }
 
 /* Empty State CTA */
 .empty-state__cta {
   display: inline-block;
   padding: 10px 20px;
-  background: var(--color-primary-600);
+  background: #111;
   color: white;
   border-radius: var(--radius-md);
   text-decoration: none;
@@ -203,11 +230,11 @@ button {
 }
 
 .empty-state__cta:hover {
-  background: var(--color-primary-700);
+  background: #333;
 }
 
 ::selection {
-  background-color: rgba(20, 69, 61, 0.15);
+  background-color: rgba(17, 17, 17, 0.15);
 }
 
 .sr-only {

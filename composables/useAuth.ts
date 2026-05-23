@@ -30,7 +30,7 @@ export const useAuth = () => {
         '/api/auth/add-role',
         { method: 'POST', body: { role } }
       );
-      return data.roles;
+      return data;
     } catch (error) {
       normalizeFetchError(error);
     }
@@ -73,7 +73,11 @@ export const useAuth = () => {
 
   const signout = async () => {
     try {
-      await $fetch('/api/auth/signout', { method: 'POST' });
+      const data = await $fetch<{ success: boolean }>(
+        '/api/auth/signout', 
+        { method: 'POST' }
+      );
+      return data;
     } catch (error) {
       normalizeFetchError(error);
     }

@@ -16,6 +16,7 @@
 </template>
 
 <script setup lang="ts">
+import { formatTime } from '~/server/utils/dateFormat';
 import InfoBadge from '~/components/primitives/InfoBadge.vue';
 
 defineEmits<{ (e: 'select', id: string): void }>();
@@ -34,7 +35,7 @@ const props = defineProps<{
 
 const otherParticipant = computed(() => props.conversation.other_participant_name || 'Conversation');
 const initials = computed(() => otherParticipant.value.split(' ').map((n) => n[0]).join('').slice(0, 2));
-const lastMessageTime = computed(() => new Date(props.conversation.last_message_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }));
+const lastMessageTime = computed(() => formatTime(props.conversation.last_message_at));
 </script>
 
 <style scoped>

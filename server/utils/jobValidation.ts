@@ -40,6 +40,18 @@ export function validateDeadline(deadline: Date | string): { valid: boolean; mes
   return { valid: true };
 }
 
+/**
+ * Extract the outward code (first half) from a UK postcode.
+ * e.g. "SW1A 1AA" → "SW1A", "M1 1AE" → "M1"
+ * Returns empty string if postcode is invalid.
+ */
+export function getPostcodeArea(postcode: string): string {
+  if (!postcode || typeof postcode !== 'string') return '';
+  const trimmed = postcode.trim();
+  const parts = trimmed.split(' ');
+  return parts[0] || '';
+}
+
 export function validatePostcode(postcode: string): { valid: boolean; message?: string } {
   if (!postcode || typeof postcode !== 'string') {
     return { valid: false, message: 'Postcode is required' };

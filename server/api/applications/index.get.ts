@@ -2,12 +2,13 @@ import { serverSupabaseClient } from '#supabase/server';
 import { ApplicationsResponseSchema } from '~/schemas/application';
 import { getAuthenticatedUser } from '~/server/utils/api';
 import { hasRole } from '~/server/utils/roles';
+import { logger } from '~/server/utils/logger';
 
 export default defineEventHandler(async (event) => {
   try {
-    console.log('[applications/index.get] Starting request');
+    logger.debug('Starting request', 'applications/index.get');
     const user = await getAuthenticatedUser(event, 'Sign in to view your applications');
-    console.log('[applications/index.get] User authenticated:', user.id);
+    logger.debug('User authenticated', 'applications/index.get', user.id);
     const client = await serverSupabaseClient(event);
 
     // Resolve actual role from the user's profile — never trust query.role for authorization
@@ -28,7 +29,7 @@ export default defineEventHandler(async (event) => {
         .select(`
           *,
           job:jobs!inner(title, employer_id, budget_amount, budget_type),
-          worker:profiles!worker_id(first_name, last_name)
+          worker:profiles!worker_id(username, first_name, last_name, bio)
         `)
         .eq('jobs.employer_id', user.id)
         .order('created_at', { ascending: false });
@@ -40,7 +41,9 @@ export default defineEventHandler(async (event) => {
           job_title: job?.title,
           job_budget_amount: job?.budget_amount,
           job_budget_type: job?.budget_type,
-          worker_name: worker ? `${worker.first_name} ${worker.last_name}` : null
+          worker_name: worker ? `${worker.first_name} ${worker.last_name}` : null,
+          worker_username: worker?.username || null,
+          worker_bio: worker?.bio || null
         };
       });
       error = result.error;
@@ -74,16 +77,15 @@ export default defineEventHandler(async (event) => {
 
     const response = { applications: data || [] };
     
-    // Validate response with Zod schema (safe validation)
+    // Validate response with Zod schema
     try {
       return ApplicationsResponseSchema.parse(response);
     } catch (validationError) {
-      console.error('API Response validation failed:', validationError);
-      // Return unvalidated response to prevent breaking the application
-      return response;
+      logger.error('Response validation failed', validationError, 'applications/index.get');
+      throw createError({ statusCode: 500, statusMessage: 'Invalid response format' });
     }
   } catch (error: any) {
-    console.error('[applications/index.get] Error:', error);
+    logger.error('Request failed', error, 'applications/index.get');
     throw error;
   }
 });

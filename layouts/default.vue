@@ -25,12 +25,19 @@
       </TopBar>
     </template>
 
-    <template #bottom-nav>
-      <BottomNav />
+    <template #bottom-nav="slotProps">
+      <BottomNav :is-menu-open="slotProps.isSidebarOpen" @toggle-menu="slotProps.onToggleSidebar" />
     </template>
 
     <div class="layout-content">
-      <slot />
+      <Suspense>
+        <template #default>
+          <slot />
+        </template>
+        <template #fallback>
+          <PageLoadingSkeleton />
+        </template>
+      </Suspense>
     </div>
   </AppShell>
 </template>
@@ -42,6 +49,7 @@ import NavSidebar from '~/components/layout/NavSidebar.vue';
 import TopBar from '~/components/layout/TopBar.vue';
 import BottomNav from '~/components/layout/BottomNav.vue';
 import RoleSwitcher from '~/components/layout/RoleSwitcher.vue';
+import PageLoadingSkeleton from '~/components/primitives/PageLoadingSkeleton.vue';
 import { useActiveRole } from '~/composables/useActiveRole';
 import { useAuth } from '~/composables/useAuth';
 
@@ -55,9 +63,9 @@ const handleSignOut = async () => {
 };
 
 const logo = {
-  label: 'ChoreShore',
+  label: 'HireBeHired',
   subtitle: 'Marketplace',
-  initials: 'CS'
+  initials: 'HB'
 };
 
 const navItems = computed(() => {

@@ -5,7 +5,8 @@ export default defineNuxtConfig({
   supabase: {
     redirect: false,
     url: process.env.SUPABASE_URL,
-    key: process.env.SUPABASE_KEY
+    key: process.env.SUPABASE_KEY,
+    serviceKey: process.env.SUPABASE_SERVICE_KEY
   },
   typescript: {
     strict: true
@@ -18,7 +19,9 @@ export default defineNuxtConfig({
   routeRules: {
     '/api/**': {
       headers: {
-        'Content-Security-Policy': "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data:; connect-src 'self' https://*.supabase.co;",
+        // Removed 'unsafe-eval' from script-src (most dangerous)
+        // TODO: Replace 'unsafe-inline' with nonce or hash-based CSP for production
+        'Content-Security-Policy': "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data:; connect-src 'self' https://*.supabase.co; frame-src 'none'; object-src 'none'; base-uri 'self'; form-action 'self';",
         'X-Frame-Options': 'DENY',
         'X-Content-Type-Options': 'nosniff',
         'Referrer-Policy': 'strict-origin-when-cross-origin',

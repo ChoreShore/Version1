@@ -1,4 +1,5 @@
 import { createError, setHeader } from 'h3';
+import Redis from 'ioredis';
 
 interface RateLimitConfig {
   windowMs: number; // Time window in milliseconds
@@ -13,15 +14,63 @@ interface RateLimitResult {
   resetTime: Date;
 }
 
-// In-memory rate limit store (for production, use Redis)
+// Redis client for distributed rate limiting
+let redisClient: Redis | null = null;
+let useInMemoryFallback = false;
+
+// Fallback in-memory store for development/testing when Redis is unavailable
 const rateLimitStore = new Map<string, number[]>();
 
-// Cleanup interval to prevent memory leaks
+// Initialize Redis client
+function initializeRedis() {
+  const redisUrl = process.env.REDIS_URL || process.env.REDIS_HOST;
+
+  if (redisUrl) {
+    try {
+      redisClient = new Redis(redisUrl, {
+        maxRetriesPerRequest: 3,
+        retryStrategy: (times) => {
+          if (times > 3) {
+            console.error('Redis connection failed after retries, rate limiting will fail closed');
+            return null;
+          }
+          return Math.min(times * 100, 3000);
+        },
+      });
+
+      redisClient.on('error', (err) => {
+        console.error('Redis error:', err);
+      });
+
+      redisClient.on('connect', () => {
+        console.log('Redis connected for rate limiting');
+      });
+    } catch (error) {
+      console.error('Failed to initialize Redis, rate limiting will fail closed:', error);
+    }
+  } else {
+    // Only allow in-memory fallback in development mode
+    const isDevelopment = process.env.NODE_ENV === 'development';
+    if (isDevelopment) {
+      console.warn('REDIS_URL not configured, using in-memory rate limiting (development mode only)');
+      useInMemoryFallback = true;
+    } else {
+      console.error('REDIS_URL not configured in production, rate limiting will fail closed');
+    }
+  }
+}
+
+// Initialize Redis on module load
+initializeRedis();
+
+// Cleanup interval for in-memory fallback (only used when Redis is unavailable)
 const CLEANUP_INTERVAL = 60000; // 1 minute
 const MAX_STORE_SIZE = 10000; // Maximum number of entries to prevent memory issues
 
-// Periodic cleanup of expired entries
+// Periodic cleanup of expired entries (in-memory fallback only)
 setInterval(() => {
+  if (!useInMemoryFallback) return; // Skip cleanup when using Redis
+  
   const now = Date.now();
   let totalEntries = 0;
   
@@ -61,19 +110,91 @@ setInterval(() => {
 }, CLEANUP_INTERVAL);
 
 /**
- * Check if a request should be rate limited
+ * Check if a request should be rate limited using Redis (distributed) or in-memory fallback
  * @param identifier - Unique identifier for the user/IP (e.g., user ID or IP address)
  * @param config - Rate limit configuration
  * @returns Rate limit result
  */
-export function checkRateLimit(
+export async function checkRateLimit(
   identifier: string,
   config: RateLimitConfig
-): RateLimitResult {
+): Promise<RateLimitResult> {
   const now = Date.now();
   const windowStart = now - config.windowMs;
+  const redisKey = `ratelimit:${identifier}`;
+
+  // Fail closed in production if Redis is not available
+  const isDevelopment = process.env.NODE_ENV === 'development';
+  if (!redisClient && !useInMemoryFallback && !isDevelopment) {
+    throw createError({
+      statusCode: 503,
+      statusMessage: 'Service temporarily unavailable. Please try again later.'
+    });
+  }
+
+  // Use Redis for distributed rate limiting if available
+  if (redisClient && !useInMemoryFallback) {
+    try {
+      const pipeline = redisClient.pipeline();
+
+      // Remove entries outside the current window
+      pipeline.zremrangebyscore(redisKey, 0, windowStart);
+
+      // Count current requests in window
+      pipeline.zcard(redisKey);
+
+      // Add current request
+      pipeline.zadd(redisKey, now, `${now}-${Math.random()}`);
+
+      // Set expiration to windowMs + 1 second buffer
+      pipeline.expire(redisKey, Math.ceil(config.windowMs / 1000) + 1);
+
+      const results = await pipeline.exec();
+
+      if (!results) {
+        throw new Error('Redis pipeline execution failed');
+      }
+
+      const count = results[1][1] as number;
+
+      // Check if limit exceeded (count before adding current request)
+      if (count >= config.maxRequests) {
+        // Get oldest timestamp to calculate reset time
+        const oldest = await redisClient.zrange(redisKey, 0, 0, 'WITHSCORES');
+        const oldestTimestamp = oldest.length > 1 ? parseFloat(oldest[1]) : now;
+        const resetTime = new Date(oldestTimestamp + config.windowMs);
+
+        return {
+          success: false,
+          limit: config.maxRequests,
+          remaining: 0,
+          resetTime
+        };
+      }
+
+      return {
+        success: true,
+        limit: config.maxRequests,
+        remaining: config.maxRequests - count - 1,
+        resetTime: new Date(now + config.windowMs)
+      };
+    } catch (error) {
+      console.error('Redis rate limiting error:', error);
+      // Fail closed in production, allow fallback in development
+      const isDevelopment = process.env.NODE_ENV === 'development';
+      if (!isDevelopment) {
+        throw createError({
+          statusCode: 503,
+          statusMessage: 'Service temporarily unavailable. Please try again later.'
+        });
+      }
+      console.warn('Falling back to in-memory rate limiting (development mode)');
+      useInMemoryFallback = true;
+      // Fall through to in-memory implementation
+    }
+  }
   
-  // Get existing timestamps for this identifier
+  // In-memory fallback (original implementation)
   const timestamps = rateLimitStore.get(identifier) || [];
   
   // Filter out timestamps outside the current window
@@ -108,11 +229,11 @@ export function checkRateLimit(
 /**
  * Rate limiting middleware for API endpoints
  * @param config - Rate limit configuration
- * @returns Function that throws error if rate limited
+ * @returns Async function that throws error if rate limited
  */
 export function createRateLimiter(config: RateLimitConfig) {
-  return (identifier: string, event?: any) => {
-    const result = checkRateLimit(identifier, config);
+  return async (identifier: string, event?: any) => {
+    const result = await checkRateLimit(identifier, config);
     
     if (!result.success) {
       if (event) {
@@ -167,5 +288,17 @@ export const rateLimiters = {
   general: createRateLimiter({
     windowMs: 60 * 1000, // 1 minute
     maxRequests: 60 // 60 requests per minute
+  }),
+
+  // Username availability checks — prevents mass enumeration
+  usernameCheck: createRateLimiter({
+    windowMs: 60 * 1000, // 1 minute
+    maxRequests: 10 // 10 username checks per minute per IP
+  }),
+
+  // Message rate limiting — prevents spam
+  messages: createRateLimiter({
+    windowMs: 60 * 1000, // 1 minute
+    maxRequests: 30 // 30 messages per minute per user
   })
 };

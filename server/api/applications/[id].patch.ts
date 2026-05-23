@@ -1,7 +1,12 @@
+import { validateUpdateApplication, ApplicationResponseSchema } from '~/schemas/application';
 import { serverSupabaseClient } from '#supabase/server';
-import { validateUpdateApplication } from '~/schemas/application';
-import { rateLimiters } from '~/server/utils/rateLimit';
 import { getAuthenticatedUser } from '~/server/utils/api';
+import { ensureApplicationOwner } from '~/server/utils/api';
+import { logger } from '~/server/utils/logger';
+import { getErrorMessage, logDetailedError } from '~/server/utils/errorMessages';
+import { requireCsrfProtection } from '~/server/utils/csrf';
+import { rateLimiters } from '~/server/utils/rateLimit';
+import { assertValidUuid } from '~/server/utils/api';
 import {
   fetchApplication,
   authorizeAction,
@@ -19,19 +24,11 @@ import {
 
 export default defineEventHandler(async (event) => {
   try {
-    const applicationId = getRouterParam(event, 'id');
+    const applicationId = assertValidUuid(getRouterParam(event, 'id'), {
+      label: 'Application ID'
+    });
     const body = await readBody(event);
     const user = await getAuthenticatedUser(event, 'Sign in to update applications');
-
-    if (!applicationId) {
-      throw createError({ statusCode: 400, statusMessage: 'Application ID is required' });
-    }
-
-    if (!applicationId.trim()) {
-      throw createError({ statusCode: 400, statusMessage: 'Invalid application ID format' });
-    }
-
-    rateLimiters.applications(user.id);
 
     const validation = validateUpdateApplication(body);
     if (!validation.success || !validation.data) {
@@ -42,6 +39,7 @@ export default defineEventHandler(async (event) => {
       });
     }
 
+    await rateLimiters.applications(user.id);
     const validatedData = validation.data;
     const client = await serverSupabaseClient(event);
 

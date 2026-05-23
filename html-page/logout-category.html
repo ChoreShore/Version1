@@ -744,9 +744,19 @@ body{
 
 <script>
 
+// Simple HTML escape function to prevent XSS
+function escapeHtml(unsafe) {
+  return unsafe
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+}
+
 function showResults(category){
 
-  document.getElementById("resultsTitle").innerHTML =
+  document.getElementById("resultsTitle").textContent =
     "Results for: " + category;
 
   let jobs = "";
@@ -841,31 +851,33 @@ function showResults(category){
 
   else{
 
+    const escapedCategory = escapeHtml(category);
+
     jobs = `
 
       <div class="job-card">
-        <h3>${category} Job</h3>
+        <h3>${escapedCategory} Job</h3>
         <p>💷 £18/hour</p>
         <p>📍 London</p>
         <button>Apply Now</button>
       </div>
 
       <div class="job-card">
-        <h3>${category} Assistant</h3>
+        <h3>${escapedCategory} Assistant</h3>
         <p>💷 £16/hour</p>
         <p>📍 Manchester</p>
         <button>Apply Now</button>
       </div>
 
       <div class="job-card">
-        <h3>Experienced ${category}</h3>
+        <h3>Experienced ${escapedCategory}</h3>
         <p>💷 £22/hour</p>
         <p>📍 Birmingham</p>
         <button>Apply Now</button>
       </div>
 
       <div class="job-card">
-        <h3>Urgent ${category}</h3>
+        <h3>Urgent ${escapedCategory}</h3>
         <p>💷 £25/hour</p>
         <p>📍 Leeds</p>
         <button>Apply Now</button>

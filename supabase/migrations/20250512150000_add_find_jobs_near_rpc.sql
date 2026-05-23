@@ -8,7 +8,7 @@ DROP FUNCTION IF EXISTS find_jobs_near(float, float, float);
 CREATE OR REPLACE FUNCTION find_jobs_near(
   search_lat float,
   search_lng float,
-  distance_km float DEFAULT 10
+  max_distance_km float DEFAULT 10
 )
 RETURNS TABLE (
   job_id uuid,
@@ -27,7 +27,7 @@ BEGIN
     RAISE EXCEPTION 'Longitude must be between -180 and 180';
   END IF;
 
-  IF distance_km <= 0 OR distance_km > 1000 THEN
+  IF max_distance_km <= 0 OR max_distance_km > 1000 THEN
     RAISE EXCEPTION 'Distance must be between 0 and 1000 km';
   END IF;
 
@@ -50,7 +50,7 @@ BEGIN
     AND ST_DistanceSphere(
       ST_SetSRID(ST_MakePoint(j.longitude, j.latitude), 4326),
       ST_SetSRID(ST_MakePoint(search_lng, search_lat), 4326)
-    ) / 1000 <= distance_km
+    ) / 1000 <= max_distance_km
   ORDER BY distance_km ASC;
 END;
 $$;

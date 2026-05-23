@@ -11,18 +11,6 @@ export interface UuidValidationOptions {
   invalidMessage?: string;
 }
 
-export function rethrowIfAuthError(error: any): void {
-  // This function is deprecated - it's causing more problems than it solves
-  // Supabase client initialization errors with "Auth session missing" are being
-  // caught here and converted to generic auth errors, hiding the real issue
-  // Do not use this function - handle auth errors explicitly in each endpoint
-}
-
-/** @deprecated Use rethrowIfAuthError instead */
-export function handleSupabaseAuthErrors(error: any): void {
-  rethrowIfAuthError(error);
-}
-
 /**
  * Safely get the authenticated user from Supabase with proper error handling
  * This wraps serverSupabaseUser to handle initialization errors gracefully

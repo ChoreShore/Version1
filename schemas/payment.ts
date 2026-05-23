@@ -20,12 +20,12 @@ export type PaymentMethodVerificationStatus = z.infer<typeof PaymentMethodVerifi
 
 export const CreatePaymentIntentSchema = z.object({
   application_id: z.string().uuid('Invalid application ID format'),
-  idempotency_key: z.string().min(1).optional()
+  idempotency_key: z.string().min(1, 'Please provide an idempotency key to prevent duplicate charges')
 });
 
 export const ConfirmPaymentSchema = z.object({
   application_id: z.string().uuid('Invalid application ID format'),
-  payment_intent_id: z.string().min(1, 'Payment intent ID is required')
+  payment_intent_id: z.string().min(1, 'Please provide a payment intent ID')
 });
 
 export const PayoutSchema = z.object({

@@ -1,12 +1,20 @@
 import { serverSupabaseClient } from '#supabase/server';
-import { assertValidUuid, getAuthenticatedUser, ensureJobOwner } from '~/server/utils/api';
+import { getAuthenticatedUser } from '~/server/utils/api';
+import { ensureJobOwner } from '~/server/utils/api';
+import { logger } from '~/server/utils/logger';
+import { getErrorMessage, logDetailedError } from '~/server/utils/errorMessages';
+import { requireCsrfProtection } from '~/server/utils/csrf';
 
 export default defineEventHandler(async (event) => {
   try {
-    const user = await getAuthenticatedUser(event, 'Sign in to delete jobs');
+    // Apply CSRF protection
+    requireCsrfProtection(event);
+
     const jobId = assertValidUuid(getRouterParam(event, 'id'), {
       label: 'Job ID'
     });
+
+    const user = await getAuthenticatedUser(event, 'Sign in to delete jobs');
 
     const client = await serverSupabaseClient(event);
 

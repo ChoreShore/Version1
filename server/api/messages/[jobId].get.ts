@@ -1,21 +1,15 @@
 import { serverSupabaseClient } from '#supabase/server';
 import { MessagesResponseSchema } from '~/schemas/message';
-import { getAuthenticatedUser, ensureMessageParticipant } from '~/server/utils/api';
+import { logger } from '~/server/utils/logger';
+import { getAuthenticatedUser, ensureMessageParticipant, assertValidUuid } from '~/server/utils/api';
 
 export default defineEventHandler(async (event) => {
   try {
     const user = await getAuthenticatedUser(event, 'Sign in to view messages');
 
-    const jobId = getRouterParam(event, 'id');
-
-    if (!jobId) {
-      throw createError({ statusCode: 400, statusMessage: 'Job ID is required' });
-    }
-
-    // Basic ID validation (UUID format will be validated by database)
-    if (!jobId.trim()) {
-      throw createError({ statusCode: 400, statusMessage: 'Invalid Job ID format' });
-    }
+    const jobId = assertValidUuid(getRouterParam(event, 'id'), {
+      label: 'Job ID'
+    });
 
     const client = await serverSupabaseClient(event);
 
@@ -31,12 +25,12 @@ export default defineEventHandler(async (event) => {
       .from('messages')
       .select(`
         *,
-        sender:profiles!messages_sender_id_fkey(id, first_name, last_name),
-        receiver:profiles!messages_receiver_id_fkey(id, first_name, last_name)
+        sender:profiles!messages_sender_id_fkey(username, id, first_name, last_name, bio),
+        receiver:profiles!messages_receiver_id_fkey(username, id, first_name, last_name, bio)
       `)
       .eq('job_id', jobId)
       .or(`sender_id.eq.${user.id},receiver_id.eq.${user.id}`)
-      .order('sent_at', { ascending: true })
+      .order('created_at', { ascending: true })
       .range(offset, offset + limit - 1);
 
     if (error) {
@@ -45,13 +39,12 @@ export default defineEventHandler(async (event) => {
 
     const response = { messages: data || [], pagination: { offset, limit, hasMore: (data?.length || 0) === limit } };
     
-    // Validate response with Zod schema (safe validation)
+    // Validate response with Zod schema
     try {
       return MessagesResponseSchema.parse(response);
     } catch (validationError) {
-      console.error('API Response validation failed:', validationError);
-      // Return unvalidated response to prevent breaking the application
-      return response;
+      logger.error('Response validation failed', validationError, 'messages/[jobId].get');
+      throw createError({ statusCode: 500, statusMessage: 'Invalid response format' });
     }
   } catch (error: any) {
     throw error;

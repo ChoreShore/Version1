@@ -39,18 +39,22 @@ const validBody = {
 
 const buildApiResponse = (outcome: string, extra: Record<string, any> = {}) => ({
   code: 200,
-  status: { outcome, ...extra },
+  status: { outcome, ...extra }
 });
 
 describe('POST /api/rtw/verify', () => {
   beforeEach(() => {
-    vi.clearAllMocks();
+    (globalThis as any).$fetch = mocks.mockFetch;
+    mocks.mockUser.mockReset();
+    mocks.mockReadBody.mockReset();
+    mocks.mockUpdateEq.mockReset();
+    mocks.mockUpdate.mockReset();
+    mocks.mockFrom.mockReset();
+    mocks.mockCreateError.mockReset();
+    
     process.env.RAPIDAPI_KEY = 'test-rapidapi-key';
     mocks.mockUser.mockResolvedValue({ id: 'user-abc' });
     mocks.mockReadBody.mockResolvedValue(validBody);
-    mocks.mockFetch.mockResolvedValue(
-      buildApiResponse('ACCEPTED', { name: 'JOHN DOE', expiry_date: '30/03/2028' })
-    );
     mocks.mockUpdateEq.mockResolvedValue({ error: null });
     mocks.mockUpdate.mockReturnValue({ eq: mocks.mockUpdateEq });
     mocks.mockFrom.mockReturnValue({ update: mocks.mockUpdate });
@@ -93,6 +97,12 @@ describe('POST /api/rtw/verify', () => {
   });
 
   describe('RTW API call', () => {
+    beforeEach(() => {
+      mocks.mockFetch.mockResolvedValue(
+        buildApiResponse('ACCEPTED', { name: 'JOHN DOE', expiry_date: '30/03/2028' })
+      );
+    });
+
     it('sends share code, personal details, and company name as query params', async () => {
       await handler(mockEvent);
 
@@ -100,7 +110,7 @@ describe('POST /api/rtw/verify', () => {
       expect(calledUrl).toContain('code=W1234567');
       expect(calledUrl).toContain('forename=John');
       expect(calledUrl).toContain('surname=Doe');
-      expect(calledUrl).toContain('company_name=ChoreShore');
+      expect(calledUrl).toContain('company_name=HireBeHired');
     });
 
     it('sends the RapidAPI key in the request headers', async () => {
@@ -125,6 +135,12 @@ describe('POST /api/rtw/verify', () => {
   });
 
   describe('ACCEPTED outcome', () => {
+    beforeEach(() => {
+      mocks.mockFetch.mockResolvedValue(
+        buildApiResponse('ACCEPTED', { name: 'JOHN DOE', expiry_date: '30/03/2028' })
+      );
+    });
+
     it('returns success:true with name and converted expiry_date', async () => {
       const result = await handler(mockEvent);
 
@@ -155,6 +171,10 @@ describe('POST /api/rtw/verify', () => {
     });
 
     it('updates profiles with rtw_status verified and the authenticated user id', async () => {
+      mocks.mockFetch.mockResolvedValue(
+        buildApiResponse('ACCEPTED', { name: 'JOHN DOE', expiry_date: '30/03/2028' })
+      );
+
       await handler(mockEvent);
 
       expect(mocks.mockFrom).toHaveBeenCalledWith('profiles');
@@ -169,6 +189,9 @@ describe('POST /api/rtw/verify', () => {
     });
 
     it('throws 400 when the profile update returns an error', async () => {
+      mocks.mockFetch.mockResolvedValue(
+        buildApiResponse('ACCEPTED', { name: 'JOHN DOE', expiry_date: '30/03/2028' })
+      );
       mocks.mockUpdateEq.mockResolvedValue({ error: { message: 'update failed' } });
 
       await expect(handler(mockEvent)).rejects.toMatchObject({ statusCode: 400 });
@@ -176,6 +199,10 @@ describe('POST /api/rtw/verify', () => {
   });
 
   describe('non-ACCEPTED outcomes', () => {
+    beforeEach(() => {
+      mocks.mockFetch.mockResolvedValue(buildApiResponse('REJECTED'));
+    });
+
     it.each([
       ['REJECTED', 'right to work could not be confirmed'],
       ['NOT_FOUND', 'Share code not found'],

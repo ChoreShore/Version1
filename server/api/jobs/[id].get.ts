@@ -1,6 +1,7 @@
 import { serverSupabaseClient } from '#supabase/server';
 import { JobResponseSchema } from '~/schemas/job';
-import { assertValidUuid, getAuthenticatedUser, ensureJobOwner } from '~/server/utils/api';
+import { logger } from '~/server/utils/logger';
+import { assertValidUuid, getAuthenticatedUser } from '~/server/utils/api';
 
 export default defineEventHandler(async (event) => {
   try {
@@ -11,41 +12,59 @@ export default defineEventHandler(async (event) => {
 
     const client = await serverSupabaseClient(event);
 
-    // Authorization check: ensure user owns this job
-    await ensureJobOwner(client, jobId, user.id);
-
-    const { data, error } = await client
+    // Fetch job first to determine ownership (minimal select)
+    const { data: job, error } = await client
       .from('jobs')
-      .select(`
-        *,
-        employer:profiles!employer_id(first_name, last_name, phone),
-        category:job_categories!category_id(name)
-      `)
+      .select('employer_id, status')
       .eq('id', jobId)
       .single();
 
-    if (error) {
-      // Check if it's a "not found" error
-      if (error.code === 'PGRST116') {
-        throw createError({ statusCode: 404, statusMessage: 'Job not found' });
-      }
-      
-      throw createError({ statusCode: 400, statusMessage: error.message });
+    if (error || !job) {
+      throw createError({ statusCode: 404, statusMessage: 'Job not found' });
     }
 
-    // Fetch application count for this job
-    const { count } = await client
-      .from('applications')
-      .select('*', { count: 'exact', head: true })
-      .eq('job_id', jobId);
+    const isOwner = job.employer_id === user.id;
 
-    const response = { job: { ...data, application_count: count ?? 0 } };
-    
+    // Non-owners can only view OPEN jobs
+    if (!isOwner && job.status !== 'open') {
+      throw createError({ statusCode: 403, statusMessage: 'This job is not available' });
+    }
+
+    // Build selective query based on ownership
+    let select = `*, category:job_categories!category_id(name)`;
+    if (isOwner) {
+      select += `, employer:profiles!employer_id(first_name, last_name)`;
+    } else {
+      select += `, employer:profiles!employer_id(first_name, last_name)`;
+    }
+
+    const { data: jobData, error: jobError } = await client
+      .from('jobs')
+      .select(select)
+      .eq('id', jobId)
+      .single();
+
+    if (jobError || !jobData) {
+      throw createError({ statusCode: 404, statusMessage: 'Job not found' });
+    }
+
+    // Application count only for owner
+    let applicationCount = 0;
+    if (isOwner) {
+      const { count } = await client
+        .from('applications')
+        .select('*', { count: 'exact', head: true })
+        .eq('job_id', jobId);
+      applicationCount = count ?? 0;
+    }
+
+    const response = { job: { ...jobData, application_count: applicationCount } };
+
     // Validate response with Zod schema
     try {
       return JobResponseSchema.parse(response);
     } catch (validationError) {
-      console.error('API Response validation failed:', validationError);
+      logger.error('Response validation failed', validationError, 'jobs/[id].get');
       throw createError({ statusCode: 500, statusMessage: 'Invalid response format' });
     }
   } catch (error: any) {

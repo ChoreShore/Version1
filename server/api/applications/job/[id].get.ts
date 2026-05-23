@@ -1,4 +1,5 @@
 import { serverSupabaseClient } from '#supabase/server';
+import { logger } from '~/server/utils/logger';
 import { ApplicationWithDetailsSchema, ApplicationsResponseSchema } from '~/schemas/application';
 import { getAuthenticatedUser, ensureJobEmployer } from '~/server/utils/api';
 
@@ -26,7 +27,7 @@ export default defineEventHandler(async (event) => {
       .from('applications')
       .select(`
         *,
-        worker:profiles!worker_id(first_name, last_name, phone),
+        worker:profiles!worker_id(username, first_name, last_name, bio),
         job:jobs(budget_amount, budget_type)
       `)
       .eq('job_id', jobId)
@@ -37,19 +38,20 @@ export default defineEventHandler(async (event) => {
     }
 
     // Transform data to include missing required fields
-    const applications = (data || []).map(app => {
+    const applications = data?.map(app => {
       const { job, worker, ...appData } = app;
       return {
         ...appData,
-        job_id: jobId, // Add missing job_id field
-        updated_at: app.created_at, // Add missing updated_at field (same as created_at for now)
+        job_title: job?.title,
         job_budget_amount: job?.budget_amount,
         job_budget_type: job?.budget_type,
         worker_first_name: worker?.first_name,
         worker_last_name: worker?.last_name,
-        worker_phone: worker?.phone
+        worker_name: worker ? `${worker.first_name} ${worker.last_name}` : null,
+        worker_username: worker?.username || null,
+        worker_bio: worker?.bio || null
       };
-    });
+    }) || [];
 
     const response = { applications };
     
@@ -59,9 +61,8 @@ export default defineEventHandler(async (event) => {
         applications: applications.map(app => ApplicationWithDetailsSchema.parse(app))
       });
     } catch (validationError) {
-      console.error('API Response validation failed:', validationError);
-      // Return unvalidated response to prevent breaking the application
-      return response;
+      logger.error('Response validation failed', validationError, 'applications/job/[id].get');
+      throw createError({ statusCode: 500, statusMessage: 'Invalid response format' });
     }
   } catch (error: any) {
     throw error;

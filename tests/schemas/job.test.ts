@@ -71,7 +71,7 @@ describe('CreateJobSchema', () => {
     it('rejects an empty title', () => {
       const result = CreateJobSchema.safeParse({ ...validJob(), title: '' });
       expect(result.success).toBe(false);
-      if (!result.success) expect(result.error.issues[0].message).toMatch(/required/i);
+      if (!result.success) expect(result.error.issues[0].message).toBe('Please enter a job title');
     });
 
     it('rejects a title over 100 characters', () => {
@@ -193,13 +193,13 @@ describe('CreateJobSchema', () => {
     it('rejects an empty deadline', () => {
       const result = CreateJobSchema.safeParse({ ...validJob(), deadline: '' });
       expect(result.success).toBe(false);
-      if (!result.success) expect(result.error.issues[0].message).toMatch(/required/i);
+      if (!result.success) expect(result.error.issues[0].message).toBe('Please select a deadline');
     });
 
     it('rejects a non-date string', () => {
       const result = CreateJobSchema.safeParse({ ...validJob(), deadline: 'not-a-date' });
       expect(result.success).toBe(false);
-      if (!result.success) expect(result.error.issues[0].message).toMatch(/Invalid deadline format/i);
+      if (!result.success) expect(result.error.issues[0].message).toBe('Please enter a valid deadline');
     });
   });
 });

@@ -1,16 +1,5 @@
 <template>
   <div class="app-shell">
-    <button
-      class="app-shell__mobile-toggle"
-      type="button"
-      aria-label="Toggle navigation"
-      @click="toggleSidebar"
-    >
-      <span></span>
-      <span></span>
-      <span></span>
-    </button>
-
     <aside class="app-shell__sidebar" :class="{ 'is-open': isSidebarOpen }">
       <slot name="sidebar" />
     </aside>
@@ -23,7 +12,7 @@
         <slot />
       </main>
       <nav class="app-shell__bottom-nav">
-        <slot name="bottom-nav" />
+        <slot name="bottom-nav" :is-sidebar-open="isSidebarOpen" @toggle-sidebar="toggleSidebar" />
       </nav>
     </div>
 
@@ -70,31 +59,6 @@ defineExpose({ openSidebar, closeSidebar, toggleSidebar });
   overflow-x: hidden;
 }
 
-.app-shell__mobile-toggle {
-  position: fixed;
-  top: var(--space-4);
-  left: var(--space-4);
-  z-index: 60;
-  display: inline-flex;
-  flex-direction: column;
-  gap: 4px;
-  width: 44px;
-  height: 44px;
-  padding: 10px;
-  border-radius: var(--radius-md);
-  border: 1px solid var(--border);
-  background-color: var(--surface);
-  box-shadow: var(--shadow-sm);
-  justify-content: center;
-  align-items: center;
-}
-
-.app-shell__mobile-toggle span {
-  width: 100%;
-  height: 2px;
-  background-color: var(--text);
-}
-
 .app-shell__sidebar {
   position: fixed;
   top: 0;
@@ -111,7 +75,12 @@ defineExpose({ openSidebar, closeSidebar, toggleSidebar });
 
 .app-shell__sidebar.is-open {
   transform: translateX(0);
-  /* transition removed for mobile */
+}
+
+@media (max-width: 1023px) {
+  .app-shell__sidebar {
+    transition: transform 250ms ease-out;
+  }
 }
 
 .app-shell__content {

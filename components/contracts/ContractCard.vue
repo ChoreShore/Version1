@@ -25,6 +25,7 @@
 
 <script setup lang="ts">
 import { computed } from 'vue';
+import { formatDate } from '~/server/utils/dateFormat';
 import type { ContractWithDetailsInput, ContractStatus } from '~/schemas/contract';
 import StatusPill from '~/components/primitives/StatusPill.vue';
 
@@ -46,7 +47,7 @@ const contractStatusLabelMap: Record<ContractStatus, string> = {
 
 const contractStatusVariant = computed(() => contractStatusVariantMap[props.contract.status]);
 const contractStatusLabel = computed(() => contractStatusLabelMap[props.contract.status]);
-const createdAt = computed(() => new Date(props.contract.created_at).toLocaleDateString());
+const createdAt = computed(() => formatDate(props.contract.created_at));
 const showActions = computed(() => !!useSlots().actions);
 </script>
 

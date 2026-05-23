@@ -10,6 +10,16 @@
       <span class="bottom-nav__icon">{{ item.icon }}</span>
       <span class="bottom-nav__label">{{ item.label }}</span>
     </NuxtLink>
+    <button
+      type="button"
+      class="bottom-nav__item bottom-nav__item--menu"
+      :class="{ 'is-active': isMenuOpen }"
+      @click="handleMenuClick"
+      aria-label="Toggle menu"
+    >
+      <span class="bottom-nav__icon">{{ isMenuOpen ? '✕' : '☰' }}</span>
+      <span class="bottom-nav__label">Menu</span>
+    </button>
   </nav>
 </template>
 
@@ -25,6 +35,14 @@ interface NavItem {
   icon: string;
   label: string;
 }
+
+const props = defineProps<{
+  isMenuOpen?: boolean;
+}>();
+
+const emit = defineEmits<{
+  toggleMenu: [];
+}>();
 
 const navItems = computed<NavItem[]>(() => {
   const items: NavItem[] = [
@@ -42,6 +60,10 @@ const isActive = (to: string) => {
     return current === '/';
   }
   return current.startsWith(to);
+};
+
+const handleMenuClick = () => {
+  emit('toggleMenu');
 };
 </script>
 
@@ -86,5 +108,21 @@ const isActive = (to: string) => {
   font-size: 11px;
   font-weight: 500;
   line-height: 1;
+}
+
+.bottom-nav__item--menu {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--color-text-muted);
+}
+
+.bottom-nav__item--menu:hover {
+  background: var(--hover);
+  color: var(--color-text);
+}
+
+.bottom-nav__item--menu.is-active {
+  color: var(--color-primary-600);
 }
 </style>

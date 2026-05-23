@@ -84,6 +84,7 @@ export function useIdentity() {
 
     DiditSdk.shared.onEvent = (event) => {
       if (import.meta.dev) {
+        // Development logging - client-side console.log is acceptable in browser
         console.log('Didit event:', event.type, event.data);
       }
     };
