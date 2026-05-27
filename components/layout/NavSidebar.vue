@@ -117,7 +117,7 @@ const currentRoleLabel = computed(() => {
   width: 40px;
   height: 40px;
   border-radius: var(--radius-lg);
-  background: linear-gradient(135deg, var(--teal), var(--accent));
+  background: linear-gradient(135deg, var(--dark), var(--accent));
   color: white;
   display: inline-flex;
   align-items: center;
@@ -131,7 +131,7 @@ const currentRoleLabel = computed(() => {
   margin: 0;
   font-size: var(--text-base);
   font-weight: 700;
-  color: var(--color-teal);
+  color: var(--color-text);
 }
 
 .nav-sidebar__brand-subtitle {
@@ -169,11 +169,11 @@ const currentRoleLabel = computed(() => {
 }
 
 .nav-sidebar__link.is-active {
-  color: var(--color-teal);
+  color: var(--color-text);
 }
 
 .nav-sidebar__link:focus-visible {
-  outline: 2px solid var(--color-teal);
+  outline: 2px solid var(--dark);
   outline-offset: 2px;
   border-radius: var(--radius-md);
 }
@@ -190,8 +190,8 @@ const currentRoleLabel = computed(() => {
   margin-left: auto;
   padding: 2px 8px;
   border-radius: var(--radius-pill);
-  background-color: var(--color-mint);
-  color: var(--color-teal);
+  background-color: var(--color-hover);
+  color: var(--color-text);
   font-size: var(--text-xs);
   font-weight: 600;
 }
@@ -208,8 +208,8 @@ const currentRoleLabel = computed(() => {
   gap: 6px;
   padding: 4px 10px;
   border-radius: var(--radius-pill);
-  background: var(--color-mint);
-  color: var(--color-teal);
+  background: var(--color-hover);
+  color: var(--color-text);
   font-size: var(--text-xs);
   font-weight: 600;
   margin-top: var(--space-2);
@@ -219,6 +219,6 @@ const currentRoleLabel = computed(() => {
   width: 6px;
   height: 6px;
   border-radius: 50%;
-  background: var(--color-teal);
+  background: var(--dark);
 }
 </style>

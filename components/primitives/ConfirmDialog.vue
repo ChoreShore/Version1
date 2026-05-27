@@ -147,7 +147,7 @@ const handleOverlayClick = () => {
 }
 
 .confirm-dialog__button--confirm {
-  background: var(--teal);
+  background: var(--dark);
   color: white;
 }
 

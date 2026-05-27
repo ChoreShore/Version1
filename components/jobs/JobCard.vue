@@ -185,7 +185,7 @@ function toggleExpand() {
 }
 
 .job-card__title a:focus-visible {
-  outline: 2px solid var(--color-teal);
+  outline: 2px solid var(--dark);
   outline-offset: 2px;
   border-radius: 2px;
 }
@@ -239,7 +239,7 @@ function toggleExpand() {
 }
 
 .job-card__expand:focus-visible {
-  outline: 2px solid var(--color-teal);
+  outline: 2px solid var(--dark);
   outline-offset: 2px;
   border-radius: 2px;
 }

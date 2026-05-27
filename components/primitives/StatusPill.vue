@@ -30,12 +30,12 @@ withDefaults(
 }
 
 .status-info {
-  background: var(--mint);
-  color: var(--teal);
+  background: var(--color-hover);
+  color: var(--color-text);
 }
 
 .status-success {
-  background: rgba(46, 125, 107, 0.12);
+  background: rgba(17, 17, 17, 0.12);
   color: var(--success);
 }
 

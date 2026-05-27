@@ -128,7 +128,7 @@ const toggleHelp = () => {
 }
 
 .role-switcher__help:focus-visible {
-  outline: 2px solid var(--color-teal);
+  outline: 2px solid var(--dark);
   outline-offset: 2px;
 }
 
@@ -148,14 +148,14 @@ const toggleHelp = () => {
 }
 
 .role-switcher__option:focus-visible {
-  outline: 2px solid var(--color-teal);
+  outline: 2px solid var(--dark);
   outline-offset: 2px;
   z-index: 1;
 }
 
 .role-switcher__option.is-active {
-  background: var(--color-mint);
-  color: var(--color-teal);
+  background: var(--color-hover);
+  color: var(--color-text);
   box-shadow: inset 0 0 0 1px var(--color-border);
 }
 

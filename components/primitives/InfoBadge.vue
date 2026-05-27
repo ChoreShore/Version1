@@ -31,12 +31,12 @@ withDefaults(
 }
 
 .variant-info {
-  background-color: var(--mint);
-  color: var(--teal);
+  background-color: var(--color-hover);
+  color: var(--color-text);
 }
 
 .variant-success {
-  background-color: rgba(46, 125, 107, 0.12);
+  background-color: rgba(17, 17, 17, 0.12);
   color: var(--success);
 }
 

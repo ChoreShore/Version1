@@ -150,7 +150,7 @@ const roleGreeting = computed(() => {
 }
 
 .topbar__action--primary {
-  background: var(--teal);
+  background: var(--dark);
   color: white;
   border-color: transparent;
 }

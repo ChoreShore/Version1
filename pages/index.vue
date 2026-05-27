@@ -5,12 +5,9 @@
       <NuxtLink
         v-for="cat in categories"
         :key="cat.id"
-        :to="`/jobs?category=${cat.id}`"
+        :to="`/jobs/public?category=${cat.id}`"
         class="category-nav__item"
-        :class="{ active: activeCategory === cat.id }"
-        @click.prevent="filterByCategory(cat.id)"
         :aria-label="`Filter by ${cat.name} jobs`"
-        :aria-pressed="activeCategory === cat.id"
       >
         <component :is="catIcon(cat.name)" class="category-nav__icon" :size="16" />
         <span class="category-nav__label">{{ cat.name }}</span>
@@ -167,6 +164,7 @@ import { useSupabaseUser } from '#imports';
 import { Zap, Circle, Users, Star, Flame, Shield, Heart, Laptop, Brush, Truck, Hammer, Package, Home, MapPin, ChevronRight } from '@lucide/vue';
 import StatusPill from '~/components/primitives/StatusPill.vue';
 import InfoBadge from '~/components/primitives/InfoBadge.vue';
+import LoadingSkeleton from '~/components/primitives/LoadingSkeleton.vue';
 import TrustSection from '~/components/sections/TrustSection.vue';
 import HowItWorksSection from '~/components/sections/HowItWorksSection.vue';
 import EarningSection from '~/components/sections/EarningSection.vue';
@@ -200,8 +198,6 @@ const categories = ref<{ id: string; name: string }[]>([
   { id: 'delivery', name: 'Delivery' },
   { id: 'remote-work', name: 'Remote Work' }
 ]);
-const activeCategory = ref<string | null>(null);
-
 // Stats
 const stats = ref<{ jobs_completed_this_week: number; jobs_posted_today: number; escrow_protected_payments: number } | null>(null);
 
@@ -224,9 +220,6 @@ const savedJobIds = ref<Set<string>>(new Set());
 
 const displayedJobs = computed(() => {
   let jobs = allJobs.value;
-  if (activeCategory.value) {
-    jobs = jobs.filter((j) => j.category_id === activeCategory.value);
-  }
   if (activeFilter.value === 'nearby') {
     // No distance data for now; just show all
   }
@@ -269,10 +262,6 @@ function catIcon(name: string) {
     'Remote Work': Laptop
   };
   return iconMap[name] ?? Circle;
-}
-
-function filterByCategory(id: string) {
-  activeCategory.value = activeCategory.value === id ? null : id;
 }
 
 function applyFilter(id: string) {
@@ -393,7 +382,7 @@ onMounted(async () => {
 }
 
 .homepage-search__input:focus {
-  border-color: var(--teal);
+  border-color: var(--dark);
 }
 
 .homepage-search__input--short {
@@ -536,9 +525,9 @@ onMounted(async () => {
 }
 
 .category-nav__item.active {
-  background: var(--color-mint);
-  border-color: var(--color-teal);
-  color: var(--color-teal);
+  background: var(--color-hover);
+  border-color: var(--dark);
+  color: var(--dark);
   font-weight: 600;
 }
 
@@ -759,7 +748,7 @@ onMounted(async () => {
 .filter-pill:hover,
 .filter-pill.active {
   background: var(--hover);
-  border-color: var(--teal);
+  border-color: var(--dark);
 }
 
 .filter-pill__icon {
@@ -799,7 +788,7 @@ onMounted(async () => {
 .jobs-section__link {
   font-size: var(--text-sm);
   font-weight: 600;
-  color: var(--teal);
+  color: var(--dark);
   text-decoration: none;
 }
 
