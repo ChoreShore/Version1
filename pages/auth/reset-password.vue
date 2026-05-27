@@ -4,11 +4,12 @@
       <div class="auth-card">
         <header class="auth-header">
           <h1 class="auth-title">Reset Password</h1>
-          <p class="auth-subtitle">Enter your email to receive a password reset link</p>
+          <p v-if="!isRecovery" class="auth-subtitle">Enter your email to receive a password reset link</p>
+          <p v-else class="auth-subtitle">Enter your new password below</p>
         </header>
 
-        <form @submit.prevent="handleSubmit" class="auth-form" novalidate>
-          <!-- Email Field -->
+        <!-- Request reset link form -->
+        <form v-if="!isRecovery" @submit.prevent="handleRequestSubmit" class="auth-form" novalidate>
           <FormField id="email" :error="errors.email" :state="errors.email ? 'error' : 'default'">
             <FormLabel for="email">Email Address</FormLabel>
             <FormControl>
@@ -27,24 +28,78 @@
             <FormError v-if="errors.email">{{ errors.email }}</FormError>
           </FormField>
 
-          <!-- Submit Button -->
           <button class="auth-form__submit" type="submit" :disabled="loading || !canSubmit">
             <LoadingSkeleton v-if="loading" variant="text" width="100%" height="16px" />
             <span v-else>Send Reset Link</span>
           </button>
 
-          <!-- Submit Error -->
           <div v-if="submitError" role="alert" id="submit-error" class="submit-error">
             {{ submitError }}
           </div>
 
-          <!-- Success Message -->
           <div v-if="success" role="status" class="success-message">
             <div class="success-icon" aria-hidden="true">✓</div>
             <div>
               <p class="success-title">Reset link sent</p>
               <p class="success-text">
                 Check your email for a password reset link. It may take a few minutes to arrive.
+              </p>
+            </div>
+          </div>
+        </form>
+
+        <!-- Update password form (recovery mode) -->
+        <form v-else @submit.prevent="handleUpdateSubmit" class="auth-form" novalidate>
+          <FormField id="newPassword" :error="errors.newPassword" :state="errors.newPassword ? 'error' : 'default'">
+            <FormLabel for="newPassword">New Password</FormLabel>
+            <FormControl>
+              <input
+                id="newPassword"
+                v-model="updateForm.newPassword"
+                type="password"
+                placeholder="Enter your new password"
+                :disabled="loading"
+                autocomplete="new-password"
+                required
+                @blur="validateUpdateField('newPassword')"
+              />
+            </FormControl>
+            <FormHint>Must be at least 8 characters with uppercase, lowercase, and a number</FormHint>
+            <FormError v-if="errors.newPassword">{{ errors.newPassword }}</FormError>
+          </FormField>
+
+          <FormField id="confirmPassword" :error="errors.confirmPassword" :state="errors.confirmPassword ? 'error' : 'default'">
+            <FormLabel for="confirmPassword">Confirm Password</FormLabel>
+            <FormControl>
+              <input
+                id="confirmPassword"
+                v-model="updateForm.confirmPassword"
+                type="password"
+                placeholder="Confirm your new password"
+                :disabled="loading"
+                autocomplete="new-password"
+                required
+                @blur="validateUpdateField('confirmPassword')"
+              />
+            </FormControl>
+            <FormError v-if="errors.confirmPassword">{{ errors.confirmPassword }}</FormError>
+          </FormField>
+
+          <button class="auth-form__submit" type="submit" :disabled="loading || !canUpdateSubmit">
+            <LoadingSkeleton v-if="loading" variant="text" width="100%" height="16px" />
+            <span v-else>Update Password</span>
+          </button>
+
+          <div v-if="submitError" role="alert" id="submit-error" class="submit-error">
+            {{ submitError }}
+          </div>
+
+          <div v-if="success" role="status" class="success-message">
+            <div class="success-icon" aria-hidden="true">✓</div>
+            <div>
+              <p class="success-title">Password updated</p>
+              <p class="success-text">
+                Your password has been updated successfully. You can now sign in with your new password.
               </p>
             </div>
           </div>
@@ -66,22 +121,34 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, reactive } from 'vue';
+import { ref, computed, reactive, watch } from 'vue';
 import FormField from '~/components/primitives/form/FormField.vue';
 import FormLabel from '~/components/primitives/form/FormLabel.vue';
 import FormControl from '~/components/primitives/form/FormControl.vue';
 import FormError from '~/components/primitives/form/FormError.vue';
 import FormHint from '~/components/primitives/form/FormHint.vue';
 import LoadingSkeleton from '~/components/primitives/LoadingSkeleton.vue';
-import { validatePasswordReset } from '~/schemas/auth';
-import type { PasswordResetInput } from '~/schemas/auth';
+import { validatePasswordReset, validateRecoveryUpdatePassword } from '~/schemas/auth';
+import type { PasswordResetInput, RecoveryUpdatePasswordInput } from '~/schemas/auth';
 
 definePageMeta({
   layout: false,
   title: 'Reset Password - HireBeHired'
 });
 
-// Form state
+const user = useSupabaseUser();
+const supabase = useSupabaseClient();
+const router = useRouter();
+
+// Detect recovery mode based on active session (Supabase sets session after email link click)
+const isRecovery = ref(false);
+
+watch(user, (newUser) => {
+  isRecovery.value = !!newUser;
+}, { immediate: true });
+
+// ─── Request Link Form ──────────────────────────────────────────────────────
+
 const form = reactive<PasswordResetInput>({
   email: ''
 });
@@ -91,20 +158,13 @@ const loading = ref(false);
 const submitError = ref('');
 const success = ref(false);
 
-// Validation
 const validateField = (field: keyof PasswordResetInput) => {
   const fieldValue = form[field];
-  
-  // Clear previous error
   delete errors[field];
-
-  // Basic validation
   if (!fieldValue) {
     errors[field] = 'Email is required';
     return;
   }
-
-  // Email validation
   if (field === 'email') {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(fieldValue as string)) {
@@ -118,17 +178,12 @@ const validateForm = () => {
   return Object.keys(errors).length === 0;
 };
 
-const isFormValid = computed(() => {
-  return form.email.trim() !== '' && Object.keys(errors).length === 0;
-});
-
 const canSubmit = computed(() => {
-  return Object.keys(errors).length === 0 && 
+  return Object.keys(errors).length === 0 &&
          form.email && form.email.trim() !== '';
 });
 
-// Form submission
-const handleSubmit = async () => {
+const handleRequestSubmit = async () => {
   if (!validateForm()) return;
 
   loading.value = true;
@@ -136,10 +191,8 @@ const handleSubmit = async () => {
   success.value = false;
 
   try {
-    // Validate with Zod schema
     const validation = validatePasswordReset(form);
     if (!validation.success) {
-      // Map Zod errors to form errors
       Object.entries(validation.errors || {}).forEach(([field, message]) => {
         errors[field] = message;
       });
@@ -152,9 +205,74 @@ const handleSubmit = async () => {
     });
 
     success.value = true;
-
   } catch (error: any) {
     submitError.value = error?.data?.statusMessage || 'Failed to send reset link. Please try again.';
+  } finally {
+    loading.value = false;
+  }
+};
+
+// ─── Update Password Form (Recovery) ──────────────────────────────────────
+
+const updateForm = reactive<RecoveryUpdatePasswordInput>({
+  newPassword: '',
+  confirmPassword: ''
+});
+
+const validateUpdateField = (field: keyof RecoveryUpdatePasswordInput) => {
+  const fieldValue = updateForm[field];
+  delete errors[field];
+  if (!fieldValue) {
+    errors[field] = field === 'newPassword' ? 'Password is required' : 'Please confirm your password';
+    return;
+  }
+  if (field === 'newPassword') {
+    if (fieldValue.length < 8) errors[field] = 'Password must be at least 8 characters';
+    else if (!/[A-Z]/.test(fieldValue)) errors[field] = 'Password must contain at least one uppercase letter';
+    else if (!/[a-z]/.test(fieldValue)) errors[field] = 'Password must contain at least one lowercase letter';
+    else if (!/[0-9]/.test(fieldValue)) errors[field] = 'Password must contain at least one number';
+  }
+  if (field === 'confirmPassword' && updateForm.newPassword !== fieldValue) {
+    errors[field] = "Passwords don't match";
+  }
+};
+
+const validateUpdateForm = () => {
+  (['newPassword', 'confirmPassword'] as const).forEach(field => validateUpdateField(field));
+  return Object.keys(errors).length === 0;
+};
+
+const canUpdateSubmit = computed(() => {
+  return updateForm.newPassword && updateForm.confirmPassword && Object.keys(errors).length === 0;
+});
+
+const handleUpdateSubmit = async () => {
+  if (!validateUpdateForm()) return;
+
+  loading.value = true;
+  submitError.value = '';
+  success.value = false;
+
+  try {
+    const validation = validateRecoveryUpdatePassword(updateForm);
+    if (!validation.success || !validation.data) {
+      Object.entries(validation.errors || {}).forEach(([field, message]) => {
+        errors[field] = message;
+      });
+      return;
+    }
+
+    const { error } = await supabase.auth.updateUser({
+      password: validation.data.newPassword
+    });
+
+    if (error) throw error;
+
+    success.value = true;
+    await supabase.auth.signOut();
+    setTimeout(() => router.push('/auth/sign-in'), 3000);
+  } catch (error: any) {
+    submitError.value = error?.message || 'Failed to update password. Please try again.';
   } finally {
     loading.value = false;
   }
@@ -292,17 +410,8 @@ const handleSubmit = async () => {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .auth-container {
-  }
-
   .auth-form__submit {
     transition: none;
-  }
-
-  .auth-form__submit.is-loading {
-  }
-
-  .auth-form__success-icon {
   }
 }
 </style>

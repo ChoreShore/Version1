@@ -127,18 +127,34 @@ export const AddRoleSchema = z.object({
   })
 });
 
+// Update email schema (for authenticated users)
+export const UpdateEmailSchema = z.object({
+  newEmail: z.string()
+    .min(1, 'Email is required')
+    .email('Please enter a valid email address'),
+
+  confirmEmail: z.string()
+    .min(1, 'Please confirm your email'),
+
+  currentPassword: z.string()
+    .min(1, 'Current password is required')
+}).refine((data) => data.newEmail === data.confirmEmail, {
+  message: "Email addresses don't match",
+  path: ['confirmEmail']
+});
+
 // Update password schema (for authenticated users)
 export const UpdatePasswordSchema = z.object({
   currentPassword: z.string()
     .min(1, 'Current password is required'),
-  
+
   newPassword: z.string()
     .min(8, 'Password must be at least 8 characters')
     .max(128, 'Password must be less than 128 characters')
     .regex(/[A-Z]/, 'Password must contain at least one uppercase letter')
     .regex(/[a-z]/, 'Password must contain at least one lowercase letter')
     .regex(/[0-9]/, 'Password must contain at least one number'),
-  
+
   confirmPassword: z.string()
     .min(1, 'Please confirm your new password')
 }).refine((data) => data.newPassword === data.confirmPassword, {
@@ -147,6 +163,22 @@ export const UpdatePasswordSchema = z.object({
 }).refine((data) => data.currentPassword !== data.newPassword, {
   message: "New password must be different from current password",
   path: ["newPassword"]
+});
+
+// Recovery update password schema (for password reset via email link)
+export const RecoveryUpdatePasswordSchema = z.object({
+  newPassword: z.string()
+    .min(8, 'Password must be at least 8 characters')
+    .max(128, 'Password must be less than 128 characters')
+    .regex(/[A-Z]/, 'Password must contain at least one uppercase letter')
+    .regex(/[a-z]/, 'Password must contain at least one lowercase letter')
+    .regex(/[0-9]/, 'Password must contain at least one number'),
+
+  confirmPassword: z.string()
+    .min(1, 'Please confirm your new password')
+}).refine((data) => data.newPassword === data.confirmPassword, {
+  message: "Passwords don't match",
+  path: ["confirmPassword"]
 });
 
 // Delete account schema (requires confirmation)
@@ -169,7 +201,9 @@ export type SignUpInput = z.infer<typeof SignUpSchema>;
 export type SignUpFormInput = z.infer<typeof SignUpFormSchema>;
 export type PasswordResetInput = z.infer<typeof PasswordResetSchema>;
 export type AddRoleInput = z.infer<typeof AddRoleSchema>;
+export type UpdateEmailInput = z.infer<typeof UpdateEmailSchema>;
 export type UpdatePasswordInput = z.infer<typeof UpdatePasswordSchema>;
+export type RecoveryUpdatePasswordInput = z.infer<typeof RecoveryUpdatePasswordSchema>;
 export type DeleteAccountInput = z.infer<typeof DeleteAccountSchema>;
 
 // Validation helper functions
@@ -247,6 +281,52 @@ export const validatePasswordReset = (data: unknown) => {
     return {
       success: true,
       data: PasswordResetSchema.parse(data),
+      errors: null
+    };
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      return {
+        success: false,
+        data: null,
+        errors: error.issues.reduce((acc, err) => {
+          const field = err.path[0] as string;
+          acc[field] = err.message;
+          return acc;
+        }, {} as Record<string, string>)
+      };
+    }
+    throw error;
+  }
+};
+
+export const validateUpdateEmail = (data: unknown) => {
+  try {
+    return {
+      success: true,
+      data: UpdateEmailSchema.parse(data),
+      errors: null
+    };
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      return {
+        success: false,
+        data: null,
+        errors: error.issues.reduce((acc, err) => {
+          const field = err.path[0] as string;
+          acc[field] = err.message;
+          return acc;
+        }, {} as Record<string, string>)
+      };
+    }
+    throw error;
+  }
+};
+
+export const validateRecoveryUpdatePassword = (data: unknown) => {
+  try {
+    return {
+      success: true,
+      data: RecoveryUpdatePasswordSchema.parse(data),
       errors: null
     };
   } catch (error) {

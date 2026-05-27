@@ -28,7 +28,7 @@ export default defineEventHandler(async (event) => {
 
     const client = await serverSupabaseClient(event);
     const { error } = await client.auth.resetPasswordForEmail(validation.data.email, {
-      redirectTo: `${getRequestURL(event).origin}/auth/reset`
+      redirectTo: `${getRequestURL(event).origin}/auth/reset-password`
     });
 
     if (error) {

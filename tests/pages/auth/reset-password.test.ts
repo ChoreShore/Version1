@@ -1,6 +1,9 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { ref } from 'vue';
 import { mount } from '@vue/test-utils';
 import ResetPasswordPage from '~/pages/auth/reset-password.vue';
+
+const mockUser = ref<any>(null);
 
 // Stub Nuxt auto-imports
 (globalThis as any).definePageMeta = vi.fn();
@@ -10,6 +13,15 @@ describe('Auth Reset-Password Page', () => {
   let wrapper: any;
 
   beforeEach(() => {
+    mockUser.value = null;
+    (globalThis as any).useSupabaseUser = () => mockUser;
+    (globalThis as any).useSupabaseClient = () => ({
+      auth: {
+        updateUser: vi.fn(),
+        signOut: vi.fn()
+      }
+    });
+    (globalThis as any).useRouter = () => ({ push: vi.fn() });
     (globalThis as any).$fetch.mockReset();
   });
 
