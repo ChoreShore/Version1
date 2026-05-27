@@ -14,6 +14,7 @@ export default defineConfig({
       '#supabase/server': path.resolve(__dirname, 'tests/mocks/supabase-server.ts'),
       '#imports': path.resolve(__dirname, 'tests/mocks/nuxt-imports.ts'),
       'ofetch': path.resolve(__dirname, 'tests/mocks/ofetch.ts'),
+      'h3': path.resolve(__dirname, 'tests/mocks/h3.ts'),
       '~': path.resolve(__dirname),
       '@': path.resolve(__dirname),
     },

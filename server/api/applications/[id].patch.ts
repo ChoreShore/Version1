@@ -7,6 +7,7 @@ import { getErrorMessage, logDetailedError } from '~/server/utils/errorMessages'
 import { requireCsrfProtection } from '~/server/utils/csrf';
 import { rateLimiters } from '~/server/utils/rateLimit';
 import { assertValidUuid } from '~/server/utils/api';
+import { sendNotificationEmail } from '~/server/utils/email';
 import {
   fetchApplication,
   authorizeAction,
@@ -56,6 +57,15 @@ export default defineEventHandler(async (event) => {
 
     if (validatedData.status === 'accepted') {
       const updatedApp = await processAcceptance(client, applicationId, user.id, job, paymentEvent);
+
+      // Notify applicant of acceptance (fire-and-forget)
+      sendNotificationEmail(event, {
+        userId: currentApp.worker_id,
+        subject: `Your application for "${job.title}" was accepted`,
+        html: `<p>Hi there,</p><p>Great news — your application for "<strong>${job.title}</strong>" has been accepted.</p><p>Log in to your dashboard to view the contract details.</p>`,
+        idempotencyKey: `application-accepted/${applicationId}`
+      }).catch(() => {});
+
       return buildResponse(updatedApp);
     }
 
@@ -63,6 +73,16 @@ export default defineEventHandler(async (event) => {
 
     if (validatedData.status && validatedData.status !== currentApp.status) {
       await logHistory(client, applicationId, currentApp.status, validatedData.status, user.id);
+    }
+
+    // Notify applicant of rejection (fire-and-forget)
+    if (validatedData.status === 'rejected') {
+      sendNotificationEmail(event, {
+        userId: currentApp.worker_id,
+        subject: `Update on your application for "${job.title}"`,
+        html: `<p>Hi there,</p><p>Unfortunately, your application for "<strong>${job.title}</strong>" was not successful this time.</p><p>Don't be discouraged — there are plenty of other jobs waiting for you on ChoreShore.</p>`,
+        idempotencyKey: `application-rejected/${applicationId}`
+      }).catch(() => {});
     }
 
     return buildResponse(updatedApp);

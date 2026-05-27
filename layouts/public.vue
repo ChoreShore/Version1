@@ -40,7 +40,7 @@
         <div class="public-layout__footer-section">
           <h4>For Employers</h4>
           <NuxtLink to="/jobs/new">Post a Job</NuxtLink>
-          <NuxtLink to="/workers/public">Hire Workers</NuxtLink>
+          <NuxtLink to="/auth/sign-up">Hire Workers</NuxtLink>
         </div>
         <div class="public-layout__footer-section">
           <h4>Company</h4>

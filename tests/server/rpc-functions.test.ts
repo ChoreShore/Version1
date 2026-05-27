@@ -1,6 +1,12 @@
+/**
+ * API Behavior Contract Tests
+ * These tests document expected API responses for RPC-related scenarios
+ * but do NOT exercise actual server handler logic or database RPC functions.
+ * They should be backed by real handler + database integration tests.
+ */
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 
-describe('RPC Functions - Security Fixes', () => {
+describe('API Behavior Contracts - RPC Functions', () => {
   const mockFetch = vi.fn();
 
   beforeEach(() => {

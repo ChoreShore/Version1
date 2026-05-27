@@ -12,6 +12,7 @@ export default defineNuxtConfig({
     strict: true
   },
   runtimeConfig: {
+    resendApiKey: process.env.RESEND_API_KEY,
     public: {
       diditUnilinkUrl: process.env.DIDIT_UNILINK_URL
     }

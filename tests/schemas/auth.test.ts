@@ -5,13 +5,15 @@ import {
   SignUpFormSchema,
   PasswordResetSchema,
   AddRoleSchema,
+  UpdateEmailSchema,
   UpdatePasswordSchema,
   DeleteAccountSchema,
   validateSignIn,
   validateSignUpForm,
   validateSignUp,
   validatePasswordReset,
-  validateAddRole
+  validateAddRole,
+  validateUpdateEmail
 } from '~/schemas/auth';
 
 // ─── SignInSchema ─────────────────────────────────────────────────────────────
@@ -224,6 +226,57 @@ describe('AddRoleSchema', () => {
 
   it('rejects a missing role', () => {
     expect(AddRoleSchema.safeParse({}).success).toBe(false);
+  });
+});
+
+// ─── UpdateEmailSchema ────────────────────────────────────────────────────────
+
+describe('UpdateEmailSchema', () => {
+  const valid = {
+    newEmail: 'new@example.com',
+    confirmEmail: 'new@example.com',
+    currentPassword: 'MyPassword1'
+  };
+
+  it('accepts a fully valid payload', () => {
+    expect(UpdateEmailSchema.safeParse(valid).success).toBe(true);
+  });
+
+  describe('newEmail', () => {
+    it('rejects an invalid email format', () => {
+      const result = UpdateEmailSchema.safeParse({ ...valid, newEmail: 'not-an-email' });
+      expect(result.success).toBe(false);
+      if (!result.success) expect(result.error.issues[0].message).toMatch(/valid email/i);
+    });
+
+    it('rejects an empty email', () => {
+      const result = UpdateEmailSchema.safeParse({ ...valid, newEmail: '' });
+      expect(result.success).toBe(false);
+      if (!result.success) expect(result.error.issues[0].message).toMatch(/required/i);
+    });
+  });
+
+  describe('cross-field: confirmEmail must match newEmail', () => {
+    it('rejects when confirmEmail does not match newEmail', () => {
+      const result = UpdateEmailSchema.safeParse({ ...valid, confirmEmail: 'different@example.com' });
+      expect(result.success).toBe(false);
+      if (!result.success) {
+        const issue = result.error.issues.find(i => i.path.includes('confirmEmail'));
+        expect(issue?.message).toMatch(/don't match/i);
+      }
+    });
+
+    it('accepts when confirmEmail matches newEmail', () => {
+      expect(UpdateEmailSchema.safeParse(valid).success).toBe(true);
+    });
+  });
+
+  describe('currentPassword', () => {
+    it('rejects an empty currentPassword', () => {
+      const result = UpdateEmailSchema.safeParse({ ...valid, currentPassword: '' });
+      expect(result.success).toBe(false);
+      if (!result.success) expect(result.error.issues[0].message).toMatch(/required/i);
+    });
   });
 });
 
@@ -441,5 +494,31 @@ describe('validateAddRole', () => {
     const result = validateAddRole({ role: 'superuser' });
     expect(result.success).toBe(false);
     expect(result.errors).toHaveProperty('role');
+  });
+});
+
+describe('validateUpdateEmail', () => {
+  const valid = {
+    newEmail: 'new@example.com',
+    confirmEmail: 'new@example.com',
+    currentPassword: 'MyPassword1'
+  };
+
+  it('returns success:true for a valid payload', () => {
+    const result = validateUpdateEmail(valid);
+    expect(result.success).toBe(true);
+    expect(result.errors).toBeNull();
+  });
+
+  it('returns success:false with errors for mismatched emails', () => {
+    const result = validateUpdateEmail({ ...valid, confirmEmail: 'other@example.com' });
+    expect(result.success).toBe(false);
+    expect(result.errors).toHaveProperty('confirmEmail');
+  });
+
+  it('returns success:false with errors for an invalid email', () => {
+    const result = validateUpdateEmail({ ...valid, newEmail: 'bad' });
+    expect(result.success).toBe(false);
+    expect(result.errors).toHaveProperty('newEmail');
   });
 });

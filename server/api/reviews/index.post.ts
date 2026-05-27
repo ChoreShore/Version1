@@ -93,7 +93,7 @@ export default defineEventHandler(async (event) => {
     // Check if review already exists
     const { data: existingReview } = await client
       .from('reviews')
-      .select('id')
+      .select('review_id')
       .eq('job_id', validatedData.job_id)
       .eq('reviewer_id', user.id)
       .eq('reviewed_user_id', validatedData.reviewed_user_id)

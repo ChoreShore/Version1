@@ -283,6 +283,12 @@ export const rateLimiters = {
     windowMs: 60 * 60 * 1000, // 1 hour
     maxRequests: 3 // 3 password changes per hour
   }),
+
+  // Strict rate limiting for email changes
+  emailChange: createRateLimiter({
+    windowMs: 60 * 60 * 1000, // 1 hour
+    maxRequests: 3 // 3 email changes per hour
+  }),
   
   // General API rate limiting
   general: createRateLimiter({

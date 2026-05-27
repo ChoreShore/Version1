@@ -6,6 +6,7 @@ import { logger } from '~/server/utils/logger';
 import { rateLimiters } from '~/server/utils/rateLimit';
 import { getErrorMessage, logDetailedError } from '~/server/utils/errorMessages';
 import { requireCsrfProtection } from '~/server/utils/csrf';
+import { sendNotificationEmail, getUserDetails } from '~/server/utils/email';
 
 export default defineEventHandler(async (event) => {
   try {
@@ -54,7 +55,7 @@ export default defineEventHandler(async (event) => {
     // Get the job to verify employer
     const { data: job, error: jobError } = await client
       .from('jobs')
-      .select('employer_id')
+      .select('id, title, employer_id')
       .eq('id', validatedData.job_id)
       .single();
 
@@ -137,6 +138,19 @@ export default defineEventHandler(async (event) => {
 
     if (error) {
       throw createError({ statusCode: 400, statusMessage: error.message });
+    }
+
+    // Notify receiver of new message (fire-and-forget)
+    if (job?.title) {
+      const sender = await getUserDetails(event, user.id);
+      const senderName = [sender.firstName, sender.lastName].filter(Boolean).join(' ') || 'Someone';
+      const messagePreview = (data.body as string)?.slice(0, 100) + ((data.body as string)?.length > 100 ? '…' : '');
+      sendNotificationEmail(event, {
+        userId: validatedData.receiver_id,
+        subject: `New message from ${senderName} about "${job.title}"`,
+        html: `<p>Hi there,</p><p><strong>${senderName}</strong> sent you a message about "<strong>${job.title}</strong>":</p><blockquote style="border-left: 3px solid #ddd; padding-left: 12px; margin: 12px 0; color: #555;">${messagePreview}</blockquote><p>Log in to your dashboard to reply.</p>`,
+        idempotencyKey: `message-received/${data.id}`
+      }).catch(() => {});
     }
 
     const response = { message: data };

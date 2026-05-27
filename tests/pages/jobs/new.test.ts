@@ -36,6 +36,18 @@ vi.mock('~/composables/useActiveRole', () => ({
 (globalThis as any).$fetch = vi.fn();
 (globalThis as any).navigateTo = vi.fn();
 
+// Mock localStorage
+const localStorageMock = (() => {
+  let store: Record<string, string> = {};
+  return {
+    getItem: (key: string) => store[key] || null,
+    setItem: (key: string, value: string) => { store[key] = value; },
+    removeItem: (key: string) => { delete store[key]; },
+    clear: () => { store = {}; }
+  };
+})();
+Object.defineProperty(global, 'localStorage', { value: localStorageMock, writable: true, configurable: true });
+
 describe('Jobs New Page', () => {
   let wrapper: any;
 

@@ -36,7 +36,7 @@ export async function authorizeAction(
 export async function fetchJob(client: SupabaseClient, jobId: string) {
   const { data, error } = await client
     .from('jobs')
-    .select('id, employer_id, status, deadline, budget_type, budget_amount')
+    .select('id, title, employer_id, status, deadline, budget_type, budget_amount')
     .eq('id', jobId)
     .single();
 

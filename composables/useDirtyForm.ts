@@ -1,4 +1,5 @@
 import { ref, onMounted, onBeforeUnmount, watch } from 'vue';
+import type { Ref } from 'vue';
 
 interface UseDirtyFormOptions {
   /** Form data to watch for changes */
@@ -11,7 +12,7 @@ interface UseDirtyFormOptions {
 
 interface UseDirtyFormReturn {
   /** Whether the form has unsaved changes */
-  isDirty: boolean;
+  isDirty: Ref<boolean>;
   /** Reset the dirty state */
   resetDirty: () => void;
   /** Show confirmation dialog and return user's choice */

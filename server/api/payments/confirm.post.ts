@@ -1,6 +1,7 @@
 import { serverSupabaseClient, serverSupabaseUser } from '#supabase/server';
 import { ConfirmPaymentSchema, PaymentConfirmationResponseSchema } from '~/schemas/payment';
 import { ensureAuthenticated, ensureJobEmployer } from '~/server/utils/api';
+import { sendNotificationEmail } from '~/server/utils/email';
 
 export default defineEventHandler(async (event) => {
   try {
@@ -102,6 +103,22 @@ export default defineEventHandler(async (event) => {
       if (insertError) {
         throw createError({ statusCode: 500, statusMessage: 'Failed to create confirmed payment event' });
       }
+    }
+
+    // Notify worker that payment has been confirmed (fire-and-forget)
+    const { data: appWithJob } = await client
+      .from('applications')
+      .select('id, worker_id, job:jobs(id, title)')
+      .eq('id', application_id)
+      .single();
+
+    if (appWithJob?.worker_id && (appWithJob.job as any)?.title) {
+      sendNotificationEmail(event, {
+        userId: appWithJob.worker_id,
+        subject: `Payment confirmed for "${(appWithJob.job as any).title}"`,
+        html: `<p>Hi there,</p><p>Good news — the employer has confirmed payment for "<strong>${(appWithJob.job as any).title}</strong>". The funds are now held in escrow and will be released when the job is completed.</p><p>Log in to your dashboard to get started.</p>`,
+        idempotencyKey: `payment-confirmed/${application_id}/${payment_intent_id}`
+      }).catch(() => {});
     }
 
     return PaymentConfirmationResponseSchema.parse({

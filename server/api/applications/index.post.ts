@@ -5,6 +5,7 @@ import { logger } from '~/server/utils/logger';
 import { rateLimiters } from '~/server/utils/rateLimit';
 import { getErrorMessage, logDetailedError } from '~/server/utils/errorMessages';
 import { requireCsrfProtection } from '~/server/utils/csrf';
+import { sendNotificationEmail } from '~/server/utils/email';
 
 export default defineEventHandler(async (event) => {
   try {
@@ -33,14 +34,14 @@ export default defineEventHandler(async (event) => {
     // Fetch job details for validation
     const { data: jobData } = await client
       .from('jobs')
-      .select('id, status, employer_id, deadline')
+      .select('id, title, status, employer_id, deadline')
       .eq('id', validatedData.job_id)
       .single();
 
     // Fetch user profile for role validation
     const { data: profileData } = await client
       .from('profiles')
-      .select('id, roles')
+      .select('id, roles, first_name, last_name')
       .eq('id', user.id)
       .single();
 
@@ -108,6 +109,17 @@ export default defineEventHandler(async (event) => {
       }
       
       throw createError({ statusCode: 400, statusMessage: error.message });
+    }
+
+    // Notify job poster of new application (fire-and-forget, never blocks response)
+    if (jobData?.employer_id) {
+      const applicantName = [profileData?.first_name, profileData?.last_name].filter(Boolean).join(' ') || 'Someone';
+      sendNotificationEmail(event, {
+        userId: jobData.employer_id,
+        subject: `New application for "${jobData.title}"`,
+        html: `<p>Hi there,</p><p><strong>${applicantName}</strong> has applied to your job "<strong>${jobData.title}</strong>".</p><p>Log in to your dashboard to review their application.</p>`,
+        idempotencyKey: `application-submitted/${data.id}`
+      }).catch(() => {});
     }
 
     const response = { application: data };

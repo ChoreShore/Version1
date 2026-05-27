@@ -9,6 +9,14 @@ describe('ApplicationActions', () => {
   beforeEach(() => {
     mockAction = vi.fn()
     vi.clearAllMocks()
+    // Provide a minimal localStorage mock for all tests (component accesses it in onMounted)
+    const localStorageMock = {
+      getItem: vi.fn(() => null),
+      setItem: vi.fn(),
+      removeItem: vi.fn(),
+      clear: vi.fn()
+    }
+    Object.defineProperty(global, 'localStorage', { value: localStorageMock, writable: true, configurable: true })
   })
 
   const createWrapper = (props: any = {}) => {

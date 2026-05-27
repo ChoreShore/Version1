@@ -3,13 +3,13 @@ import { ref, computed } from 'vue';
 
 beforeAll(() => {
   process.env.SUPABASE_URL = process.env.SUPABASE_URL
-    ?? 'https://ywqjgusyluhchlvvtnlp.supabase.co';
+    ?? 'http://localhost:54321';
   process.env.SUPABASE_KEY = process.env.SUPABASE_KEY
-    ?? 'sb_publishable_RsC53VHhXi1OkdGtcQqokg_fPq-GyXA';
+    ?? 'test-publishable-key';
   process.env.SUPABASE_ANON_KEY = process.env.SUPABASE_ANON_KEY
-    ?? 'sb_anonymous_RsC53VHhXi1OkdGtcQqokg_fPq-GyXA';
+    ?? 'test-anon-key';
   process.env.SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY
-    ?? 'your-service-role-key-here';
+    ?? 'test-service-role-key';
   process.env.NODE_ENV = 'test';
 
   const mockUser = ref({ id: 'user-1' });

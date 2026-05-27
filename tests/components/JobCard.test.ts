@@ -105,7 +105,7 @@ describe('JobCard', () => {
     it('renders urgent pill when job is urgent', () => {
       const job = createJob({ is_urgent: true });
       wrapper = createWrapper(job);
-      const urgentPill = wrapper.findAllComponents({ name: 'StatusPill' }).find((pill: any) => pill.props('label') === '🔥 Urgent');
+      const urgentPill = wrapper.findAllComponents({ name: 'StatusPill' }).find((pill: any) => pill.props('label') === 'Urgent');
       expect(urgentPill).toBeDefined();
     });
 

@@ -152,6 +152,40 @@ describe('resetPassword', () => {
   });
 });
 
+// ─── updateEmail ──────────────────────────────────────────────────────────────
+
+describe('updateEmail', () => {
+  const payload = {
+    newEmail: 'new@example.com',
+    confirmEmail: 'new@example.com',
+    currentPassword: 'MyPassword1'
+  };
+
+  it('POSTs to /api/auth/update-email with the payload', async () => {
+    mockFetch.mockResolvedValue({ success: true, message: 'Check your email' });
+
+    await auth.updateEmail(payload);
+
+    expect(mockFetch).toHaveBeenCalledWith('/api/auth/update-email', {
+      method: 'POST',
+      body: payload
+    });
+  });
+
+  it('returns the success response', async () => {
+    mockFetch.mockResolvedValue({ success: true, message: 'Check your email' });
+
+    const result = await auth.updateEmail(payload);
+
+    expect(result).toEqual({ success: true, message: 'Check your email' });
+  });
+
+  it('propagates fetch errors', async () => {
+    mockFetch.mockRejectedValue({ statusCode: 401, statusMessage: 'Current password is incorrect' });
+    await expect(auth.updateEmail(payload)).rejects.toThrow('Current password is incorrect');
+  });
+});
+
 // ─── updatePassword ───────────────────────────────────────────────────────────
 
 describe('updatePassword', () => {

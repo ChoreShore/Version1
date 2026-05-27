@@ -1,4 +1,4 @@
-import type { SignUpInput, SignInInput, Role, UpdatePasswordInput, DeleteAccountInput } from '~/schemas/auth';
+import type { SignUpInput, SignInInput, Role, UpdateEmailInput, UpdatePasswordInput, DeleteAccountInput } from '~/schemas/auth';
 
 function normalizeFetchError(error: any): never {
   const message = error?.statusMessage || error?.message || 'Something went wrong';
@@ -47,6 +47,18 @@ export const useAuth = () => {
     }
   };
 
+  const updateEmail = async (payload: UpdateEmailInput) => {
+    try {
+      const data = await $fetch<{ success: boolean; message: string }>(
+        '/api/auth/update-email',
+        { method: 'POST', body: payload }
+      );
+      return data;
+    } catch (error) {
+      normalizeFetchError(error);
+    }
+  };
+
   const updatePassword = async (payload: UpdatePasswordInput) => {
     try {
       const data = await $fetch<{ success: boolean; message: string }>(
@@ -83,5 +95,5 @@ export const useAuth = () => {
     }
   };
 
-  return { user, signup, signin, addRole, resetPassword, updatePassword, deleteAccount, signout };
+  return { user, signup, signin, addRole, resetPassword, updateEmail, updatePassword, deleteAccount, signout };
 };

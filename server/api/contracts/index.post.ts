@@ -5,6 +5,7 @@ import { ensureJobEmployer } from '~/server/utils/api';
 import { logger } from '~/server/utils/logger';
 import { getErrorMessage, logDetailedError } from '~/server/utils/errorMessages';
 import { requireCsrfProtection } from '~/server/utils/csrf';
+import { sendNotificationEmail } from '~/server/utils/email';
 
 export default defineEventHandler(async (event) => {
   try {
@@ -67,6 +68,23 @@ export default defineEventHandler(async (event) => {
         });
       }
       throw createError({ statusCode: 400, statusMessage: error.message });
+    }
+
+    // Fetch job title for notification
+    const { data: job } = await client
+      .from('jobs')
+      .select('title')
+      .eq('id', job_id)
+      .single();
+
+    // Notify worker of new contract (fire-and-forget)
+    if (job?.title) {
+      sendNotificationEmail(event, {
+        userId: worker_id,
+        subject: `A contract has been created for "${job.title}"`,
+        html: `<p>Hi there,</p><p>A contract has been generated for your accepted application to "<strong>${job.title}</strong>".</p><p>Log in to your dashboard to review and sign the contract.</p>`,
+        idempotencyKey: `contract-created/${data.id}`
+      }).catch(() => {});
     }
 
     try {

@@ -1,6 +1,12 @@
+/**
+ * API Behavior Contract Tests
+ * These tests document expected API responses for race-condition scenarios
+ * but do NOT exercise actual server handler logic or database concurrency.
+ * They should be backed by real handler + database integration tests.
+ */
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 
-describe('Integration Tests - Race Condition Prevention', () => {
+describe('API Behavior Contracts - Race Condition Prevention', () => {
   const mockFetch = vi.fn();
 
   beforeEach(() => {
@@ -61,7 +67,6 @@ describe('Integration Tests - Race Condition Prevention', () => {
         body: { status: 'accepted' }
       }) as any;
 
-      // In a real integration test, we would verify the RPC uses SELECT FOR UPDATE
       expect(result.application.status).toBe('accepted');
     });
   });
@@ -116,7 +121,6 @@ describe('Integration Tests - Race Condition Prevention', () => {
         body: { contract_id: 'contract-1' }
       }) as any;
 
-      // In a real integration test, we would verify the UPDATE includes WHERE payout_status = 'pending'
       expect(result.status).toBe('paid');
     });
   });
@@ -215,7 +219,6 @@ describe('Integration Tests - Race Condition Prevention', () => {
         body: { status: 'rejected' }
       }) as any;
 
-      // In a real integration test, we would verify the UPDATE includes WHERE version = X
       expect(result.application.version).toBe(2);
     });
   });

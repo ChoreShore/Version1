@@ -80,6 +80,10 @@
       </section>
 
       <section class="settings-section">
+        <EmailSettingsSection />
+      </section>
+
+      <section class="settings-section">
         <UpdatePasswordForm />
       </section>
 
@@ -96,6 +100,7 @@ import RtwSettingsSection from '~/components/profile/RtwSettingsSection.vue';
 import IdentitySettingsSection from '~/components/profile/IdentitySettingsSection.vue';
 import PhotoSettingsSection from '~/components/profile/PhotoSettingsSection.vue';
 import BioSettingsSection from '~/components/profile/BioSettingsSection.vue';
+import EmailSettingsSection from '~/components/profile/EmailSettingsSection.vue';
 import UpdatePasswordForm from '~/components/profile/UpdatePasswordForm.vue';
 import DeleteAccountForm from '~/components/profile/DeleteAccountForm.vue';
 import StatusPill from '~/components/primitives/StatusPill.vue';

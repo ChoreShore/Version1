@@ -37,14 +37,16 @@
         :class="{ active: selectedCategory === category.id }"
         @click="filterByCategory(category.id)"
       >
-        {{ category.name }}
+        <Check v-if="selectedCategory === category.id" :size="14" class="category-pill__check" />
+        <span>{{ category.name }}</span>
       </button>
       <button
         v-if="selectedCategory"
         class="category-pill category-pill--clear"
         @click="clearCategoryFilter"
       >
-        Clear filter
+        <X :size="14" />
+        <span>Clear filter</span>
       </button>
     </div>
 
@@ -79,6 +81,7 @@ definePageMeta({
   layout: 'public'
 });
 import { onMounted, ref } from 'vue';
+import { Check, X } from '@lucide/vue';
 import JobCard from '~/components/jobs/JobCard.vue';
 import EmptyState from '~/components/primitives/EmptyState.vue';
 import LoadingSkeleton from '~/components/primitives/LoadingSkeleton.vue';
@@ -87,6 +90,8 @@ import HowItWorksSection from '~/components/sections/HowItWorksSection.vue';
 import LegalSection from '~/components/sections/LegalSection.vue';
 import { useJobs } from '~/composables/useJobs';
 import { useGeolocation } from '~/composables/useGeolocation';
+
+const route = useRoute();
 
 const jobs = ref<any[]>([]);
 const jobsLoading = ref(true);
@@ -196,6 +201,9 @@ const clearCategoryFilter = () => {
 };
 
 onMounted(() => {
+  if (route.query.category && typeof route.query.category === 'string') {
+    selectedCategory.value = route.query.category;
+  }
   loadCategories();
   loadJobs();
 });
@@ -343,6 +351,9 @@ onMounted(() => {
 }
 
 .category-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
   padding: 8px 16px;
   border-radius: var(--radius-pill);
   background: var(--color-surface-muted);
@@ -352,25 +363,38 @@ onMounted(() => {
   color: var(--color-text);
   cursor: pointer;
   white-space: nowrap;
-  transition: background 120ms ease, border-color 120ms ease;
+  transition: background 120ms ease, border-color 120ms ease, color 120ms ease, box-shadow 120ms ease;
 }
 
-.category-pill:hover,
-.category-pill.active {
+.category-pill:hover {
   background: var(--color-primary-50);
-  border-color: var(--color-primary-200);
+  border-color: var(--color-primary-300);
   color: var(--color-primary-700);
 }
 
+.category-pill.active {
+  background: var(--color-primary-600);
+  border-color: var(--color-primary-600);
+  color: white;
+  font-weight: 600;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+}
+
+.category-pill__check {
+  flex-shrink: 0;
+}
+
 .category-pill--clear {
-  background: var(--color-danger-50);
-  border-color: var(--color-danger-200);
-  color: var(--color-danger-700);
+  background: transparent;
+  border-color: var(--color-border);
+  color: var(--color-danger-600);
+  font-weight: 500;
 }
 
 .category-pill--clear:hover {
-  background: var(--color-danger-100);
-  border-color: var(--color-danger-300);
+  background: var(--color-danger-50);
+  border-color: var(--color-danger-200);
+  color: var(--color-danger-700);
 }
 
 @media (max-width: 768px) {
