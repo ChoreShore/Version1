@@ -1,12 +1,10 @@
-import { serverSupabaseClient, serverSupabaseUser } from '#supabase/server';
+import { serverSupabaseClient } from '#supabase/server';
 import { PaymentMethodsResponseSchema } from '~/schemas/payment';
+import { getAuthenticatedUser } from '~/server/utils/api';
 
 export default defineEventHandler(async (event) => {
   try {
-    const user = await serverSupabaseUser(event);
-    if (!user) {
-      throw createError({ statusCode: 401, statusMessage: 'Authentication required' });
-    }
+    const user = await getAuthenticatedUser(event, 'Authentication required');
 
     const client = await serverSupabaseClient(event);
 

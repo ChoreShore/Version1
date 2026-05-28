@@ -23,9 +23,13 @@ export default defineEventHandler(async (event) => {
 
     const user = await getAuthenticatedUser(event, 'Sign in to delete your account');
     const client = await serverSupabaseClient(event);
-    
+
+    if (!user.email) {
+      throw createError({ statusCode: 400, statusMessage: 'User email is required' });
+    }
+
     const { error: signInError } = await client.auth.signInWithPassword({
-      email: user.email!,
+      email: user.email,
       password: validation.data.password
     });
 

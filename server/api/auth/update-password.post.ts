@@ -1,9 +1,10 @@
 import { UpdatePasswordSchema } from '~/schemas/auth';
-import { serverSupabaseClient, serverSupabaseUser } from '#supabase/server';
+import { serverSupabaseClient } from '#supabase/server';
 import { logger } from '~/server/utils/logger';
 import { rateLimiters } from '~/server/utils/rateLimit';
 import { getErrorMessage, logDetailedError } from '~/server/utils/errorMessages';
 import { requireCsrfProtection } from '~/server/utils/csrf';
+import { getAuthenticatedUser } from '~/server/utils/api';
 
 export default defineEventHandler(async (event) => {
   try {
@@ -12,17 +13,10 @@ export default defineEventHandler(async (event) => {
 
     const body = await readBody(event);
 
-    // Apply rate limiting based on user ID
-    await rateLimiters.password(event.context?.user?.id || 'unknown');
+    const user = await getAuthenticatedUser(event, 'Unauthorized - Please sign in');
 
-    const user = await serverSupabaseUser(event);
-
-    if (!user) {
-      throw createError({
-        statusCode: 401,
-        statusMessage: 'Unauthorized - Please sign in'
-      });
-    }
+    // Apply rate limiting based on authenticated user ID
+    await rateLimiters.password(user.id);
 
     const validation = UpdatePasswordSchema.safeParse(body);
 
@@ -34,9 +28,13 @@ export default defineEventHandler(async (event) => {
     }
 
     const client = await serverSupabaseClient(event);
-    
+
+    if (!user.email) {
+      throw createError({ statusCode: 400, statusMessage: 'User email is required' });
+    }
+
     const { error: signInError } = await client.auth.signInWithPassword({
-      email: user.email!,
+      email: user.email,
       password: validation.data.currentPassword
     });
 

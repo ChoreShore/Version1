@@ -1,14 +1,11 @@
-import { serverSupabaseClient, serverSupabaseUser } from '#supabase/server';
+import { serverSupabaseClient } from '#supabase/server';
 import { ConfirmPaymentSchema, PaymentConfirmationResponseSchema } from '~/schemas/payment';
-import { ensureAuthenticated, ensureJobEmployer } from '~/server/utils/api';
+import { getAuthenticatedUser, ensureJobEmployer } from '~/server/utils/api';
 import { sendNotificationEmail } from '~/server/utils/email';
 
 export default defineEventHandler(async (event) => {
   try {
-    const user = ensureAuthenticated(
-      await serverSupabaseUser(event),
-      'Authentication required'
-    );
+    const user = await getAuthenticatedUser(event, 'Authentication required');
 
     const body = await readBody(event);
 

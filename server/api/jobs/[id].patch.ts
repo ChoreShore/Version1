@@ -1,4 +1,5 @@
-import { UpdateJobInput, JobResponseSchema, validateUpdateJob } from '~/schemas/job';
+import type { UpdateJobInput } from '~/schemas/job';
+import { JobResponseSchema, validateUpdateJob } from '~/schemas/job';
 import { serverSupabaseClient } from '#supabase/server';
 import { getAuthenticatedUser, assertValidUuid, ensureJobOwner } from '~/server/utils/api';
 import { logger } from '~/server/utils/logger';
@@ -14,7 +15,11 @@ const VALID_STATUS_TRANSITIONS: Record<string, string[]> = {
 
 function isValidStatusTransition(from: string | undefined, to: string): boolean {
   if (!from || from === to) return true;
-  const allowed = VALID_STATUS_TRANSITIONS[from] || [];
+  const allowed = VALID_STATUS_TRANSITIONS[from];
+  if (!allowed) {
+    logger.warn(`Unexpected job status encountered: "${from}". Transition to "${to}" blocked.`, 'jobs/[id].patch');
+    return false;
+  }
   return allowed.includes(to);
 }
 

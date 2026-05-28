@@ -1,5 +1,6 @@
-import { serverSupabaseClient, serverSupabaseUser } from '#supabase/server';
+import { serverSupabaseClient } from '#supabase/server';
 import { validateRtwVerify, RtwApiResponseSchema } from '~/schemas/rtw';
+import { getAuthenticatedUser } from '~/server/utils/api';
 
 function parseApiDate(dateStr: string | undefined): string | null {
   if (!dateStr) return null;
@@ -17,10 +18,7 @@ const OUTCOME_MESSAGES: Record<string, string> = {
 
 export default defineEventHandler(async (event) => {
   try {
-    const user = await serverSupabaseUser(event);
-    if (!user) {
-      throw createError({ statusCode: 401, statusMessage: 'Sign in to verify your right to work' });
-    }
+    const user = await getAuthenticatedUser(event, 'Sign in to verify your right to work');
 
     const body = await readBody(event);
 

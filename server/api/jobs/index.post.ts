@@ -102,7 +102,10 @@ export default defineEventHandler(async (event) => {
         .eq('id', recentDuplicate.id)
         .single();
 
-      if (!fetchError && existingJob) {
+      if (fetchError) {
+        logger.error('Failed to fetch existing job for deduplication', fetchError, 'jobs/index.post');
+        // Continue to create the job anyway since we can't confirm if a duplicate exists
+      } else if (existingJob) {
         const response = { job: existingJob };
         try {
           return JobResponseSchema.parse(response);

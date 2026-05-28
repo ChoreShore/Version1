@@ -45,22 +45,12 @@ export default defineEventHandler(async (event) => {
       .eq('id', user.id)
       .single();
 
-    // Check for existing application
-    const { data: existingApp } = await client
-      .from('applications')
-      .select('id, status')
-      .eq('job_id', validatedData.job_id)
-      .eq('worker_id', user.id)
-      .maybeSingle();
-
     // Build validation errors
     let validationErrors = [];
     if (!jobData) validationErrors.push('Job not found');
     else if (jobData.status !== 'open') validationErrors.push(`Job status is '${jobData.status}', not 'open'`);
     else if (new Date(jobData.deadline) < new Date()) validationErrors.push('Job deadline has passed');
     else if (jobData.employer_id === user.id) validationErrors.push('You cannot apply to your own job');
-    
-    if (existingApp && existingApp.status !== 'withdrawn') validationErrors.push('You have already applied to this job');
     
     if (!profileData?.roles?.includes('worker')) {
       validationErrors.push(`Your roles: [${profileData?.roles?.join(', ') || 'none'}]. Need 'worker' role.`);

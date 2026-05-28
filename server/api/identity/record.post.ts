@@ -1,11 +1,9 @@
-import { serverSupabaseClient, serverSupabaseUser } from '#supabase/server';
+import { serverSupabaseClient } from '#supabase/server';
 import { validateIdentityRecord } from '~/schemas/identity';
+import { getAuthenticatedUser } from '~/server/utils/api';
 
 export default defineEventHandler(async (event) => {
-  const user = await serverSupabaseUser(event);
-  if (!user) {
-    throw createError({ statusCode: 401, statusMessage: 'Sign in to continue' });
-  }
+  const user = await getAuthenticatedUser(event, 'Sign in to continue');
 
   const body = await readBody(event);
   const validation = validateIdentityRecord(body);

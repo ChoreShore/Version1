@@ -49,7 +49,7 @@ export default defineEventHandler(async (event) => {
       { data: applications },
       { data: otherJobs },
       { data: identityData },
-      { data: employerProfile }
+      { data: employerProfile, error: profileError }
     ] = await Promise.all([
       client.from('reviews').select('reviewed_user_id, rating').eq('reviewed_user_id', employerId),
       client.from('jobs').select('id').eq('employer_id', employerId),
@@ -65,6 +65,11 @@ export default defineEventHandler(async (event) => {
       client.auth.admin.getUserById(employerId),
       client.from('profiles').select('first_name, last_name, photo_url, username').eq('id', employerId).single()
     ]);
+
+    // Handle profile query error - profile might not exist
+    if (profileError) {
+      console.warn('[public/jobs/[id].get] Profile not found for employer:', employerId);
+    }
 
     // 3. Build lookups
     const employerReviews = (reviews || []).filter((r: any) => r.reviewed_user_id === employerId);
