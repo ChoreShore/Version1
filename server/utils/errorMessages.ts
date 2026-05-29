@@ -63,10 +63,3 @@ export function getErrorMessage(key: ErrorMessageKey): string {
   return ErrorMessages[key];
 }
 
-/**
- * Log detailed error information server-side while returning generic message to client
- * @param error - The actual error object
- * @param context - Additional context for logging
- */
-// logDetailedError is now exported from logger.ts - this file is kept for backwards compatibility
-export { logDetailedError } from '~/server/utils/logger';

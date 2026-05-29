@@ -1,8 +1,8 @@
-import { validateBio, BioSchema } from '~/schemas/profile';
+import { validateBio, BioSchema, sanitizeBio } from '~/schemas/profile';
 import { serverSupabaseClient } from '#supabase/server';
 import { getAuthenticatedUser } from '~/server/utils/api';
-import { logger } from '~/server/utils/logger';
-import { getErrorMessage, logDetailedError } from '~/server/utils/errorMessages';
+import { logger, logDetailedError } from '~/server/utils/logger';
+import { getErrorMessage } from '~/server/utils/errorMessages';
 import { requireCsrfProtection } from '~/server/utils/csrf';
 
 export default defineEventHandler(async (event) => {
@@ -48,12 +48,12 @@ export default defineEventHandler(async (event) => {
     }
 
     // Sanitize bio
-    const sanitizedBio = body.bio ? sanitizedBio(body.bio) : null;
+    const sanitizedBioText = body.bio ? sanitizeBio(body.bio) : null;
 
     // Update profiles table with bio
     const { error: updateError } = await client
       .from('profiles')
-      .update({ bio: sanitizedBio })
+      .update({ bio: sanitizedBioText })
       .eq('id', user.id);
 
     if (updateError) {
@@ -64,7 +64,7 @@ export default defineEventHandler(async (event) => {
       });
     }
 
-    return { success: true, bio: sanitizedBio };
+    return { success: true, bio: sanitizedBioText };
   } catch (error: any) {
     if (error.message?.includes('Auth session missing') || error.message?.includes('auth session missing')) {
       logDetailedError(error, 'bio-update-auth');

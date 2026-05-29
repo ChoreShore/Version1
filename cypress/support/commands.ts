@@ -4,7 +4,7 @@
 interface JobData {
   title: string
   description: string
-  category: string
+  category: string // category ID (UUID)
   budget_type: string
   budget_amount: number
   deadline: string
@@ -34,6 +34,8 @@ declare global {
       signIn(email?: string, password?: string): any
       mockLogin(options?: MockLoginOptions): Chainable<void>
       createJob(jobData: JobData): any
+      createJobViaApi(jobData: JobData): Chainable<{ job: any }>
+      deleteJob(jobId: string): Chainable<Cypress.Response<any>>
       switchToWorker(): Chainable<void>
       fillRtwForm(code: string, dob: string, forename: string, surname: string): Chainable<void>
     }
@@ -59,33 +61,40 @@ Cypress.Commands.add('login', (email?: string, password?: string) => {
 
   if (!testEmail || !testPassword) {
     throw new Error(
-      'login: credentials are missing. Set TEST_EMAIL and TEST_PASSWORD in cypress.config.ts env block.'
+      'login: credentials are missing. Set CYPRESS_TEST_EMAIL and CYPRESS_TEST_PASSWORD environment variables.'
     )
   }
 
   cy.request({
     method: 'POST',
     url: '/api/auth/signin',
+    headers: { Origin: Cypress.config('baseUrl') as string },
     body: { email: testEmail, password: testPassword },
     failOnStatusCode: true
   })
 })
 
-// UI-based sign-in (slower, use only when testing the login form itself)
+// UI-based sign-in — goes directly to Supabase (no CSRF, no server rate limit)
+// Waits for the redirect so cy.session() captures a fully-established session
 Cypress.Commands.add('signIn', (email?: string, password?: string) => {
   const testEmail = email || Cypress.env('TEST_EMAIL')
   const testPassword = password || Cypress.env('TEST_PASSWORD')
 
   if (!testEmail || !testPassword) {
     throw new Error(
-      'signIn: credentials are missing. Set TEST_EMAIL and TEST_PASSWORD in cypress.config.ts env block.'
+      'signIn: credentials are missing. Set CYPRESS_TEST_EMAIL and CYPRESS_TEST_PASSWORD environment variables.'
     )
   }
 
   cy.visit('/auth/sign-in')
-  cy.get('input[id="email"]').type(testEmail)
-  cy.get('input[id="password"]').type(testPassword)
-  cy.get('button[type="submit"]').click()
+  // Wait for Vue SSR hydration to finish before interacting
+  cy.wait(500)
+  cy.get('input[id="email"]').should('be.visible').clear().type(testEmail, { delay: 0 })
+  cy.get('input[id="password"]').clear().type(testPassword, { delay: 0 })
+  // Wait for Vue's canSubmit computed to enable the button, then click
+  cy.get('button[type="submit"]').should('not.be.disabled').click()
+  // Wait until we navigate away from sign-in — session is now established
+  cy.url({ timeout: 15000 }).should('not.include', '/auth/sign-in')
 })
 
 // Mock login — bypasses real auth by intercepting Supabase and app auth endpoints
@@ -180,7 +189,7 @@ Cypress.Commands.add('mockLogin', (options?: MockLoginOptions) => {
 
   cy.window().then((win) => {
     win.localStorage.setItem('active-role', opts.activeRole)
-    win.localStorage.setItem('sb-ywqjgusyluhchlvvtnlp-auth-token', JSON.stringify(mockSession))
+    win.localStorage.setItem('sb-localhost-auth-token', JSON.stringify(mockSession))
   })
 
   // Set cookies for Nuxt Supabase server/client synchronization
@@ -203,15 +212,67 @@ Cypress.Commands.add('fillRtwForm', (code: string, dob: string, forename: string
   cy.get('button.rtw-modal__submit').click()
 })
 
-// Custom command for creating a test job
+// Custom command for creating a test job via UI (multi-step wizard)
 Cypress.Commands.add('createJob', (jobData: JobData) => {
   cy.visit('/jobs/new')
+
+  // Step 0: Basic Info
   cy.get('input[id="title"]').type(jobData.title)
-  cy.get('textarea[id="description"]').type(jobData.description)
   cy.get('select[id="category"]').select(jobData.category)
+  cy.get('.job-form__submit').contains('Next').click()
+
+  // Step 1: Description
+  cy.get('textarea[id="description"]').type(jobData.description)
+  cy.get('.job-form__submit').contains('Next').click()
+
+  // Step 2: Budget & Timeline
   cy.get('select[id="budget_type"]').select(jobData.budget_type)
   cy.get('input[id="budget_amount"]').type(jobData.budget_amount.toString())
   cy.get('input[id="deadline"]').type(jobData.deadline)
+  cy.get('.job-form__submit').contains('Next').click()
+
+  // Step 3: Location
   cy.get('input[id="postcode"]').type(jobData.postcode)
-  cy.get('button[type="submit"]').click()
+  cy.get('.job-form__submit').contains('Next').click()
+
+  // Step 4: Review & Submit
+  cy.get('.job-form__submit').contains('Post a job').click()
+})
+
+// Fast programmatic job creation — returns the created job for cleanup
+Cypress.Commands.add('createJobViaApi', (jobData: JobData) => {
+  return cy.request({
+    method: 'POST',
+    url: '/api/jobs',
+    headers: { Origin: Cypress.config('baseUrl') as string },
+    body: {
+      title: jobData.title,
+      description: jobData.description,
+      category_id: jobData.category,
+      budget_type: jobData.budget_type,
+      budget_amount: jobData.budget_amount,
+      deadline: jobData.deadline,
+      postcode: jobData.postcode
+    },
+    failOnStatusCode: true
+  }).then((response) => {
+    expect(response.status).to.equal(200)
+    return response.body as { job: any }
+  })
+})
+
+// Delete a job by ID via API — used for cleanup
+Cypress.Commands.add('deleteJob', (jobId: string) => {
+  return cy.request({
+    method: 'DELETE',
+    url: `/api/jobs/${jobId}`,
+    headers: { Origin: Cypress.config('baseUrl') as string },
+    failOnStatusCode: false
+  }).then((response) => {
+    if (response.status === 200 || response.status === 404) {
+      cy.log(`Deleted job ${jobId}`)
+    } else {
+      cy.log(`Could not delete job ${jobId}: ${response.status} ${response.body?.statusMessage || ''}`)
+    }
+  })
 })

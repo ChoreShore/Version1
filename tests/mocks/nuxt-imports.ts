@@ -2,10 +2,11 @@
 // This provides all the auto-imported composables and utilities used in the app
 
 import { ref } from 'vue';
+import { createSupabaseMock } from './createSupabaseMock';
 
 export const useSupabaseUser = () => ref(null);
-export const useSupabaseClient = () => ({ from: () => ({ select: () => ({ eq: () => ({ single: () => Promise.resolve({ data: null, error: null }) }) }) }) });
-export const useRoute = () => ({ params: {}, query: {} });
+export const useSupabaseClient = () => createSupabaseMock();
+export const useRoute = () => ({ path: '/', params: {}, query: {} });
 export const useRouter = () => ({ push: () => {}, replace: () => {}, go: () => {}, back: () => {}, forward: () => {} });
 export const useRuntimeConfig = () => ({ public: {} });
 export const definePageMeta = () => {};

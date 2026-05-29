@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { defineEventHandler, createError, readBody, getRequestHeader, getRequestURL } from 'h3';
+import { createSupabaseMock } from '../../mocks/createSupabaseMock';
 
 (globalThis as any).defineEventHandler = defineEventHandler;
 (globalThis as any).createError = createError;
@@ -8,25 +9,8 @@ import { defineEventHandler, createError, readBody, getRequestHeader, getRequest
 (globalThis as any).getRequestURL = getRequestURL;
 (globalThis as any).getRequestIP = vi.fn(() => '127.0.0.1');
 
-const mockFrom: any = vi.fn(() => ({
-  select: vi.fn(() => ({
-    eq: vi.fn(() => ({
-      single: vi.fn(() => Promise.resolve({ data: null, error: null })),
-      maybeSingle: vi.fn(() => Promise.resolve({ data: null, error: null })),
-      order: vi.fn(() => Promise.resolve({ data: [], error: null })),
-    })),
-  })),
-  insert: vi.fn(() => ({
-    select: vi.fn(() => ({
-      single: vi.fn(() => Promise.resolve({ data: null, error: null })),
-    })),
-  })),
-}));
-
-const mockClient = { from: mockFrom };
-
-const mockServerSupabaseClient = vi.fn(() => Promise.resolve(mockClient));
-const mockServerSupabaseUser: any = vi.fn(() => Promise.resolve({ id: 'a1b2c3d4-e5f6-4aaa-abcd-ef1234567899', email: 'test@example.com' }));
+const mockServerSupabaseClient = vi.fn();
+const mockServerSupabaseUser: any = vi.fn();
 
 vi.mock('#supabase/server', () => ({
   serverSupabaseClient: mockServerSupabaseClient,
@@ -52,6 +36,7 @@ vi.mock('~/server/utils/errorMessages', () => ({
 
 vi.mock('~/server/utils/logger', () => ({
   logger: { info: vi.fn(), warn: vi.fn(), error: vi.fn(), debug: vi.fn() },
+  logDetailedError: vi.fn(),
 }));
 
 vi.mock('~/server/utils/email', () => ({
@@ -89,45 +74,16 @@ describe('Contracts Routes', () => {
         worker_id: 'a1b2c3d4-e5f6-4aaa-abcd-ef1234567898',
         job_id: 'a1b2c3d4-e5f6-4aaa-abcd-ef1234567891',
       };
+      const contract = { id: 'contract-1', ...payload, status: 'pending', created_at: '2024-01-01', updated_at: '2024-01-01' };
 
-      mockFrom.mockImplementation((table: string) => {
-        if (table === 'jobs') {
-          return {
-            select: vi.fn(() => ({
-              eq: vi.fn(() => ({
-                single: vi.fn(() => Promise.resolve({ data: { employer_id: payload.employer_id }, error: null })),
-              })),
-            })),
-          };
-        }
-        if (table === 'applications') {
-          return {
-            select: vi.fn(() => ({
-              eq: vi.fn(() => ({
-                single: vi.fn(() => Promise.resolve({
-                  data: { id: payload.application_id, job_id: payload.job_id, worker_id: payload.worker_id, status: 'accepted' },
-                  error: null,
-                })),
-              })),
-            })),
-          };
-        }
-        return {
-          select: vi.fn(() => ({
-            eq: vi.fn(() => ({
-              single: vi.fn(() => Promise.resolve({ data: null, error: null })),
-            })),
-          })),
-          insert: vi.fn(() => ({
-            select: vi.fn(() => ({
-              single: vi.fn(() => Promise.resolve({
-                data: { id: 'contract-1', ...payload, status: 'pending' },
-                error: null,
-              })),
-            })),
-          })),
-        };
+      const mockClient = createSupabaseMock({
+        from: {
+          jobs: { single: { employer_id: payload.employer_id } },
+          applications: { single: { id: payload.application_id, job_id: payload.job_id, worker_id: payload.worker_id, status: 'accepted' } },
+          contracts: { insertSingle: contract },
+        },
       });
+      mockServerSupabaseClient.mockResolvedValue(mockClient);
 
       const result = await handler(createEvent({ method: 'POST', body: payload }));
       expect(result.contract.id).toBe('contract-1');
@@ -150,27 +106,13 @@ describe('Contracts Routes', () => {
         job_id: 'a1b2c3d4-e5f6-4aaa-abcd-ef1234567891',
       };
 
-      mockFrom.mockImplementation((table: string) => {
-        if (table === 'jobs') {
-          return {
-            select: vi.fn(() => ({
-              eq: vi.fn(() => ({
-                single: vi.fn(() => Promise.resolve({ data: { employer_id: payload.employer_id }, error: null })),
-              })),
-            })),
-          };
-        }
-        return {
-          select: vi.fn(() => ({
-            eq: vi.fn(() => ({
-              single: vi.fn(() => Promise.resolve({
-                data: { id: payload.application_id, job_id: payload.job_id, worker_id: payload.worker_id, status: 'pending' },
-                error: null,
-              })),
-            })),
-          })),
-        };
+      const mockClient = createSupabaseMock({
+        from: {
+          jobs: { single: { employer_id: payload.employer_id } },
+          applications: { single: { id: payload.application_id, job_id: payload.job_id, worker_id: payload.worker_id, status: 'pending' } },
+        },
       });
+      mockServerSupabaseClient.mockResolvedValue(mockClient);
 
       try {
         await handler(createEvent({ method: 'POST', body: payload }));

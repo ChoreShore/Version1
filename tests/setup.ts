@@ -1,5 +1,5 @@
 import { beforeAll, afterAll, afterEach, vi } from 'vitest';
-import { ref, computed } from 'vue';
+import { ref, computed, reactive } from 'vue';
 
 beforeAll(() => {
   process.env.SUPABASE_URL = process.env.SUPABASE_URL
@@ -53,6 +53,12 @@ beforeAll(() => {
 
   // Add Vue functions to global scope for auto-imports
   (globalThis as any).computed = computed;
+  (globalThis as any).ref = ref;
+  (globalThis as any).reactive = reactive;
+  (globalThis as any).onMounted = () => {};
+  (globalThis as any).onBeforeUnmount = () => {};
+  (globalThis as any).watch = () => {};
+  (globalThis as any).watchEffect = () => {};
 });
 
 afterEach(() => {

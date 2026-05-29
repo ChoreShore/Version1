@@ -1,9 +1,9 @@
 import { PasswordResetSchema } from '~/schemas/auth';
 import { validatePasswordReset } from '~/schemas/auth';
 import { serverSupabaseClient } from '#supabase/server';
-import { logger } from '~/server/utils/logger';
+import { logger, logDetailedError } from '~/server/utils/logger';
 import { rateLimiters } from '~/server/utils/rateLimit';
-import { getErrorMessage, logDetailedError } from '~/server/utils/errorMessages';
+import { getErrorMessage } from '~/server/utils/errorMessages';
 import { requireCsrfProtection } from '~/server/utils/csrf';
 
 export default defineEventHandler(async (event) => {

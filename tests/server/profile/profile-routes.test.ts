@@ -77,6 +77,7 @@ vi.mock('~/server/utils/errorMessages', () => ({
 
 vi.mock('~/server/utils/logger', () => ({
   logger: { info: vi.fn(), warn: vi.fn(), error: vi.fn(), debug: vi.fn() },
+  logDetailedError: vi.fn(),
 }));
 
 const createEvent = (overrides: any = {}) => ({

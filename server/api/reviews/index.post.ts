@@ -1,9 +1,9 @@
 import { serverSupabaseClient } from '#supabase/server';
 import { validateCreateReview, ReviewResponseSchema } from '~/schemas/review';
-import { logger } from '~/server/utils/logger';
+import { logger, logDetailedError } from '~/server/utils/logger';
 import { mapReview, reviewSelect } from './utils';
 import { getAuthenticatedUser, ensureJobEmployer, ensureApplicationOwner } from '~/server/utils/api';
-import { getErrorMessage, logDetailedError } from '~/server/utils/errorMessages';
+import { getErrorMessage } from '~/server/utils/errorMessages';
 import { requireCsrfProtection } from '~/server/utils/csrf';
 
 export default defineEventHandler(async (event) => {

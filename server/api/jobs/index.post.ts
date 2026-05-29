@@ -4,9 +4,9 @@ import { validateCreateJob, JobResponseSchema } from '~/schemas/job';
 import { getAuthenticatedUser } from '~/server/utils/api';
 import { hasRole } from '~/server/utils/roles';
 import { geocodePostcode } from '~/server/utils/geocoding';
-import { logger } from '~/server/utils/logger';
+import { logger, logDetailedError } from '~/server/utils/logger';
 import { rateLimiters } from '~/server/utils/rateLimit';
-import { getErrorMessage, logDetailedError } from '~/server/utils/errorMessages';
+import { getErrorMessage } from '~/server/utils/errorMessages';
 import { requireCsrfProtection } from '~/server/utils/csrf';
 
 export default defineEventHandler(async (event) => {

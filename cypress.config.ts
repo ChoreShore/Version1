@@ -2,8 +2,8 @@ import { defineConfig } from 'cypress'
 
 export default defineConfig({
   e2e: {
-    // Use your deployed website URL
-    baseUrl: 'https://version1-seven.vercel.app', // Your deployed HireBeHired app
+    // Run `npm run dev` before tests, or use `npm run test:e2e:ci`
+    baseUrl: 'http://localhost:3000',
     supportFile: 'cypress/support/e2e.ts',
     specPattern: 'cypress/e2e/**/*.cy.{js,jsx,ts,tsx}',
     video: true,
@@ -16,18 +16,11 @@ export default defineConfig({
     env: {
       // Environment variables for testing
       USE_REAL_SUPABASE: true,
-      USE_MOCKS: false,
-      // Test account credentials — fill these in before running e2e
-      TEST_EMAIL: '',
-      TEST_PASSWORD: '',
-      // Unverified worker account (rtw_status = 'unverified')
-      // Falls back to TEST_EMAIL/TEST_PASSWORD if not set
-      TEST_WORKER_UNVERIFIED_EMAIL: '',
-      TEST_WORKER_UNVERIFIED_PASSWORD: '',
-      // Verified worker account (rtw_status = 'verified', not expired)
-      // Falls back to TEST_EMAIL/TEST_PASSWORD if not set
-      TEST_WORKER_VERIFIED_EMAIL: '',
-      TEST_WORKER_VERIFIED_PASSWORD: ''
+      USE_MOCKS: false
+      // Test credentials are read from OS env vars prefixed with CYPRESS_:
+      //   CYPRESS_TEST_EMAIL, CYPRESS_TEST_PASSWORD
+      //   CYPRESS_TEST_WORKER_UNVERIFIED_EMAIL, CYPRESS_TEST_WORKER_UNVERIFIED_PASSWORD
+      //   CYPRESS_TEST_WORKER_VERIFIED_EMAIL, CYPRESS_TEST_WORKER_VERIFIED_PASSWORD
     },
     // Retry configuration for flaky tests
     retries: {

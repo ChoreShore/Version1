@@ -1,8 +1,8 @@
 import { DeleteAccountSchema } from '~/schemas/auth';
 import { serverSupabaseClient, serverSupabaseUser } from '#supabase/server';
-import { logger } from '~/server/utils/logger';
+import { logger, logDetailedError } from '~/server/utils/logger';
 import { getAuthenticatedUser } from '~/server/utils/api';
-import { getErrorMessage, logDetailedError } from '~/server/utils/errorMessages';
+import { getErrorMessage } from '~/server/utils/errorMessages';
 import { requireCsrfProtection } from '~/server/utils/csrf';
 
 export default defineEventHandler(async (event) => {
@@ -43,9 +43,10 @@ export default defineEventHandler(async (event) => {
     const { error: deleteError } = await client.rpc('delete_user');
 
     if (deleteError) {
+      logger.error('delete_user RPC failed', deleteError, 'delete-account');
       throw createError({
         statusCode: 500,
-        statusMessage: 'Failed to delete account'
+        statusMessage: deleteError.message || 'Failed to delete account'
       });
     }
 

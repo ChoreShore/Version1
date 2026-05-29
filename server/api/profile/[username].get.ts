@@ -1,7 +1,7 @@
 import { serverSupabaseClient } from '#supabase/server';
 import { getRequestIP } from 'h3';
 import { rateLimiters } from '~/server/utils/rateLimit';
-import { logDetailedError } from '~/server/utils/errorMessages';
+import { logDetailedError } from '~/server/utils/logger';
 
 const profileReviewSelect = `
   review_id,

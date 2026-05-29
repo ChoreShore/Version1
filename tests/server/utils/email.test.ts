@@ -48,7 +48,8 @@ vi.mock('#supabase/server', () => ({
 }));
 
 vi.mock('~/server/utils/logger', () => ({
-  logger: mocks.mockLogger
+  logger: mocks.mockLogger,
+  logDetailedError: vi.fn(),
 }));
 
 import { sendEmail, getUserDetails, sendNotificationEmail } from '~/server/utils/email';

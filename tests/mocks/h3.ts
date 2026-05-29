@@ -48,3 +48,7 @@ export function getRequestURL(event: any) {
 export function getRequestIP(event: any, _opts?: any) {
   return event?.headers?.['x-forwarded-for'] ?? '127.0.0.1';
 }
+
+export function readFormData(event: any) {
+  return Promise.resolve(event?.formData ?? new FormData());
+}

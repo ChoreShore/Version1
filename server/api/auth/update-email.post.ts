@@ -1,7 +1,8 @@
 import { UpdateEmailSchema } from '~/schemas/auth';
 import { serverSupabaseClient } from '#supabase/server';
 import { rateLimiters } from '~/server/utils/rateLimit';
-import { getErrorMessage, logDetailedError } from '~/server/utils/errorMessages';
+import { logDetailedError } from '~/server/utils/logger';
+import { getErrorMessage } from '~/server/utils/errorMessages';
 import { requireCsrfProtection } from '~/server/utils/csrf';
 import { getAuthenticatedUser } from '~/server/utils/api';
 

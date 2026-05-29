@@ -2,9 +2,9 @@ import { serverSupabaseClient } from '#supabase/server';
 import { validateCreateMessage, MessageResponseSchema } from '~/schemas/message';
 import { getAuthenticatedUser } from '~/server/utils/api';
 import { ensureMessageParticipant } from '~/server/utils/api';
-import { logger } from '~/server/utils/logger';
+import { logger, logDetailedError } from '~/server/utils/logger';
 import { rateLimiters } from '~/server/utils/rateLimit';
-import { getErrorMessage, logDetailedError } from '~/server/utils/errorMessages';
+import { getErrorMessage } from '~/server/utils/errorMessages';
 import { requireCsrfProtection } from '~/server/utils/csrf';
 import { sendNotificationEmail, getUserDetails } from '~/server/utils/email';
 

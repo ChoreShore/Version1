@@ -2,8 +2,8 @@ import { validateUpdateApplication, ApplicationResponseSchema } from '~/schemas/
 import { serverSupabaseClient } from '#supabase/server';
 import { getAuthenticatedUser } from '~/server/utils/api';
 import { ensureApplicationOwner } from '~/server/utils/api';
-import { logger } from '~/server/utils/logger';
-import { getErrorMessage, logDetailedError } from '~/server/utils/errorMessages';
+import { logger, logDetailedError } from '~/server/utils/logger';
+import { getErrorMessage } from '~/server/utils/errorMessages';
 import { requireCsrfProtection } from '~/server/utils/csrf';
 import { rateLimiters } from '~/server/utils/rateLimit';
 import { assertValidUuid } from '~/server/utils/api';

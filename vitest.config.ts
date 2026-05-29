@@ -13,6 +13,7 @@ export default defineConfig({
     alias: {
       '#supabase/server': path.resolve(__dirname, 'tests/mocks/supabase-server.ts'),
       '#imports': path.resolve(__dirname, 'tests/mocks/nuxt-imports.ts'),
+      '#components': path.resolve(__dirname, 'tests/mocks/nuxt-components.ts'),
       'ofetch': path.resolve(__dirname, 'tests/mocks/ofetch.ts'),
       'h3': path.resolve(__dirname, 'tests/mocks/h3.ts'),
       '~': path.resolve(__dirname),

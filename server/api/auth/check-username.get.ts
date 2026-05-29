@@ -1,7 +1,8 @@
 import { serverSupabaseClient } from '#supabase/server';
 import { getRequestIP } from 'h3';
 import { rateLimiters } from '~/server/utils/rateLimit';
-import { getErrorMessage, logDetailedError } from '~/server/utils/errorMessages';
+import { logDetailedError } from '~/server/utils/logger';
+import { getErrorMessage } from '~/server/utils/errorMessages';
 
 export default defineEventHandler(async (event) => {
   try {

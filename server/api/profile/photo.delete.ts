@@ -1,7 +1,7 @@
 import { serverSupabaseClient } from '#supabase/server';
 import { getAuthenticatedUser } from '~/server/utils/api';
-import { logger } from '~/server/utils/logger';
-import { getErrorMessage, logDetailedError } from '~/server/utils/errorMessages';
+import { logger, logDetailedError } from '~/server/utils/logger';
+import { getErrorMessage } from '~/server/utils/errorMessages';
 import { requireCsrfProtection } from '~/server/utils/csrf';
 
 export default defineEventHandler(async (event) => {
