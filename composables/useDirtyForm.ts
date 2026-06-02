@@ -1,5 +1,20 @@
-import { ref, onMounted, onBeforeUnmount, watch } from 'vue';
+import { ref, onMounted, onBeforeUnmount, watch, toRaw, unref } from 'vue';
 import type { Ref } from 'vue';
+
+/**
+ * Safely stringify an object for comparison, handling potential circular references
+ */
+function safeStringify(obj: any): string {
+  try {
+    // unref handles both refs and plain values
+    return JSON.stringify(toRaw(unref(obj)));
+  } catch (err) {
+    if (import.meta.dev) {
+      console.warn('useDirtyForm: Failed to stringify form data, likely due to circular references.', err);
+    }
+    return '';
+  }
+}
 
 interface UseDirtyFormOptions {
   /** Form data to watch for changes */
@@ -28,13 +43,17 @@ export function useDirtyForm(options: UseDirtyFormOptions): UseDirtyFormReturn {
   const { formData, message = 'You have unsaved changes. Are you sure you want to leave?', enableBeforeUnload = true } = options;
 
   const isDirty = ref(false);
-  const initialValue = ref(JSON.stringify(formData));
+  const initialValue = ref(safeStringify(formData));
 
   // Watch form data for changes (handles both nested mutations and full reassignments)
   watch(
-    () => formData,
+    () => unref(formData),
     () => {
-      isDirty.value = JSON.stringify(formData) !== initialValue.value;
+      const currentStringified = safeStringify(formData);
+      // Only update dirty state if we could successfully stringify
+      if (currentStringified || !initialValue.value) {
+        isDirty.value = currentStringified !== initialValue.value;
+      }
     },
     { deep: true }
   );
@@ -42,7 +61,7 @@ export function useDirtyForm(options: UseDirtyFormOptions): UseDirtyFormReturn {
   // Reset dirty state
   const resetDirty = () => {
     isDirty.value = false;
-    initialValue.value = JSON.stringify(formData);
+    initialValue.value = safeStringify(formData);
   };
 
   // Show confirmation dialog

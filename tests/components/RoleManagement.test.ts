@@ -3,7 +3,7 @@ import { mount, flushPromises } from '@vue/test-utils';
 import { ref, nextTick } from 'vue';
 import RoleManagement from '~/components/profile/RoleManagement.vue';
 
-const mockAddRole = vi.fn(() => Promise.resolve(['employer', 'worker']));
+const mockAddRole = vi.fn(() => Promise.resolve({ roles: ['employer', 'worker'] }));
 const mockUser = ref<any>({ id: 'user-1' });
 const mockRoles = ref<string[]>(['employer']);
 
@@ -12,7 +12,7 @@ describe('RoleManagement', () => {
     vi.clearAllMocks();
     mockUser.value = { id: 'user-1' };
     mockRoles.value = ['employer'];
-    mockAddRole.mockResolvedValue(['employer', 'worker']);
+    mockAddRole.mockResolvedValue({ roles: ['employer', 'worker'] });
 
     (globalThis as any).useAuth = () => ({ addRole: mockAddRole });
     (globalThis as any).useSupabaseUser = () => mockUser;

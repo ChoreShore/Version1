@@ -59,8 +59,8 @@ const loading = ref(false);
 const error = ref<string | null>(null);
 const success = ref<string | null>(null);
 
-const hasWorkerRole = computed(() => userRoles.value.includes('worker'));
-const hasEmployerRole = computed(() => userRoles.value.includes('employer'));
+const hasWorkerRole = computed(() => userRoles.value?.includes('worker') || false);
+const hasEmployerRole = computed(() => userRoles.value?.includes('employer') || false);
 
 const fetchUserRoles = async () => {
   if (!user.value) return;
