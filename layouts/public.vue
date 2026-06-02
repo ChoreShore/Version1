@@ -46,12 +46,14 @@
           <h4>Company</h4>
           <NuxtLink to="/about">About Us</NuxtLink>
           <NuxtLink to="/contact">Contact</NuxtLink>
+          <NuxtLink to="/safety">Safety</NuxtLink>
         </div>
         <div class="public-layout__footer-section">
           <h4>Legal</h4>
           <NuxtLink to="/terms">Terms of Service</NuxtLink>
           <NuxtLink to="/privacy">Privacy Policy</NuxtLink>
           <NuxtLink to="/cookies">Cookie Policy</NuxtLink>
+          <NuxtLink to="/refund">Refund Policy</NuxtLink>
         </div>
       </div>
       <div class="public-layout__footer-bottom">

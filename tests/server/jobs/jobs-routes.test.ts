@@ -97,7 +97,7 @@ describe('Jobs Routes', () => {
               { id: 'job-1', title: 'My Job', employer_id: 'user-1', status: 'open', created_at: '2024-01-01', updated_at: '2024-01-01', description: 'Test job', category_id: 'cat-1', postcode: 'SW1A 1AA', budget_type: 'fixed', budget_amount: 100, deadline: '2024-12-31', category: { name: 'Gardening' }, employer: { first_name: 'Alice', last_name: 'Smith' } },
             ],
           },
-          applications: { count: 3 },
+          applications: { select: [{ job_id: 'job-1' }, { job_id: 'job-1' }, { job_id: 'job-1' }] },
         },
       });
       mockServerSupabaseClient.mockResolvedValue(mockClient);

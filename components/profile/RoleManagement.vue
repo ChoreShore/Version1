@@ -92,7 +92,7 @@ const addRole = async (role: Role) => {
 
   try {
     const result = await addRoleApi(role);
-    userRoles.value = result;
+    userRoles.value = result.roles;
     success.value = `${role.charAt(0).toUpperCase() + role.slice(1)} role added successfully`;
     
     setTimeout(() => {

@@ -111,13 +111,17 @@ export default defineEventHandler(async (event) => {
       }
     }
 
-    await client
+    const { error: contractUpdateError } = await client
       .from('contracts')
       .update({
         payout_status: 'processed',
         updated_at: occurredAt
       })
       .eq('id', contract_id);
+
+    if (contractUpdateError) {
+      throw createError({ statusCode: 500, statusMessage: 'Failed to update contract payout status' });
+    }
 
     return PayoutResponseSchema.parse({
       success: true,

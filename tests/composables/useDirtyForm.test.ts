@@ -24,7 +24,7 @@ describe('useDirtyForm', () => {
     let dirtyForm: ReturnType<typeof useDirtyForm> | null = null;
     withComposable(() => {
       const formData = ref({ name: 'Alice' });
-      dirtyForm = useDirtyForm({ formData: formData.value, enableBeforeUnload: false });
+      dirtyForm = useDirtyForm({ formData, enableBeforeUnload: false });
     });
     await nextTick();
     expect(dirtyForm!.isDirty.value).toBe(false);
@@ -35,7 +35,7 @@ describe('useDirtyForm', () => {
     const formData = ref({ name: 'Alice' });
 
     withComposable(() => {
-      dirtyForm = useDirtyForm({ formData: formData.value, enableBeforeUnload: false });
+      dirtyForm = useDirtyForm({ formData, enableBeforeUnload: false });
     });
     await nextTick();
 
@@ -50,7 +50,7 @@ describe('useDirtyForm', () => {
     const formData = ref({ name: 'Alice' });
 
     withComposable(() => {
-      dirtyForm = useDirtyForm({ formData: formData.value, enableBeforeUnload: false });
+      dirtyForm = useDirtyForm({ formData, enableBeforeUnload: false });
     });
     await nextTick();
 
@@ -71,7 +71,7 @@ describe('useDirtyForm', () => {
 
     withComposable(() => {
       const formData = ref({ name: 'Alice' });
-      dirtyForm = useDirtyForm({ formData: formData.value, enableBeforeUnload: false });
+      dirtyForm = useDirtyForm({ formData, enableBeforeUnload: false });
     });
     await nextTick();
 
@@ -85,7 +85,7 @@ describe('useDirtyForm', () => {
     const formData = ref({ name: 'Alice' });
 
     withComposable(() => {
-      dirtyForm = useDirtyForm({ formData: formData.value, enableBeforeUnload: false });
+      dirtyForm = useDirtyForm({ formData, enableBeforeUnload: false });
     });
     await nextTick();
 
@@ -102,7 +102,7 @@ describe('useDirtyForm', () => {
     const formData = ref({ name: 'Alice' });
 
     withComposable(() => {
-      dirtyForm = useDirtyForm({ formData: formData.value, message: 'Custom message', enableBeforeUnload: false });
+      dirtyForm = useDirtyForm({ formData, message: 'Custom message', enableBeforeUnload: false });
     });
     await nextTick();
 
@@ -119,7 +119,7 @@ describe('useDirtyForm', () => {
 
     const wrapper = withComposable(() => {
       const formData = ref({ name: 'Alice' });
-      useDirtyForm({ formData: formData.value, enableBeforeUnload: true });
+      useDirtyForm({ formData, enableBeforeUnload: true });
     });
     await nextTick();
 
@@ -134,7 +134,7 @@ describe('useDirtyForm', () => {
 
     withComposable(() => {
       const formData = ref({ name: 'Alice' });
-      useDirtyForm({ formData: formData.value, enableBeforeUnload: false });
+      useDirtyForm({ formData, enableBeforeUnload: false });
     });
     await nextTick();
 
@@ -146,7 +146,7 @@ describe('useDirtyForm', () => {
     let dirtyForm: ReturnType<typeof useDirtyForm> | null = null;
     const formData = ref({ name: 'Alice' });
     const wrapper = withComposable(() => {
-      dirtyForm = useDirtyForm({ formData: formData.value, enableBeforeUnload: true });
+      dirtyForm = useDirtyForm({ formData, enableBeforeUnload: true });
     });
     await nextTick();
 

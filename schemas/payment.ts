@@ -81,7 +81,9 @@ export const PaymentMethodSchema = z.object({
   display_label: z.string().nullable().optional(),
   connected_at: z.string().nullable().optional(),
   verified_at: z.string().nullable().optional(),
-  updated_at: z.string()
+  updated_at: z.string(),
+  created_at: z.string().optional(),
+  metadata: z.any().nullable().optional()
 });
 
 export const PaymentIntentResponseSchema = z.object({

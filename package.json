@@ -29,6 +29,7 @@
   "devDependencies": {
     "@cypress/vite-dev-server": "^7.2.1",
     "@cypress/vue": "^6.0.2",
+    "@nuxtjs/google-fonts": "^3.2.0",
     "@vitest/coverage-v8": "^4.1.7",
     "@vitest/ui": "^4.1.7",
     "@vue/test-utils": "^2.4.4",

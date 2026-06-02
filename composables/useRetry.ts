@@ -27,7 +27,7 @@ export function useRetry(options: RetryOptions = {}) {
     nextRetryIn: null
   });
 
-  let retryTimeout: NodeJS.Timeout | null = null;
+  let retryTimeout: ReturnType<typeof setTimeout> | null = null;
 
   const calculateDelay = (attempt: number): number => {
     const delay = Math.min(

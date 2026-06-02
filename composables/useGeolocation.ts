@@ -81,7 +81,6 @@ export const useGeolocation = () => {
   };
 
   return {
-    ...state.value,
     state,
     isSupported,
     hasLocation,

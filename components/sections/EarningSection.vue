@@ -22,6 +22,26 @@
         <span class="earning-card__label">Handyman</span>
         <span class="earning-card__rate">£18–£35/hr</span>
       </div>
+      <div class="earning-card">
+        <span class="earning-card__icon">🐾</span>
+        <span class="earning-card__label">Pet Care</span>
+        <span class="earning-card__rate">£10–£16/hr</span>
+      </div>
+      <div class="earning-card">
+        <span class="earning-card__icon">🤝</span>
+        <span class="earning-card__label">Care Support</span>
+        <span class="earning-card__rate">£14–£22/hr</span>
+      </div>
+      <div class="earning-card">
+        <span class="earning-card__icon">🎨</span>
+        <span class="earning-card__label">Creative</span>
+        <span class="earning-card__rate">£20–£50/hr</span>
+      </div>
+      <div class="earning-card">
+        <span class="earning-card__icon">📦</span>
+        <span class="earning-card__label">Delivery</span>
+        <span class="earning-card__rate">£10–£18/hr</span>
+      </div>
     </div>
   </section>
 </template>
@@ -40,6 +60,7 @@
 }
 
 .earning-section__title {
+  font-family: var(--font-display);
   font-size: var(--text-2xl);
   margin-bottom: var(--space-5);
 }
@@ -72,6 +93,7 @@
 }
 
 .earning-card__label {
+  font-family: var(--font-display);
   font-size: var(--text-base);
 }
 

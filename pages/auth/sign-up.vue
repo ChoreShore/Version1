@@ -331,7 +331,7 @@ const submitError = ref('');
 const success = ref(false);
 const showConfirmDialog = ref(false);
 const usernameAvailable = ref<boolean | null>(null);
-const usernameCheckDebounce = ref<NodeJS.Timeout | null>(null);
+const usernameCheckDebounce = ref<ReturnType<typeof setTimeout> | null>(null);
 const showPassword = ref(false);
 const showConfirmPassword = ref(false);
 
@@ -365,7 +365,7 @@ const handleUsernameInput = () => {
 
 // Use dirty form composable
 const { isDirty, resetDirty } = useDirtyForm({
-  formData: form,
+  formData: form as unknown as Record<string, any>,
   message: 'You have unsaved changes. Are you sure you want to leave without creating your account?',
   enableBeforeUnload: true
 });

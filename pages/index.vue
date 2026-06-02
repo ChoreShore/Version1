@@ -61,22 +61,22 @@
         <span class="stat-item__label">jobs posted today</span>
       </div>
       <div class="stat-item">
-        <span class="stat-item__icon"><Shield :size="18" /></span>
-        <span class="stat-item__value">Escrow</span>
-        <span class="stat-item__label">protected payments</span>
+        <span class="stat-item__icon"><MessageCircle :size="18" /></span>
+        <span class="stat-item__value">{{ formatStat(stats?.secure_conversations) }}+</span>
+        <span class="stat-item__label">Secure messaging</span>
       </div>
     </section>
 
     <!-- Filters -->
     <div class="filters" role="group" aria-label="Job filters">
       <button
-        v-for="f in filters"
+        v-for="f in filterCategories"
         :key="f.id"
         class="filter-pill"
-        :class="{ active: activeFilter === f.id }"
-        @click="applyFilter(f.id)"
+        :class="{ active: activeCategory === f.id }"
+        @click="setCategory(f.id)"
         :aria-label="`Filter by ${f.label}`"
-        :aria-pressed="activeFilter === f.id"
+        :aria-pressed="activeCategory === f.id"
       >
         <component :is="getFilterIcon(f.icon)" class="filter-pill__icon" :size="14" />
         <span>{{ f.label }}</span>
@@ -102,46 +102,13 @@
       </div>
 
       <div v-else-if="displayedJobs.length" class="job-grid">
-        <article v-for="job in displayedJobs" :key="job.id" class="job-card">
-          <div class="job-card__header">
-            <StatusPill
-              v-if="cardTopPill(job)"
-              :label="cardTopPill(job)?.label"
-              :variant="cardTopPill(job)?.variant as any"
-            />
-            <button
-              class="job-card__save"
-              :class="{ saved: isSaved(job.id) }"
-              @click="toggleSave(job.id)"
-              aria-label="Save job"
-            >
-              <Heart :size="20" :class="{ filled: isSaved(job.id) }" />
-            </button>
-          </div>
-
-          <h3 class="job-card__title">{{ job.title }}</h3>
-          <p class="job-card__price">
-            {{ job.budget_type === 'hourly' ? `£${job.budget_amount}/hr` : `£${job.budget_amount.toLocaleString()}` }}
-          </p>
-
-          <div class="job-card__meta">
-            <span class="job-card__time">{{ job.posted_at_relative }}</span>
-            <span v-if="job.postcode_area" class="job-card__location">📍 {{ job.postcode_area }}</span>
-          </div>
-
-          <div class="job-card__tags">
-            <InfoBadge
-              v-for="tag in job.tags.slice(0, 2)"
-              :key="tag"
-              :label="tag"
-              variant="neutral"
-            />
-          </div>
-
-          <NuxtLink :to="`/jobs/${job.id}`" class="btn btn--full btn--card">
-            View details
-          </NuxtLink>
-        </article>
+        <JobCardPublic
+          v-for="job in displayedJobs"
+          :key="job.id"
+          :job="job"
+          :is-saved="isSaved(job.id)"
+          @toggle-save="toggleSave"
+        />
       </div>
 
       <div v-else class="empty-state">
@@ -159,11 +126,10 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue';
+import { computed, ref } from 'vue';
 import { useSupabaseUser } from '#imports';
-import { Zap, Circle, Users, Star, Flame, Shield, Heart, Laptop, Brush, Truck, Hammer, Package, Home, MapPin, ChevronRight } from '@lucide/vue';
-import StatusPill from '~/components/primitives/StatusPill.vue';
-import InfoBadge from '~/components/primitives/InfoBadge.vue';
+import { Zap, Circle, Users, Star, Flame, MessageCircle, Heart, Laptop, Brush, Truck, Hammer, Package, Home, MapPin, ChevronRight } from '@lucide/vue';
+import JobCardPublic from '~/components/jobs/JobCardPublic.vue';
 import LoadingSkeleton from '~/components/primitives/LoadingSkeleton.vue';
 import TrustSection from '~/components/sections/TrustSection.vue';
 import HowItWorksSection from '~/components/sections/HowItWorksSection.vue';
@@ -186,61 +152,41 @@ definePageMeta({
 const jobsApi = useJobs();
 
 // Search
-const searchQuery = ref('');
 const locationQuery = ref('');
 
-// Categories
-const categories = ref<{ id: string; name: string }[]>([
-  { id: 'home-help', name: 'Home Help' },
+// Async data (SSR)
+const { data: jobsData, pending: jobsPending } = await useAsyncData('homepage-jobs', () =>
+  jobsApi.listPublicJobs(12)
+);
+
+const { data: statsData } = await useAsyncData('homepage-stats', () =>
+  jobsApi.getPublicStats()
+);
+
+const { data: categoriesData } = await useAsyncData('homepage-categories', () =>
+  jobsApi.listCategories().catch(() => ({ categories: [] }))
+);
+
+const allJobs = computed(() => jobsData.value?.jobs ?? []);
+const stats = computed(() => statsData.value ?? null);
+const categories = computed(() => categoriesData.value?.categories?.length ? categoriesData.value.categories : [
+  { id: 'cleaning', name: 'Cleaning' },
   { id: 'moving', name: 'Moving' },
   { id: 'handyman', name: 'Handyman' },
   { id: 'pet-care', name: 'Pet Care' },
   { id: 'delivery', name: 'Delivery' },
-  { id: 'remote-work', name: 'Remote Work' }
+  { id: 'remote', name: 'Remote' },
+  { id: 'care-support', name: 'Care Support' },
+  { id: 'creative', name: 'Creative' }
 ]);
-// Stats
-const stats = ref<{ jobs_completed_this_week: number; jobs_posted_today: number; escrow_protected_payments: number } | null>(null);
+const loading = computed(() => jobsPending.value);
 
-// Jobs
-const allJobs = ref<any[]>([]);
-const loading = ref(true);
-
-// Filters
-const filters = [
-  { id: 'nearby', label: 'Nearby', icon: '📍' },
-  { id: 'remote', label: 'Remote', icon: 'laptop' },
-  { id: 'cleaning', label: 'Cleaning', icon: 'brush' },
-  { id: 'moving', label: 'Moving', icon: 'truck' },
-  { id: 'handyman', label: 'Handyman', icon: 'hammer' }
-];
-const activeFilter = ref<string | null>(null);
+// Job filter composable
+const { searchQuery, activeCategory, categories: filterCategories, filteredJobs: displayedJobs, setCategory } = useJobFilter(allJobs);
 
 // Saved jobs (client-side only)
 const savedJobIds = ref<Set<string>>(new Set());
 
-const displayedJobs = computed(() => {
-  let jobs = allJobs.value;
-  if (activeFilter.value === 'nearby') {
-    // No distance data for now; just show all
-  }
-  if (activeFilter.value === 'remote') {
-    jobs = jobs.filter((j) => !j.postcode_area || j.postcode_area.toLowerCase().includes('remote'));
-  }
-  if (activeFilter.value && ['cleaning', 'moving', 'handyman'].includes(activeFilter.value)) {
-    const nameMap: Record<string, string> = {
-      cleaning: 'cleaning',
-      moving: 'moving',
-      handyman: 'handyman'
-    };
-    const target = nameMap[activeFilter.value];
-    jobs = jobs.filter((j) => j.category_name?.toLowerCase().includes(target));
-  }
-  if (searchQuery.value.trim()) {
-    const q = searchQuery.value.toLowerCase();
-    jobs = jobs.filter((j) => j.title.toLowerCase().includes(q) || j.description.toLowerCase().includes(q));
-  }
-  return jobs;
-});
 
 function getFilterIcon(iconName: string) {
   const iconMap: Record<string, any> = {
@@ -254,19 +200,18 @@ function getFilterIcon(iconName: string) {
 }
 function catIcon(name: string) {
   const iconMap: Record<string, any> = {
-    'Home Help': Home,
+    'Cleaning': Brush,
     'Moving': Truck,
     'Handyman': Hammer,
     'Pet Care': Heart,
     'Delivery': Package,
-    'Remote Work': Laptop
+    'Remote': Laptop,
+    'Care Support': Home,
+    'Creative': Zap
   };
   return iconMap[name] ?? Circle;
 }
 
-function applyFilter(id: string) {
-  activeFilter.value = activeFilter.value === id ? null : id;
-}
 
 function cardTopPill(job: any) {
   if (job.is_urgent) return { label: 'Urgent', variant: 'warning' };
@@ -292,32 +237,13 @@ function toggleSave(id: string) {
     savedJobIds.value.add(id);
   }
 }
-
-onMounted(async () => {
-  try {
-    const [jobsRes, statsRes, catRes] = await Promise.all([
-      jobsApi.listPublicJobs(12),
-      jobsApi.getPublicStats(),
-      jobsApi.listCategories().catch(() => ({ categories: [] }))
-    ]);
-    allJobs.value = jobsRes.jobs || [];
-    stats.value = statsRes;
-    if (catRes.categories?.length) {
-      categories.value = catRes.categories;
-    }
-  } catch (err) {
-    console.error('Homepage load error:', err);
-  } finally {
-    loading.value = false;
-  }
-});
 </script>
 
 <style scoped>
 .homepage {
   min-height: 100vh;
   background: var(--bg);
-  font-family: system-ui, -apple-system, sans-serif;
+  font-family: var(--font-body);
 }
 
 /* Header */
@@ -587,8 +513,9 @@ onMounted(async () => {
 }
 
 .hero-card__title {
+  font-family: var(--font-display);
   font-size: var(--text-xl);
-  font-weight: 700;
+  font-weight: 800;
   margin: 0;
 }
 
@@ -772,6 +699,7 @@ onMounted(async () => {
 }
 
 .jobs-section__title {
+  font-family: var(--font-display);
   font-size: var(--text-xl);
   font-weight: 700;
   margin: 0;

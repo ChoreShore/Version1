@@ -140,7 +140,7 @@ const rateLimits = computed(() => {
 
 // Use dirty form composable
 const { isDirty, resetDirty } = useDirtyForm({
-  formData: form.value,
+  formData: form,
   message: 'You have unsaved changes. Are you sure you want to cancel your application?',
   enableBeforeUnload: true
 });

@@ -90,7 +90,7 @@ describe('GET /api/public/jobs-board', () => {
 
       mockFetch.mockResolvedValue(response);
 
-      const result = await $fetch('/api/public/jobs-board?lat=51.5&lng=-0.1');
+      const result = await $fetch('/api/public/jobs-board?lat=51.5&lng=-0.1') as any;
 
       expect(Array.isArray(result.jobs)).toBe(true);
       expect(typeof result.total).toBe('number');
@@ -266,7 +266,7 @@ describe('GET /api/public/jobs-board', () => {
     it('returns empty jobs array when no jobs are nearby', async () => {
       mockFetch.mockResolvedValue({ jobs: [], total: 0 });
 
-      const result = await $fetch('/api/public/jobs-board?lat=51.5&lng=-0.1');
+      const result = await $fetch('/api/public/jobs-board?lat=51.5&lng=-0.1') as any;
 
       expect(result.jobs).toEqual([]);
       expect(result.total).toBe(0);

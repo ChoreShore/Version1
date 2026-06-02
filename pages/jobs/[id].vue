@@ -50,7 +50,6 @@
           <!-- Public CTA buttons -->
           <div v-if="!user" class="job-detail__actions">
             <NuxtLink to="/auth/sign-up" class="btn btn--primary">Sign up to apply</NuxtLink>
-            <button class="btn btn--secondary" @click="$router.push('/auth/sign-in')">Message</button>
             <button class="btn btn--secondary" @click="saveJob"><Heart :size="18" /></button>
             <button class="btn btn--secondary" @click="shareJob"><Link :size="18" /></button>
           </div>
@@ -76,7 +75,7 @@
             <p>Propose your own rate or availability to stand out</p>
             <input type="text" placeholder="Your offer (£/hour)" class="offer-input" />
             <textarea placeholder="Message (e.g. available evenings)" class="offer-textarea" />
-            <NuxtLink to="/auth/sign-up" class="btn btn--primary">Send offer</NuxtLink>
+            <NuxtLink to="/auth/sign-up" class="btn btn--primary">Sign up to apply</NuxtLink>
             <p class="offer-hint">Example: £16/hr — "Experienced cleaner, available immediately"</p>
             <div class="offer-tip">
               💡 Fair pay guidance applies. Travel distance, skill level and job duration should always be considered when making offers.
@@ -151,7 +150,7 @@
           <div v-if="!user" class="sidebar-card sidebar-card--highlight">
             <h4>⚡ Quick Apply</h4>
             <p>Apply instantly with your profile</p>
-            <NuxtLink to="/auth/sign-up" class="btn btn--primary btn--full">Apply in 1 click</NuxtLink>
+            <NuxtLink to="/auth/sign-up" class="btn btn--primary btn--full">Sign up to apply</NuxtLink>
           </div>
 
           <!-- More from employer -->

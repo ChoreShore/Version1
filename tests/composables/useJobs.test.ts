@@ -17,7 +17,7 @@ describe('useJobs composable', () => {
   });
 
   it('listJobs calls /api/jobs with query params', async () => {
-    const response: JobsResponse = {
+    const response: JobsResponseInput = {
       jobs: [],
       preview_mode: false
     };
@@ -32,7 +32,7 @@ describe('useJobs composable', () => {
   });
 
   it('getJob fetches a single job by id', async () => {
-    const response: JobResponse = {
+    const response: JobResponseInput = {
       job: {
         id: 'job-123',
         employer_id: 'employer-1',
@@ -60,7 +60,7 @@ describe('useJobs composable', () => {
   });
 
   it('createJob posts payload to /api/jobs', async () => {
-    const response: JobResponse = {
+    const response: JobResponseInput = {
       job: {
         id: 'job-123',
         employer_id: 'employer-1',
@@ -88,7 +88,8 @@ describe('useJobs composable', () => {
       postcode: 'AB1 2CD',
       budget_type: 'fixed' as const,
       budget_amount: 200,
-      deadline: '2026-01-01T00:00:00Z'
+      deadline: '2026-01-01T00:00:00Z',
+      is_recurring: false
     };
 
     const result = await jobsComposable.createJob(payload);
@@ -101,7 +102,7 @@ describe('useJobs composable', () => {
   });
 
   it('updateJob patches payload to specific job', async () => {
-    const response: JobResponse = {
+    const response: JobResponseInput = {
       job: {
         id: 'job-123',
         employer_id: 'employer-1',
@@ -149,7 +150,7 @@ describe('useJobs composable', () => {
   });
 
   it('listCategories fetches job categories', async () => {
-    const response: CategoriesResponse = {
+    const response: CategoriesResponseInput = {
       categories: [
         {
           id: 'cat-1',
@@ -169,11 +170,12 @@ describe('useJobs composable', () => {
   });
 
   it('findNearbyJobs calls /api/jobs/near with lat/lng/distance params', async () => {
-    const response: NearJobsResponse = {
+    const response: NearJobsResponseInput = {
       jobs: [
         {
           job_id: 'job-1',
           title: 'Nearby job',
+          postcode_area: 'SW1A',
           distance_km: 2
         }
       ]

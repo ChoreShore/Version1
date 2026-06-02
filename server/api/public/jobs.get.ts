@@ -3,6 +3,7 @@ import { PublicJobsResponseSchema } from '~/schemas/job';
 import { getPostcodeArea } from '~/server/utils/jobValidation';
 import { getRelativeTime } from '~/server/utils/time';
 import { formatEmployerName } from '~/server/utils/text';
+import { logger } from '~/server/utils/logger';
 import type { PublicJobPreviewInput } from '~/schemas/job';
 
 export default defineEventHandler(async (event) => {
@@ -23,7 +24,8 @@ export default defineEventHandler(async (event) => {
     });
     
     const query = getQuery(event) as { limit?: string; category?: string };
-    const limit = Math.min(Math.max(parseInt(query.limit ?? '10', 10), 1), 20);
+    const rawLimit = parseInt(query.limit ?? '10', 10);
+    const limit = isNaN(rawLimit) ? 10 : Math.min(Math.max(rawLimit, 1), 20);
 
     // 1. Fetch open jobs (don't join profiles — RLS may block anon reads)
     let jobsQuery = client

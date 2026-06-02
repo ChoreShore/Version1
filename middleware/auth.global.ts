@@ -8,7 +8,14 @@ export default defineNuxtRouteMiddleware(async (to) => {
     '/auth/sign-in',
     '/auth/sign-up',
     '/auth/reset-password',
-    '/auth/complete-profile'
+    '/auth/complete-profile',
+    '/terms',
+    '/privacy',
+    '/safety',
+    '/refund',
+    '/cookies',
+    '/about',
+    '/contact'
   ];
 
   const isPublicJobDetail = to.path.startsWith('/jobs/') && to.path !== '/jobs/new';

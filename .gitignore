@@ -30,3 +30,12 @@ cypress.env.*.json
 # Cypress run artefacts
 cypress/screenshots
 cypress/videos
+
+# Supabase migrations
+/supabase/migrations
+
+# Verification scripts & docs
+/scripts/verification/
+/scripts/check-full-schema.js
+/scripts/check-geolocation.js
+/docs/database-schema-api-rls-verification.md

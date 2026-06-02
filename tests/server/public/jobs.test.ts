@@ -35,7 +35,7 @@ describe('GET /api/public/jobs', () => {
 
       mockFetch.mockResolvedValue(response);
 
-      const result = await $fetch('/api/public/jobs');
+      const result = await $fetch('/api/public/jobs') as any;
 
       expect(Array.isArray(result.jobs)).toBe(true);
       expect(result.jobs.length).toBeGreaterThan(0);
@@ -67,7 +67,7 @@ describe('GET /api/public/jobs', () => {
 
       mockFetch.mockResolvedValue(response);
 
-      const result = await $fetch('/api/public/jobs');
+      const result = await $fetch('/api/public/jobs') as any;
       const job = result.jobs[0];
 
       expect(job).toHaveProperty('id');
@@ -147,7 +147,7 @@ describe('GET /api/public/jobs', () => {
 
       mockFetch.mockResolvedValue(response);
 
-      const result = await $fetch('/api/public/jobs');
+      const result = await $fetch('/api/public/jobs') as any;
       expect(result.jobs[0].employer.display_name).toMatch(/^[A-Za-z]+\s[A-Za-z]\.$/);
     });
   });
@@ -179,7 +179,7 @@ describe('GET /api/public/jobs', () => {
 
       mockFetch.mockResolvedValue(response);
 
-      const result = await $fetch('/api/public/jobs');
+      const result = await $fetch('/api/public/jobs') as any;
       const rating = result.jobs[0].employer.average_rating;
 
       expect(typeof rating).toBe('number');
@@ -213,7 +213,7 @@ describe('GET /api/public/jobs', () => {
 
       mockFetch.mockResolvedValue(response);
 
-      const result = await $fetch('/api/public/jobs');
+      const result = await $fetch('/api/public/jobs') as any;
       expect(result.jobs[0].employer.average_rating).toBeNull();
     });
   });
@@ -251,7 +251,7 @@ describe('GET /api/public/jobs', () => {
 
       mockFetch.mockResolvedValue(response);
 
-      const result = await $fetch('/api/public/jobs?limit=50');
+      const result = await $fetch('/api/public/jobs?limit=50') as any;
       expect(result.jobs.length).toBeLessThanOrEqual(20);
     });
   });
@@ -260,7 +260,7 @@ describe('GET /api/public/jobs', () => {
     it('returns empty jobs array when no open jobs exist', async () => {
       mockFetch.mockResolvedValue({ jobs: [] });
 
-      const result = await $fetch('/api/public/jobs');
+      const result = await $fetch('/api/public/jobs') as any;
 
       expect(result.jobs).toEqual([]);
     });

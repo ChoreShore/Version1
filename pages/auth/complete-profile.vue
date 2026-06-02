@@ -18,7 +18,7 @@
           </div>
 
           <div v-if="success" class="complete-profile-success" role="status">
-            Photo uploaded successfully. Redirecting to dashboard...
+            Photo uploaded successfully. Redirecting...
           </div>
         </div>
 
@@ -50,13 +50,21 @@ const currentPhotoUrl = ref<string | null>(null);
 const error = ref<string | null>(null);
 const success = ref(false);
 
+const redirectAfterPhoto = (roles: string[], onboardingCompleted: boolean) => {
+  if (roles.includes('worker') && !onboardingCompleted) {
+    router.push('/auth/onboarding');
+  } else {
+    router.push('/dashboard');
+  }
+};
+
 const fetchProfile = async () => {
   if (!user.value) return;
 
   try {
     const { data, error: fetchError } = await client
       .from('profiles')
-      .select('photo_url')
+      .select('photo_url, roles, onboarding_completed')
       .eq('id', user.value.id)
       .single();
 
@@ -64,9 +72,11 @@ const fetchProfile = async () => {
 
     currentPhotoUrl.value = (data as any)?.photo_url || null;
 
-    // If user already has a photo, redirect to dashboard
+    // If user already has a photo, check if worker needs onboarding
     if (currentPhotoUrl.value) {
-      router.push('/dashboard');
+      const roles = (data as any)?.roles || [];
+      const onboardingCompleted = (data as any)?.onboarding_completed || false;
+      redirectAfterPhoto(roles, onboardingCompleted);
     }
   } catch (err: any) {
     error.value = err.message || 'Failed to load profile';
@@ -77,9 +87,21 @@ const handleUploadSuccess = (photoUrl: string) => {
   success.value = true;
   currentPhotoUrl.value = photoUrl;
   
-  // Redirect to dashboard after a short delay
-  setTimeout(() => {
-    router.push('/dashboard');
+  // Redirect after a short delay — workers go to onboarding, others to dashboard
+  setTimeout(async () => {
+    try {
+      const { data } = await client
+        .from('profiles')
+        .select('roles, onboarding_completed')
+        .eq('id', user.value!.id)
+        .single();
+
+      const roles = (data as any)?.roles || [];
+      const onboardingCompleted = (data as any)?.onboarding_completed || false;
+      redirectAfterPhoto(roles, onboardingCompleted);
+    } catch {
+      router.push('/dashboard');
+    }
   }, 1500);
 };
 

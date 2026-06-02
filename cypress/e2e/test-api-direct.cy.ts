@@ -63,9 +63,9 @@ describe('Test API Directly', () => {
       console.log('Status:', response.status)
       console.log('Categories:', response.body)
       
-      if (response.status === 200 && response.body.categories) {
+      if (response.status === 200 && (response.body as any).categories) {
         console.log('Available categories:')
-        response.body.categories.forEach((cat, index) => {
+        ;(response.body as any).categories.forEach((cat: any, index: number) => {
           console.log(`  ${index}: ${cat.id} - ${cat.name}`)
         })
       } else {

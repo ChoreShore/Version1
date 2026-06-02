@@ -26,13 +26,13 @@ interface UseDirtyFormReturn {
  */
 export function useDirtyForm(options: UseDirtyFormOptions): UseDirtyFormReturn {
   const { formData, message = 'You have unsaved changes. Are you sure you want to leave?', enableBeforeUnload = true } = options;
-  
+
   const isDirty = ref(false);
   const initialValue = ref(JSON.stringify(formData));
 
-  // Watch form data for changes
+  // Watch form data for changes (handles both nested mutations and full reassignments)
   watch(
-    formData,
+    () => formData,
     () => {
       isDirty.value = JSON.stringify(formData) !== initialValue.value;
     },

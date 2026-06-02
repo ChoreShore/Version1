@@ -32,6 +32,7 @@
 }
 
 .how-it-works-section__title {
+  font-family: var(--font-display);
   font-size: var(--text-2xl);
   margin-bottom: var(--space-6);
 }
@@ -61,6 +62,7 @@
 }
 
 .step__title {
+  font-family: var(--font-display);
   margin: 0 0 var(--space-2) 0;
   font-size: var(--text-base);
 }

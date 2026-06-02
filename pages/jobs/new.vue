@@ -369,7 +369,7 @@ const stepCompletedFields = (stepIndex: number) => {
 
 // Use dirty form composable
 const { isDirty, resetDirty, confirmNavigation } = useDirtyForm({
-  formData: form.value,
+  formData: form,
   message: 'You have unsaved changes. Are you sure you want to leave without saving?',
   enableBeforeUnload: true
 });
@@ -601,7 +601,7 @@ const getErrorMessage = (err: any): string => {
 };
 
 const handleCancel = () => {
-  if (isDirty as any) {
+  if (isDirty.value) {
     showConfirmDialog.value = true;
   } else {
     navigateTo('/jobs');

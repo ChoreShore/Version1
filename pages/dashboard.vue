@@ -202,7 +202,19 @@ watch(role, () => {
   loadData();
 });
 
-onMounted(() => {
+onMounted(async () => {
+  if (user.value) {
+    const { data } = await supabase
+      .from('profiles')
+      .select('roles, onboarding_completed')
+      .eq('id', user.value.id)
+      .single();
+    const profile = data as any;
+    if (profile?.roles?.includes('worker') && !profile?.onboarding_completed) {
+      navigateTo('/auth/onboarding');
+      return;
+    }
+  }
   loadData();
 });
 

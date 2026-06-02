@@ -1,7 +1,16 @@
 export default defineNuxtConfig({
   devtools: { enabled: true },
   css: ['~/assets/css/tokens.css'],
-  modules: ['@nuxtjs/supabase'],
+  modules: ['@nuxtjs/supabase', '@nuxtjs/google-fonts'],
+  googleFonts: {
+    families: {
+      Syne: [400, 600, 700, 800],
+      'DM+Sans': [300, 400, 500]
+    },
+    display: 'swap',
+    download: true,
+    inject: true
+  },
   supabase: {
     redirect: false,
     url: process.env.SUPABASE_URL,

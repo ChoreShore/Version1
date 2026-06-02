@@ -72,20 +72,23 @@ export default defineEventHandler(async (event) => {
       throw createError({ statusCode: 400, statusMessage: error.message });
     }
 
-    // Fetch application counts for each job
-    const jobsWithCounts = await Promise.all(
-      (data || []).map(async (job: any) => {
-        const { count } = await client
-          .from('applications')
-          .select('*', { count: 'exact', head: true })
-          .eq('job_id', job.id);
-        
-        return {
-          ...job,
-          application_count: count ?? 0
-        };
-      })
-    );
+    // Fetch application counts in a single batched query
+    const jobIds = (data || []).map((job: any) => job.id);
+    const { data: counts } = await client
+      .from('applications')
+      .select('job_id')
+      .in('job_id', jobIds);
+
+    const countMap = new Map<string, number>();
+    for (const row of counts || []) {
+      const id = (row as any).job_id;
+      countMap.set(id, (countMap.get(id) || 0) + 1);
+    }
+
+    const jobsWithCounts = (data || []).map((job: any) => ({
+      ...job,
+      application_count: countMap.get(job.id) ?? 0
+    }));
 
     // Validate response with Zod schema
     const response = {

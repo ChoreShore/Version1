@@ -16,7 +16,9 @@ describe('WithdrawModal', () => {
   const createWrapper = (props: { requiresReason: boolean }) => {
     return mount(WithdrawModal, {
       props: {
-        ...props,
+        requiresReason: props.requiresReason
+      },
+      attrs: {
         onConfirm,
         onCancel
       }

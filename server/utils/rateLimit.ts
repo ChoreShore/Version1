@@ -19,7 +19,12 @@ let redisClient: Redis | null = null;
 let useInMemoryFallback = false;
 
 // Fallback in-memory store for development/testing when Redis is unavailable
-const rateLimitStore = new Map<string, number[]>();
+// Each entry stores its own windowMs so cleanup respects per-limiter windows
+interface InMemoryEntry {
+  timestamps: number[];
+  windowMs: number;
+}
+const rateLimitStore = new Map<string, InMemoryEntry>();
 
 // Initialize Redis client
 function initializeRedis() {
@@ -74,34 +79,35 @@ setInterval(() => {
   const now = Date.now();
   let totalEntries = 0;
   
-  for (const [key, timestamps] of rateLimitStore.entries()) {
-    // Filter out timestamps outside the current window (using the most recent window)
+  for (const [key, entry] of rateLimitStore.entries()) {
+    const { timestamps, windowMs } = entry;
+    // Filter out timestamps outside the entry's own window
     if (timestamps.length > 0) {
       const mostRecent = timestamps[timestamps.length - 1];
-      const windowStart = mostRecent - CLEANUP_INTERVAL;
+      const windowStart = mostRecent - windowMs;
       const filtered = timestamps.filter(t => t > windowStart);
-      
+
       if (filtered.length === 0) {
         rateLimitStore.delete(key);
       } else if (filtered.length !== timestamps.length) {
-        rateLimitStore.set(key, filtered);
+        rateLimitStore.set(key, { timestamps: filtered, windowMs });
       }
       totalEntries += filtered.length;
     } else {
       rateLimitStore.delete(key);
     }
   }
-  
+
   // If store is too large, remove oldest entries
   if (rateLimitStore.size > MAX_STORE_SIZE) {
     const entries = Array.from(rateLimitStore.entries());
     // Sort by oldest timestamp and remove excess
     entries.sort((a, b) => {
-      const aOldest = a[1][0] || Infinity;
-      const bOldest = b[1][0] || Infinity;
+      const aOldest = a[1].timestamps[0] || Infinity;
+      const bOldest = b[1].timestamps[0] || Infinity;
       return aOldest - bOldest;
     });
-    
+
     const toRemove = entries.slice(0, rateLimitStore.size - MAX_STORE_SIZE);
     for (const [key] of toRemove) {
       rateLimitStore.delete(key);
@@ -195,17 +201,18 @@ export async function checkRateLimit(
   }
   
   // In-memory fallback (original implementation)
-  const timestamps = rateLimitStore.get(identifier) || [];
-  
+  const entry = rateLimitStore.get(identifier);
+  const timestamps = entry?.timestamps || [];
+
   // Filter out timestamps outside the current window
   const recentTimestamps = timestamps.filter(t => t > windowStart);
-  
+
   // Check if limit exceeded
   if (recentTimestamps.length >= config.maxRequests) {
     // Calculate reset time (oldest timestamp + window)
     const oldestTimestamp = recentTimestamps[0];
     const resetTime = new Date(oldestTimestamp + config.windowMs);
-    
+
     return {
       success: false,
       limit: config.maxRequests,
@@ -213,11 +220,11 @@ export async function checkRateLimit(
       resetTime
     };
   }
-  
+
   // Add current request timestamp
   recentTimestamps.push(now);
-  rateLimitStore.set(identifier, recentTimestamps);
-  
+  rateLimitStore.set(identifier, { timestamps: recentTimestamps, windowMs: config.windowMs });
+
   return {
     success: true,
     limit: config.maxRequests,

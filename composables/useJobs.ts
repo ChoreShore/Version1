@@ -77,7 +77,7 @@ export const useJobs = () => {
     return await $fetch<{
       jobs_completed_this_week: number;
       jobs_posted_today: number;
-      escrow_protected_payments: number;
+      secure_conversations: number;
     }>('/api/public/stats');
   };
 

@@ -35,7 +35,7 @@ describe('POST /api/applications - Edge Case Fixes', () => {
       const result = await $fetch('/api/applications', {
         method: 'POST',
         body: payload
-      }) as { application: any };
+      }) as any;
 
       expect(result).toEqual(response);
       expect(result.application.withdrawal_reason).toBeNull();

@@ -49,13 +49,14 @@ describe('Reviews GET Routes', () => {
     it('returns reviews received by user', async () => {
       const reviews = [
         {
-          review_id: 'rev-1',
+          id: 'rev-1',
           job_id: 'a1b2c3d4-e5f6-4aaa-abcd-ef1234567890',
           reviewer_id: 'reviewer-1',
           reviewed_user_id: 'user-1',
           rating: 5,
           comment: 'Great worker!',
           created_at: '2024-01-01',
+          updated_at: '2024-01-01',
           job: { id: 'a1b2c3d4-e5f6-4aaa-abcd-ef1234567890', title: 'Gardening' },
           reviewer: { username: 'alice', id: 'reviewer-1', first_name: 'Alice', last_name: 'Smith', bio: null },
           reviewed_user: { username: 'bob', id: 'user-1', first_name: 'Bob', last_name: 'Jones', bio: null },
@@ -77,13 +78,14 @@ describe('Reviews GET Routes', () => {
     it('returns reviews given by user', async () => {
       const reviews = [
         {
-          review_id: 'rev-2',
+          id: 'rev-2',
           job_id: 'a1b2c3d4-e5f6-4aaa-abcd-ef1234567890',
           reviewer_id: 'user-1',
           reviewed_user_id: 'reviewed-1',
           rating: 4,
           comment: 'Good employer',
           created_at: '2024-01-02',
+          updated_at: '2024-01-02',
           job: { id: 'a1b2c3d4-e5f6-4aaa-abcd-ef1234567890', title: 'Cleaning' },
           reviewer: { username: 'alice', id: 'user-1', first_name: 'Alice', last_name: 'Smith', bio: null },
           reviewed_user: { username: 'bob', id: 'reviewed-1', first_name: 'Bob', last_name: 'Jones', bio: null },
@@ -110,6 +112,63 @@ describe('Reviews GET Routes', () => {
       } catch (error: any) {
         expect(error.statusCode).toBe(401);
       }
+    });
+
+    it('throws 400 on database error', async () => {
+      const mockClient = createSupabaseMock({
+        from: {
+          reviews: { select: [], error: { message: 'Connection timeout' } },
+        },
+      });
+      mockServerSupabaseClient.mockResolvedValue(mockClient);
+
+      try {
+        await handler(createEvent());
+        expect.fail('Should have thrown');
+      } catch (error: any) {
+        expect(error.statusCode).toBe(400);
+        expect(error.statusMessage).toBe('Connection timeout');
+      }
+    });
+
+    it('defaults to received type when no query param provided', async () => {
+      const reviews = [
+        {
+          id: 'rev-1',
+          job_id: 'job-1',
+          reviewer_id: 'reviewer-1',
+          reviewed_user_id: 'user-1',
+          rating: 3,
+          comment: 'Average',
+          created_at: '2024-01-01',
+          updated_at: '2024-01-01',
+          job: { id: 'job-1', title: 'Gardening' },
+          reviewer: { username: 'alice', id: 'reviewer-1', first_name: 'Alice', last_name: 'Smith', bio: null },
+          reviewed_user: { username: 'bob', id: 'user-1', first_name: 'Bob', last_name: 'Jones', bio: null },
+        },
+      ];
+      const mockClient = createSupabaseMock({
+        from: {
+          reviews: { select: reviews },
+        },
+      });
+      mockServerSupabaseClient.mockResolvedValue(mockClient);
+
+      const result = await handler(createEvent());
+      expect(result.reviews).toHaveLength(1);
+      expect(result.reviews[0].reviewer_first_name).toBe('Alice');
+    });
+
+    it('returns empty reviews array when none exist', async () => {
+      const mockClient = createSupabaseMock({
+        from: {
+          reviews: { select: [] },
+        },
+      });
+      mockServerSupabaseClient.mockResolvedValue(mockClient);
+
+      const result = await handler(createEvent());
+      expect(result.reviews).toEqual([]);
     });
   });
 });

@@ -62,7 +62,7 @@ describe('GET /api/public/stats', () => {
 
     expect(result).toHaveProperty('jobs_completed_this_week');
     expect(result).toHaveProperty('jobs_posted_today');
-    expect(result).toHaveProperty('escrow_protected_payments');
+    expect(result).toHaveProperty('secure_conversations');
   });
 
   it('returns numeric values for all stats', async () => {
@@ -70,7 +70,7 @@ describe('GET /api/public/stats', () => {
 
     expect(typeof result.jobs_completed_this_week).toBe('number');
     expect(typeof result.jobs_posted_today).toBe('number');
-    expect(typeof result.escrow_protected_payments).toBe('number');
+    expect(typeof result.secure_conversations).toBe('number');
   });
 
   it('throws 500 when Supabase config is missing', async () => {

@@ -46,46 +46,22 @@ FROM information_schema.columns
 WHERE table_schema = 'public' AND table_name = 'reviews'
 ORDER BY ordinal_position;
 
-SELECT '=== COLUMNS: payments ===' AS section;
-SELECT column_name, data_type, is_nullable, column_default
-FROM information_schema.columns
-WHERE table_schema = 'public' AND table_name = 'payments'
-ORDER BY ordinal_position;
-
 SELECT '=== COLUMNS: payment_methods ===' AS section;
 SELECT column_name, data_type, is_nullable, column_default
 FROM information_schema.columns
 WHERE table_schema = 'public' AND table_name = 'payment_methods'
 ORDER BY ordinal_position;
 
-SELECT '=== COLUMNS: payment_events ===' AS section;
+SELECT '=== COLUMNS: payment_transactions ===' AS section;
 SELECT column_name, data_type, is_nullable, column_default
 FROM information_schema.columns
-WHERE table_schema = 'public' AND table_name = 'payment_events'
+WHERE table_schema = 'public' AND table_name = 'payment_transactions'
 ORDER BY ordinal_position;
 
 SELECT '=== COLUMNS: job_categories ===' AS section;
 SELECT column_name, data_type, is_nullable, column_default
 FROM information_schema.columns
 WHERE table_schema = 'public' AND table_name = 'job_categories'
-ORDER BY ordinal_position;
-
-SELECT '=== COLUMNS: conversations ===' AS section;
-SELECT column_name, data_type, is_nullable, column_default
-FROM information_schema.columns
-WHERE table_schema = 'public' AND table_name = 'conversations'
-ORDER BY ordinal_position;
-
-SELECT '=== COLUMNS: identity_verifications ===' AS section;
-SELECT column_name, data_type, is_nullable, column_default
-FROM information_schema.columns
-WHERE table_schema = 'public' AND table_name = 'identity_verifications'
-ORDER BY ordinal_position;
-
-SELECT '=== COLUMNS: rtw_verifications ===' AS section;
-SELECT column_name, data_type, is_nullable, column_default
-FROM information_schema.columns
-WHERE table_schema = 'public' AND table_name = 'rtw_verifications'
 ORDER BY ordinal_position;
 
 -- 3. CONSTRAINTS
@@ -146,16 +122,8 @@ SELECT 'messages', COUNT(*) FROM messages
 UNION ALL
 SELECT 'reviews', COUNT(*) FROM reviews
 UNION ALL
-SELECT 'payments', COUNT(*) FROM payments
-UNION ALL
 SELECT 'payment_methods', COUNT(*) FROM payment_methods
 UNION ALL
-SELECT 'payment_events', COUNT(*) FROM payment_events
+SELECT 'payment_transactions', COUNT(*) FROM payment_transactions
 UNION ALL
-SELECT 'job_categories', COUNT(*) FROM job_categories
-UNION ALL
-SELECT 'conversations', COUNT(*) FROM conversations
-UNION ALL
-SELECT 'identity_verifications', COUNT(*) FROM identity_verifications
-UNION ALL
-SELECT 'rtw_verifications', COUNT(*) FROM rtw_verifications;
+SELECT 'job_categories', COUNT(*) FROM job_categories;

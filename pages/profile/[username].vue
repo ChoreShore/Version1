@@ -66,7 +66,7 @@
           </button>
           <template v-else>
             <button class="profile-btn profile-btn--primary" @click="handleMessage">
-              {{ user ? 'Message' : 'Sign up to message' }}
+              {{ user ? 'Message' : 'Sign up to apply' }}
             </button>
             <button class="profile-btn profile-btn--secondary" title="Save (coming soon)">
               <span>❤️</span> Save
@@ -203,7 +203,7 @@
           <div v-if="!isOwnProfile" class="profile-sidebar__box profile-sidebar__box--cta">
             <h3 class="profile-sidebar__title">💼 Work with {{ data.profile.first_name || data.profile.username }}</h3>
             <button class="profile-btn profile-btn--primary profile-btn--block" @click="handleMessage">
-              {{ user ? 'Message' : 'Sign up to hire or apply' }}
+              {{ user ? 'Message' : 'Sign up to apply' }}
             </button>
           </div>
         </aside>

@@ -28,7 +28,7 @@ describe('GET /api/payments/index - Data Leakage Fix', () => {
 
       mockFetch.mockResolvedValue(response);
 
-      const result = await $fetch('/api/payments');
+      const result = await $fetch('/api/payments') as any;
 
       expect(result.payments).toHaveLength(1);
       expect(result.payments[0].amount).toBe(1150);
@@ -55,7 +55,7 @@ describe('GET /api/payments/index - Data Leakage Fix', () => {
 
       mockFetch.mockResolvedValue(response);
 
-      const result = await $fetch('/api/payments');
+      const result = await $fetch('/api/payments') as any;
 
       expect(result.payments[0].payout_amount).toBeNull();
     });
@@ -81,7 +81,7 @@ describe('GET /api/payments/index - Data Leakage Fix', () => {
 
       mockFetch.mockResolvedValue(response);
 
-      const result = await $fetch('/api/payments');
+      const result = await $fetch('/api/payments') as any;
 
       expect(result.payments).toHaveLength(1);
       expect(result.payments[0].amount).toBe(1000);
@@ -108,7 +108,7 @@ describe('GET /api/payments/index - Data Leakage Fix', () => {
 
       mockFetch.mockResolvedValue(response);
 
-      const result = await $fetch('/api/payments');
+      const result = await $fetch('/api/payments') as any;
 
       expect(result.payments[0].platform_fee).toBeNull();
     });
@@ -132,7 +132,7 @@ describe('GET /api/payments/index - Data Leakage Fix', () => {
 
       mockFetch.mockResolvedValue(response);
 
-      const result = await $fetch('/api/payments');
+      const result = await $fetch('/api/payments') as any;
 
       // Worker sees payout_amount as amount, not escrow_amount
       expect(result.payments[0].amount).toBe(1000);
@@ -160,7 +160,7 @@ describe('GET /api/payments/index - Data Leakage Fix', () => {
 
       mockFetch.mockResolvedValue(response);
 
-      const result = await $fetch('/api/payments');
+      const result = await $fetch('/api/payments') as any;
 
       expect(result.payments[0].type).toBe('payment_made');
     });
@@ -184,7 +184,7 @@ describe('GET /api/payments/index - Data Leakage Fix', () => {
 
       mockFetch.mockResolvedValue(response);
 
-      const result = await $fetch('/api/payments');
+      const result = await $fetch('/api/payments') as any;
 
       expect(result.payments[0].type).toBe('payment_received');
     });
@@ -210,7 +210,7 @@ describe('GET /api/payments/index - Data Leakage Fix', () => {
 
       mockFetch.mockResolvedValue(response);
 
-      const result = await $fetch('/api/payments');
+      const result = await $fetch('/api/payments') as any;
 
       expect(result.payments[0].status).toBe('completed');
     });
@@ -234,7 +234,7 @@ describe('GET /api/payments/index - Data Leakage Fix', () => {
 
       mockFetch.mockResolvedValue(response);
 
-      const result = await $fetch('/api/payments');
+      const result = await $fetch('/api/payments') as any;
 
       expect(result.payments[0].status).toBe('failed');
     });
@@ -258,7 +258,7 @@ describe('GET /api/payments/index - Data Leakage Fix', () => {
 
       mockFetch.mockResolvedValue(response);
 
-      const result = await $fetch('/api/payments');
+      const result = await $fetch('/api/payments') as any;
 
       expect(result.payments[0].status).toBe('pending');
     });
@@ -308,7 +308,7 @@ describe('GET /api/payments/index - Data Leakage Fix', () => {
 
       mockFetch.mockResolvedValue(response);
 
-      const result = await $fetch('/api/payments');
+      const result = await $fetch('/api/payments') as any;
 
       expect(result.payments[0].created_at).toBe('2025-01-02T00:00:00Z');
       expect(result.payments[1].created_at).toBe('2025-01-01T00:00:00Z');
@@ -346,17 +346,17 @@ describe('GET /api/payments/index - Data Leakage Fix', () => {
 
       mockFetch.mockResolvedValue(response);
 
-      const result = await $fetch('/api/payments');
+      const result = await $fetch('/api/payments') as any;
 
       expect(result.payments).toHaveLength(2);
       
       // Employer contract
-      const employerContract = result.payments.find(p => p.type === 'payment_made');
+      const employerContract = result.payments.find((p: any) => p.type === 'payment_made');
       expect(employerContract?.platform_fee).toBe(150);
       expect(employerContract?.payout_amount).toBeNull();
       
       // Worker contract
-      const workerContract = result.payments.find(p => p.type === 'payment_received');
+      const workerContract = result.payments.find((p: any) => p.type === 'payment_received');
       expect(workerContract?.platform_fee).toBeNull();
       expect(workerContract?.payout_amount).toBe(1000);
     });

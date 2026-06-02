@@ -75,7 +75,7 @@ describe('Reviews Routes', () => {
         from: {
           jobs: { single: { employer_id: 'a1b2c3d4-e5f6-4aaa-abcd-ef1234567899' } },
           applications: { maybeSingle: { worker_id: 'a1b2c3d4-e5f6-4aaa-abcd-ef1234567898', status: 'completed' } },
-          reviews: { insertSingle: { review_id: 'rev-1', job_id: jobId, reviewer_id: 'a1b2c3d4-e5f6-4aaa-abcd-ef1234567899', reviewed_user_id: 'a1b2c3d4-e5f6-4aaa-abcd-ef1234567898', rating: 5, comment: 'Great worker, highly recommended!!', created_at: '2024-01-01', updated_at: '2024-01-01' } },
+          reviews: { insertSingle: { id: 'rev-1', job_id: jobId, reviewer_id: 'a1b2c3d4-e5f6-4aaa-abcd-ef1234567899', reviewed_user_id: 'a1b2c3d4-e5f6-4aaa-abcd-ef1234567898', rating: 5, comment: 'Great worker, highly recommended!!', created_at: '2024-01-01', updated_at: '2024-01-01' } },
         },
       });
       mockServerSupabaseClient.mockResolvedValue(mockClient);
@@ -143,6 +143,109 @@ describe('Reviews Routes', () => {
       } catch (error: any) {
         expect(error.statusCode).toBe(409);
         expect(error.statusMessage).toBe('You have already reviewed this user for this job');
+      }
+    });
+
+    it('creates a review as worker successfully', async () => {
+      const jobId = 'a1b2c3d4-e5f6-4aaa-abcd-ef1234567890';
+      const payload = {
+        job_id: jobId,
+        reviewed_user_id: 'a1b2c3d4-e5f6-4aaa-abcd-ef1234567899',
+        rating: 4,
+        comment: 'Great employer, clear instructions!',
+      };
+
+      const mockClient = createSupabaseMock({
+        from: {
+          jobs: { single: { employer_id: 'a1b2c3d4-e5f6-4aaa-abcd-ef1234567899' } },
+          applications: { maybeSingle: { worker_id: 'a1b2c3d4-e5f6-4aaa-abcd-ef1234567898', status: 'completed' } },
+          reviews: { insertSingle: { id: 'rev-2', job_id: jobId, reviewer_id: 'a1b2c3d4-e5f6-4aaa-abcd-ef1234567898', reviewed_user_id: 'a1b2c3d4-e5f6-4aaa-abcd-ef1234567899', rating: 4, comment: 'Great employer, clear instructions!', created_at: '2024-01-01', updated_at: '2024-01-01' } },
+        },
+      });
+      mockServerSupabaseClient.mockResolvedValue(mockClient);
+
+      mockServerSupabaseUser.mockResolvedValue({ id: 'a1b2c3d4-e5f6-4aaa-abcd-ef1234567898', email: 'worker@example.com' });
+
+      const result = await handler(createEvent({ method: 'POST', body: payload }));
+      expect(result.review.rating).toBe(4);
+    });
+
+    it('throws 403 when employer tries to review non-worker', async () => {
+      const jobId = 'a1b2c3d4-e5f6-4aaa-abcd-ef1234567890';
+      const payload = {
+        job_id: jobId,
+        reviewed_user_id: 'a1b2c3d4-e5f6-4aaa-abcd-ef1234567897',
+        rating: 3,
+        comment: 'Not the right worker',
+      };
+
+      const mockClient = createSupabaseMock({
+        from: {
+          jobs: { single: { employer_id: 'a1b2c3d4-e5f6-4aaa-abcd-ef1234567899' } },
+          applications: { maybeSingle: null },
+        },
+      });
+      mockServerSupabaseClient.mockResolvedValue(mockClient);
+
+      try {
+        await handler(createEvent({ method: 'POST', body: payload }));
+        expect.fail('Should have thrown');
+      } catch (error: any) {
+        expect(error.statusCode).toBe(403);
+        expect(error.statusMessage).toBe('You can only review workers who completed your job');
+      }
+    });
+
+    it('throws 403 when worker tries to review wrong employer', async () => {
+      const jobId = 'a1b2c3d4-e5f6-4aaa-abcd-ef1234567890';
+      const payload = {
+        job_id: jobId,
+        reviewed_user_id: 'a1b2c3d4-e5f6-4aaa-abcd-ef1234567897',
+        rating: 3,
+        comment: 'Wrong employer',
+      };
+
+      const mockClient = createSupabaseMock({
+        from: {
+          jobs: { single: { employer_id: 'a1b2c3d4-e5f6-4aaa-abcd-ef1234567899' } },
+          applications: { maybeSingle: { worker_id: 'a1b2c3d4-e5f6-4aaa-abcd-ef1234567898', status: 'completed' } },
+        },
+      });
+      mockServerSupabaseClient.mockResolvedValue(mockClient);
+
+      mockServerSupabaseUser.mockResolvedValue({ id: 'a1b2c3d4-e5f6-4aaa-abcd-ef1234567898', email: 'worker@example.com' });
+
+      try {
+        await handler(createEvent({ method: 'POST', body: payload }));
+        expect.fail('Should have thrown');
+      } catch (error: any) {
+        expect(error.statusCode).toBe(403);
+        expect(error.statusMessage).toBe('You can only review the employer for this job');
+      }
+    });
+
+    it('throws 404 when job not found', async () => {
+      const jobId = 'a1b2c3d4-e5f6-4aaa-abcd-ef1234567890';
+      const payload = {
+        job_id: jobId,
+        reviewed_user_id: 'a1b2c3d4-e5f6-4aaa-abcd-ef1234567898',
+        rating: 5,
+        comment: 'Great job!',
+      };
+
+      const mockClient = createSupabaseMock({
+        from: {
+          jobs: { single: null },
+        },
+      });
+      mockServerSupabaseClient.mockResolvedValue(mockClient);
+
+      try {
+        await handler(createEvent({ method: 'POST', body: payload }));
+        expect.fail('Should have thrown');
+      } catch (error: any) {
+        expect(error.statusCode).toBe(404);
+        expect(error.statusMessage).toBe('Job not found');
       }
     });
   });

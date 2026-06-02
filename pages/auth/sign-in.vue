@@ -182,7 +182,7 @@ const checkPhotoAndRedirect = async () => {
   try {
     const { data, error } = await supabase
       .from('profiles')
-      .select('photo_url')
+      .select('photo_url, roles, onboarding_completed')
       .eq('id', user.value.id)
       .single();
 
@@ -191,12 +191,22 @@ const checkPhotoAndRedirect = async () => {
       return;
     }
 
+    const profile = data as any;
+
     // Redirect to complete profile if no photo
-    if (!data.photo_url) {
+    if (!profile.photo_url) {
       navigateTo('/auth/complete-profile');
-    } else {
-      navigateTo('/dashboard');
+      return;
     }
+
+    // Redirect workers to onboarding if not completed
+    const roles = profile.roles || [];
+    if (roles.includes('worker') && !profile.onboarding_completed) {
+      navigateTo('/auth/onboarding');
+      return;
+    }
+
+    navigateTo('/dashboard');
   } catch (err) {
     // If there's any error checking for photo, just go to dashboard
     navigateTo('/dashboard');

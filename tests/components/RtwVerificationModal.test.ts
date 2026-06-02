@@ -192,7 +192,7 @@ describe('RtwVerificationModal — form validation logic', () => {
 
     it('handles null expiry date gracefully', () => {
       const iso: string | null = null;
-      const display = iso ? iso.split('-').reverse().join('/') : null;
+      const display = iso ? (iso as string).split('-').reverse().join('/') : null;
       expect(display).toBeNull();
     });
   });

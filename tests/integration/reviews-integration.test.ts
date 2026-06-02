@@ -62,7 +62,7 @@ describe('Reviews Integration', () => {
         reviews: {
           maybeSingle: null,
           insertSingle: {
-            review_id: reviewId,
+            id: reviewId,
             job_id: jobId,
             reviewer_id: 'employer-1',
             reviewed_user_id: workerId,
@@ -92,13 +92,14 @@ describe('Reviews Integration', () => {
   it('lists received reviews end-to-end', async () => {
     const reviews = [
       {
-        review_id: 'rev-1',
+        id: 'rev-1',
         job_id: 'a1b2c3d4-e5f6-4aaa-abcd-ef1234567890',
         reviewer_id: 'reviewer-1',
         reviewed_user_id: 'employer-1',
         rating: 5,
         comment: 'Great employer!',
         created_at: '2024-01-01',
+        updated_at: '2024-01-01',
         job: { id: 'a1b2c3d4-e5f6-4aaa-abcd-ef1234567890', title: 'Gardening' },
         reviewer: { username: 'alice', id: 'reviewer-1', first_name: 'Alice', last_name: 'Smith', bio: null },
         reviewed_user: { username: 'bob', id: 'employer-1', first_name: 'Bob', last_name: 'Jones', bio: null },
@@ -124,13 +125,14 @@ describe('Reviews Integration', () => {
   it('lists given reviews end-to-end', async () => {
     const reviews = [
       {
-        review_id: 'rev-2',
+        id: 'rev-2',
         job_id: 'a1b2c3d4-e5f6-4aaa-abcd-ef1234567890',
         reviewer_id: 'employer-1',
         reviewed_user_id: 'worker-1',
         rating: 4,
         comment: 'Good worker',
         created_at: '2024-01-02',
+        updated_at: '2024-01-02',
         job: { id: 'a1b2c3d4-e5f6-4aaa-abcd-ef1234567890', title: 'Cleaning' },
         reviewer: { username: 'alice', id: 'employer-1', first_name: 'Alice', last_name: 'Smith', bio: null },
         reviewed_user: { username: 'bob', id: 'worker-1', first_name: 'Bob', last_name: 'Jones', bio: null },

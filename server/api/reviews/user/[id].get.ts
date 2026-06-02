@@ -4,24 +4,26 @@ import { rateLimiters } from '~/server/utils/rateLimit';
 import { logDetailedError } from '~/server/utils/logger';
 
 const userReviewSelect = `
-  review_id,
+  id,
   job_id,
   reviewer_id,
   reviewed_user_id,
   rating,
   comment,
   created_at,
+  updated_at,
   job:jobs(id, title),
   reviewer:profiles!reviews_reviewer_id_fkey(username, first_name, last_name)
 `;
 
 function mapUserReview(raw: any) {
   return {
-    id: raw.review_id,
+    id: raw.id,
     job_id: raw.job_id,
     rating: raw.rating,
     comment: raw.comment,
     created_at: raw.created_at,
+    updated_at: raw.updated_at,
     job_title: raw.job?.title ?? null,
     reviewer_username: raw.reviewer?.username ?? null,
     reviewer_first_name: raw.reviewer?.first_name ?? null,

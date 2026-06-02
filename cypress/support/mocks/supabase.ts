@@ -207,12 +207,12 @@ export const mockSupabaseResponses = {
 export const mockAuthFlow = (scenario: 'success' | 'invalidCredentials' | 'unconfirmed' | 'emailExists') => {
   cy.intercept('POST', '**/auth/v1/signup', {
     statusCode: scenario === 'success' ? 200 : 400,
-    body: mockSupabaseResponses.auth.signUp[scenario]
+    body: (mockSupabaseResponses.auth.signUp as any)[scenario]
   }).as('signUp')
 
   cy.intercept('POST', '**/auth/v1/token?grant_type=password', {
     statusCode: scenario === 'success' ? 200 : 400,
-    body: mockSupabaseResponses.auth.signIn[scenario]
+    body: (mockSupabaseResponses.auth.signIn as any)[scenario]
   }).as('signIn')
 }
 
