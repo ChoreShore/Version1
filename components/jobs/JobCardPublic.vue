@@ -1,22 +1,15 @@
 <template>
   <article class="job-card">
-    <div class="job-card__header">
+    <div v-if="topPill" class="job-card__header">
       <StatusPill
-        v-if="topPill"
         :label="topPill.label"
         :variant="topPill.variant"
       />
-      <button
-        class="job-card__save"
-        :class="{ saved: isSaved }"
-        @click="$emit('toggle-save', job.id)"
-        aria-label="Save job"
-      >
-        <Heart :size="20" :class="{ filled: isSaved }" />
-      </button>
     </div>
 
-    <h3 class="job-card__title">{{ job.title }}</h3>
+    <NuxtLink :to="`/jobs/${job.id}`" class="job-card__title-link">
+      <h3 class="job-card__title">{{ job.title }}</h3>
+    </NuxtLink>
     <p class="job-card__price">
       {{ job.budget_type === 'hourly' ? `£${job.budget_amount ?? 0}/hr` : `£${job.budget_amount?.toLocaleString() ?? '0'}` }}
     </p>
@@ -35,7 +28,10 @@
       />
     </div>
 
-    <NuxtLink to="/auth/sign-up" class="btn btn--full btn--card">
+    <NuxtLink :to="`/jobs/${job.id}`" class="btn btn--primary btn--full btn--card">
+      View job details <ArrowRight :size="16" />
+    </NuxtLink>
+    <NuxtLink to="/auth/sign-up" class="btn btn--secondary btn--full btn--small">
       Sign up to apply
     </NuxtLink>
   </article>
@@ -46,17 +42,10 @@ import { computed } from 'vue';
 import type { PublicJobPreviewInput } from '~/schemas/job';
 import StatusPill from '~/components/primitives/StatusPill.vue';
 import InfoBadge from '~/components/primitives/InfoBadge.vue';
-import { Heart } from '@lucide/vue';
+import { ArrowRight } from '@lucide/vue';
 
-interface Props {
+const props = defineProps<{
   job: PublicJobPreviewInput & { is_urgent?: boolean };
-  isSaved?: boolean;
-}
-
-const props = defineProps<Props>();
-
-defineEmits<{
-  (e: 'toggle-save', jobId: string): void;
 }>();
 
 const topPill = computed(() => {
@@ -69,8 +58,8 @@ const topPill = computed(() => {
 
 <style scoped>
 .job-card {
-  background: var(--surface);
-  border: 1px solid var(--border);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
   border-radius: var(--radius-xl);
   padding: var(--space-4);
   display: flex;
@@ -90,40 +79,28 @@ const topPill = computed(() => {
   justify-content: space-between;
 }
 
-.job-card__save {
-  background: none;
-  border: none;
-  font-size: 20px;
-  cursor: pointer;
-  opacity: 0.5;
-  transition: opacity 120ms ease;
-  padding: 4px;
+.job-card__title-link {
+  text-decoration: none;
+  color: inherit;
 }
 
-.job-card__save:hover,
-.job-card__save.saved {
-  opacity: 1;
-}
-
-.job-card__save .filled {
-  fill: currentColor;
-  color: #ef4444;
+.job-card__title-link:hover .job-card__title {
+  color: var(--color-primary-600);
 }
 
 .job-card__title {
-  font-family: var(--font-display);
   font-size: var(--text-base);
   font-weight: 700;
   margin: 0;
   line-height: 1.3;
+  transition: color 120ms ease;
 }
 
 .job-card__price {
-  font-family: var(--font-display);
   font-size: var(--text-lg);
   font-weight: 800;
   margin: 0;
-  color: var(--text);
+  color: var(--color-text);
 }
 
 .job-card__meta {
@@ -131,12 +108,66 @@ const topPill = computed(() => {
   align-items: center;
   gap: var(--space-2);
   font-size: var(--text-xs);
-  color: var(--muted);
+  color: var(--color-text-muted);
 }
 
 .job-card__tags {
   display: flex;
   flex-wrap: wrap;
+  gap: var(--space-1);
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   gap: 6px;
+  padding: 10px 18px;
+  border-radius: var(--radius-md);
+  font-weight: 600;
+  font-size: var(--text-sm);
+  text-decoration: none;
+  border: none;
+  cursor: pointer;
+  transition: background 120ms ease, transform 80ms ease;
+}
+
+.btn:hover {
+  transform: translateY(-1px);
+}
+
+.btn--primary {
+  background: var(--color-primary-600);
+  color: var(--color-white);
+}
+
+.btn--primary:hover {
+  background: var(--color-primary-700);
+}
+
+.btn--full {
+  width: 100%;
+}
+
+.btn--card {
+  margin-top: auto;
+  border-radius: var(--radius-lg);
+  padding: 14px;
+}
+
+.btn--small {
+  padding: 8px 14px;
+  font-size: var(--text-xs);
+  border-radius: var(--radius-md);
+}
+
+.btn--secondary {
+  background: var(--color-surface-muted);
+  color: var(--color-text);
+  border: 1px solid var(--color-border);
+}
+
+.btn--secondary:hover {
+  background: var(--color-hover);
 }
 </style>

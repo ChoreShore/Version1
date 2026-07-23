@@ -56,13 +56,13 @@ describe('Payout Routes', () => {
       handler = imported;
     });
 
-    it('processes payout for active contract with idempotency key', async () => {
+    it('processes payout for completed contract with idempotency key', async () => {
       const contractId = 'a1b2c3d4-e5f6-4aaa-abcd-ef1234567890';
       const jobId = 'a1b2c3d4-e5f6-4aaa-abcd-ef1234567891';
       const mockClient = createSupabaseMock({
         from: {
           jobs: { single: { employer_id: 'employer-1' } },
-          contracts: { single: { id: contractId, employer_id: 'employer-1', worker_id: 'worker-1', job_id: jobId, payout_amount: 100, payout_status: 'pending', status: 'active' } },
+          contracts: { single: { id: contractId, employer_id: 'employer-1', worker_id: 'worker-1', job_id: jobId, payout_amount: 100, payout_status: 'pending', status: 'completed' } },
           payment_transactions: {
             maybeSingle: null,
           },
@@ -85,7 +85,7 @@ describe('Payout Routes', () => {
       const mockClient = createSupabaseMock({
         from: {
           jobs: { single: { employer_id: 'employer-1' } },
-          contracts: { single: { id: contractId, employer_id: 'employer-1', worker_id: 'worker-1', job_id: jobId, payout_amount: 100, payout_status: 'pending', status: 'active' } },
+          contracts: { single: { id: contractId, employer_id: 'employer-1', worker_id: 'worker-1', job_id: jobId, payout_amount: 100, payout_status: 'pending', status: 'completed' } },
           payment_transactions: {
             maybeSingle: { status: 'processed', amount: 100, occurred_at: '2024-01-01' },
           },
@@ -101,13 +101,13 @@ describe('Payout Routes', () => {
       expect(result.status).toBe('processed');
     });
 
-    it('rejects payout for non-active contract', async () => {
+    it('rejects payout for non-completed contract', async () => {
       const contractId = 'a1b2c3d4-e5f6-4aaa-abcd-ef1234567890';
       const jobId = 'a1b2c3d4-e5f6-4aaa-abcd-ef1234567891';
       const mockClient = createSupabaseMock({
         from: {
           jobs: { single: { employer_id: 'employer-1' } },
-          contracts: { single: { id: contractId, employer_id: 'employer-1', worker_id: 'worker-1', job_id: jobId, payout_amount: 100, payout_status: 'pending', status: 'pending' } },
+          contracts: { single: { id: contractId, employer_id: 'employer-1', worker_id: 'worker-1', job_id: jobId, payout_amount: 100, payout_status: 'pending', status: 'active' } },
         },
       });
       mockServerSupabaseClient.mockResolvedValue(mockClient);
@@ -119,7 +119,7 @@ describe('Payout Routes', () => {
         expect.fail('Should have thrown');
       } catch (error: any) {
         expect(error.statusCode).toBe(400);
-        expect(error.statusMessage).toContain('Only active contracts');
+        expect(error.statusMessage).toContain('Only completed contracts');
       }
     });
 

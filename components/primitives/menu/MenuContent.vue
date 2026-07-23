@@ -1,27 +1,3 @@
-<template>
-  <Teleport to="body">
-    <transition name="menu-fade">
-      <div
-        v-if="isOpen"
-        class="menu__content-wrapper"
-        @pointerdown.self="close"
-      >
-        <div
-          ref="contentEl"
-          class="menu__content"
-          role="menu"
-          :id="contentId"
-          :aria-labelledby="triggerId"
-          tabindex="-1"
-          :style="style"
-        >
-          <slot />
-        </div>
-      </div>
-    </transition>
-  </Teleport>
-</template>
-
 <script setup lang="ts">
 import { useMenuContext } from './context';
 
@@ -73,6 +49,30 @@ onBeforeUnmount(() => {
   window.removeEventListener('scroll', updatePosition, true);
 });
 </script>
+
+<template>
+  <Teleport to="body">
+    <transition name="menu-fade">
+      <div
+        v-if="isOpen"
+        class="menu__content-wrapper"
+        @pointerdown.self="close"
+      >
+        <div
+          ref="contentEl"
+          class="menu__content"
+          role="menu"
+          :id="contentId"
+          :aria-labelledby="triggerId"
+          tabindex="-1"
+          :style="style"
+        >
+          <slot />
+        </div>
+      </div>
+    </transition>
+  </Teleport>
+</template>
 
 <style scoped>
 .menu__content-wrapper {

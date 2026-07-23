@@ -1,7 +1,22 @@
 <template>
   <div class="photo-upload">
     <div v-if="currentPhotoUrl" class="photo-upload__preview">
-      <img :src="currentPhotoUrl" alt="Profile photo" class="photo-upload__image" />
+      <div v-if="imageError" class="photo-upload__image photo-upload__image--fallback" aria-label="Profile photo unavailable">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M20 21v-8a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8"/>
+          <path d="M4 16s1.5-2 4-2 4 2 6-1 2-3 2-3"/>
+          <circle cx="12" cy="8" r="4"/>
+          <path d="M18 8h.01"/>
+          <path d="M2 2l20 20"/>
+        </svg>
+      </div>
+      <img
+        v-else
+        :src="currentPhotoUrl"
+        alt="Profile photo"
+        class="photo-upload__image"
+        @error="imageError = true"
+      />
       <div class="photo-upload__actions">
         <button
           type="button"
@@ -87,12 +102,14 @@
 import { ref, computed } from 'vue';
 import { validatePhotoUpload } from '~/schemas/profile';
 
-interface Props {
+export interface PhotoUploadProps {
+  /** URL of existing photo */
   currentPhotoUrl?: string | null;
+  /** Whether a photo is required */
   required?: boolean;
 }
 
-const props = withDefaults(defineProps<Props>(), {
+const props = withDefaults(defineProps<PhotoUploadProps>(), {
   currentPhotoUrl: null,
   required: false
 });
@@ -111,6 +128,7 @@ const uploading = ref(false);
 const uploadProgress = ref(0);
 const isDragOver = ref(false);
 const error = ref<string | null>(null);
+const imageError = ref(false);
 
 const triggerFileInput = () => {
   fileInput.value?.click();
@@ -129,6 +147,7 @@ const validateFile = (file: File): boolean => {
 };
 
 const createPreview = (file: File) => {
+  imageError.value = false;
   const reader = new FileReader();
   reader.onload = (e) => {
     previewUrl.value = e.target?.result as string;
@@ -184,6 +203,7 @@ const handleUpload = async () => {
     uploadProgress.value = 100;
 
     if (response.success && response.photoUrl) {
+      imageError.value = false;
       emit('uploadSuccess', response.photoUrl);
       selectedFile.value = null;
       previewUrl.value = null;
@@ -250,6 +270,20 @@ const handleCancel = () => {
   border: 2px solid var(--color-border);
 }
 
+.photo-upload__image--fallback {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--color-surface-muted);
+  color: var(--color-text-muted);
+  box-sizing: border-box;
+}
+
+.photo-upload__image--fallback svg {
+  width: 48px;
+  height: 48px;
+}
+
 .photo-upload__actions {
   display: flex;
   gap: var(--space-2);
@@ -273,7 +307,7 @@ const handleCancel = () => {
 .photo-upload__button--upload,
 .photo-upload__button--change {
   background: var(--color-primary-600);
-  color: white;
+  color: var(--color-white);
 }
 
 .photo-upload__button--upload:hover:not(:disabled),
@@ -283,7 +317,7 @@ const handleCancel = () => {
 
 .photo-upload__button--delete {
   background: var(--color-danger-600);
-  color: white;
+  color: var(--color-white);
 }
 
 .photo-upload__button--delete:hover:not(:disabled) {
@@ -325,8 +359,8 @@ const handleCancel = () => {
 }
 
 .photo-upload__icon {
-  width: 48px;
-  height: 48px;
+  width: var(--space-12);
+  height: var(--space-12);
   color: var(--color-text-muted);
 }
 

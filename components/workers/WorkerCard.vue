@@ -37,8 +37,11 @@
       <InfoBadge v-if="worker.average_rating && worker.average_rating >= 4.8" label="Top Rated" variant="success" aria-label="Top rated worker with 4.8+ star rating" />
     </div>
 
-    <NuxtLink :to="`/profile/${worker.username}`" class="worker-card__cta">
+    <NuxtLink v-if="user" :to="`/profile/${worker.username}`" class="worker-card__cta">
       View Profile
+    </NuxtLink>
+    <NuxtLink v-else to="/auth/sign-up" class="worker-card__cta worker-card__cta--primary">
+      Sign up to contact
     </NuxtLink>
   </article>
 </template>
@@ -46,6 +49,9 @@
 <script setup lang="ts">
 import InfoBadge from '~/components/primitives/InfoBadge.vue';
 import { Heart, Star, Check, MapPin } from '@lucide/vue';
+import { useSupabaseUser } from '#imports';
+
+const user = useSupabaseUser();
 
 defineProps<{
   worker: {
@@ -213,6 +219,7 @@ defineEmits<{
   margin: 0;
   display: -webkit-box;
   -webkit-line-clamp: 3;
+  line-clamp: 3;
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
@@ -249,5 +256,15 @@ defineEmits<{
   outline: 2px solid var(--color-teal);
   outline-offset: 2px;
   border-radius: 2px;
+}
+
+.worker-card__cta--primary {
+  background: var(--color-primary-600);
+  color: var(--color-white);
+  border-color: var(--color-primary-600);
+}
+
+.worker-card__cta--primary:hover {
+  background: var(--color-primary-700);
 }
 </style>

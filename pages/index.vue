@@ -1,30 +1,27 @@
 <template>
   <div class="homepage">
-    <!-- Category Nav -->
-    <nav class="category-nav" aria-label="Job category filters">
-      <NuxtLink
-        v-for="cat in categories"
-        :key="cat.id"
-        :to="`/jobs/public?category=${cat.id}`"
-        class="category-nav__item"
-        :aria-label="`Filter by ${cat.name} jobs`"
-      >
-        <component :is="catIcon(cat.name)" class="category-nav__icon" :size="16" />
-        <span class="category-nav__label">{{ cat.name }}</span>
-      </NuxtLink>
-    </nav>
-
     <!-- Hero Section -->
     <section class="hero">
-      <div class="hero-scroll">
-        <div class="hero-card hero-card--dark">
-          <div class="hero-card__icon"><Zap :size="28" /></div>
-          <h2 class="hero-card__title">Get help</h2>
-          <p class="hero-card__text">Post a job and get responses within minutes</p>
-          <NuxtLink to="/jobs/new" class="btn btn--on-dark" aria-label="Post a new job">
-            <span class="btn__plus">+</span> Post a job
-          </NuxtLink>
+      <!-- Stats Bar inside hero -->
+      <div class="stats-bar">
+        <div class="stat-item">
+          <span class="stat-item__icon"><Star :size="18" /></span>
+          <span class="stat-item__value">{{ formatStat(stats?.jobs_completed_this_week) }}+</span>
+          <span class="stat-item__label">jobs completed this week</span>
         </div>
+        <div class="stat-item">
+          <span class="stat-item__icon"><Flame :size="18" /></span>
+          <span class="stat-item__value">{{ formatStat(stats?.jobs_posted_today) }}+</span>
+          <span class="stat-item__label">jobs posted today</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-item__icon"><MessageCircle :size="18" /></span>
+          <span class="stat-item__value">{{ formatStat(stats?.secure_conversations) }}+</span>
+          <span class="stat-item__label">Secure messaging</span>
+        </div>
+      </div>
+
+      <div class="hero-scroll">
         <div class="hero-card hero-card--light">
           <div class="hero-card__icon"><Circle :size="28" /></div>
           <h2 class="hero-card__title">Find work</h2>
@@ -42,28 +39,16 @@
           </NuxtLink>
         </div>
       </div>
+
+      <!-- Social proof subheadline -->
+      <p class="hero-subline">
+        <Users :size="14" class="hero-subline__icon" />
+        Trusted by thousands of local workers and employers across the UK
+      </p>
+
       <div class="hero-scroll-hint" aria-hidden="true">
         <span class="scroll-hint__text">Swipe to see more</span>
         <ChevronRight :size="16" class="scroll-hint__icon" />
-      </div>
-    </section>
-
-    <!-- Stats Bar -->
-    <section class="stats-bar">
-      <div class="stat-item">
-        <span class="stat-item__icon"><Star :size="18" /></span>
-        <span class="stat-item__value">{{ formatStat(stats?.jobs_completed_this_week) }}+</span>
-        <span class="stat-item__label">jobs completed this week</span>
-      </div>
-      <div class="stat-item">
-        <span class="stat-item__icon"><Flame :size="18" /></span>
-        <span class="stat-item__value">{{ formatStat(stats?.jobs_posted_today) }}+</span>
-        <span class="stat-item__label">jobs posted today</span>
-      </div>
-      <div class="stat-item">
-        <span class="stat-item__icon"><MessageCircle :size="18" /></span>
-        <span class="stat-item__value">{{ formatStat(stats?.secure_conversations) }}+</span>
-        <span class="stat-item__label">Secure messaging</span>
       </div>
     </section>
 
@@ -90,7 +75,7 @@
         <NuxtLink to="/jobs/public" class="jobs-section__link">View all jobs →</NuxtLink>
       </div>
 
-      <div v-if="loading" class="job-grid">
+      <Carousel v-if="loading">
         <div v-for="n in 4" :key="`sk-${n}`" class="job-card skeleton">
           <LoadingSkeleton variant="block" height="20px" width="60px" class="skeleton__pill" />
           <LoadingSkeleton variant="block" height="24px" width="80%" class="skeleton__title" />
@@ -99,9 +84,9 @@
           <LoadingSkeleton variant="block" height="20px" width="50%" class="skeleton__tags" />
           <LoadingSkeleton variant="block" height="36px" width="100%" class="skeleton__cta" />
         </div>
-      </div>
+      </Carousel>
 
-      <div v-else-if="displayedJobs.length" class="job-grid">
+      <Carousel v-else-if="displayedJobs.length">
         <JobCardPublic
           v-for="job in displayedJobs"
           :key="job.id"
@@ -109,7 +94,7 @@
           :is-saved="isSaved(job.id)"
           @toggle-save="toggleSave"
         />
-      </div>
+      </Carousel>
 
       <div v-else class="empty-state">
         <p>No jobs available right now. Be the first to post one!</p>
@@ -128,9 +113,10 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue';
 import { useSupabaseUser } from '#imports';
-import { Zap, Circle, Users, Star, Flame, MessageCircle, Heart, Laptop, Brush, Truck, Hammer, Package, Home, MapPin, ChevronRight } from '@lucide/vue';
+import { Circle, Users, Star, Flame, MessageCircle, Laptop, Brush, Truck, Hammer, MapPin, ChevronRight } from '@lucide/vue';
 import JobCardPublic from '~/components/jobs/JobCardPublic.vue';
 import LoadingSkeleton from '~/components/primitives/LoadingSkeleton.vue';
+import Carousel from '~/components/primitives/Carousel.vue';
 import TrustSection from '~/components/sections/TrustSection.vue';
 import HowItWorksSection from '~/components/sections/HowItWorksSection.vue';
 import EarningSection from '~/components/sections/EarningSection.vue';
@@ -139,10 +125,15 @@ import LegalSection from '~/components/sections/LegalSection.vue';
 
 const user = useSupabaseUser();
 
-// Redirect authenticated users to dashboard
+// Redirect authenticated users to dashboard before rendering
+if (user.value) {
+  await navigateTo('/dashboard', { replace: true });
+}
+
+// Fallback: redirect if auth state resolves after setup
 watch(() => user.value, (u) => {
   if (u) navigateTo('/dashboard', { replace: true });
-}, { immediate: true });
+});
 
 definePageMeta({
   layout: 'public',
@@ -163,22 +154,8 @@ const { data: statsData } = await useAsyncData('homepage-stats', () =>
   jobsApi.getPublicStats()
 );
 
-const { data: categoriesData } = await useAsyncData('homepage-categories', () =>
-  jobsApi.listCategories().catch(() => ({ categories: [] }))
-);
-
 const allJobs = computed(() => jobsData.value?.jobs ?? []);
 const stats = computed(() => statsData.value ?? null);
-const categories = computed(() => categoriesData.value?.categories?.length ? categoriesData.value.categories : [
-  { id: 'cleaning', name: 'Cleaning' },
-  { id: 'moving', name: 'Moving' },
-  { id: 'handyman', name: 'Handyman' },
-  { id: 'pet-care', name: 'Pet Care' },
-  { id: 'delivery', name: 'Delivery' },
-  { id: 'remote', name: 'Remote' },
-  { id: 'care-support', name: 'Care Support' },
-  { id: 'creative', name: 'Creative' }
-]);
 const loading = computed(() => jobsPending.value);
 
 // Job filter composable
@@ -197,19 +174,6 @@ function getFilterIcon(iconName: string) {
     'hammer': Hammer
   };
   return iconMap[iconName] ?? Circle;
-}
-function catIcon(name: string) {
-  const iconMap: Record<string, any> = {
-    'Cleaning': Brush,
-    'Moving': Truck,
-    'Handyman': Hammer,
-    'Pet Care': Heart,
-    'Delivery': Package,
-    'Remote': Laptop,
-    'Care Support': Home,
-    'Creative': Zap
-  };
-  return iconMap[name] ?? Circle;
 }
 
 
@@ -243,7 +207,6 @@ function toggleSave(id: string) {
 .homepage {
   min-height: 100vh;
   background: var(--bg);
-  font-family: var(--font-body);
 }
 
 /* Header */
@@ -397,72 +360,6 @@ function toggleSave(id: string) {
   font-size: 16px;
 }
 
-/* Category Nav */
-.category-nav {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: var(--space-3) var(--space-4);
-  display: flex;
-  gap: var(--space-3);
-  overflow-x: auto;
-  scrollbar-width: thin;
-  scrollbar-color: var(--color-border) transparent;
-}
-
-.category-nav::-webkit-scrollbar {
-  height: 6px;
-}
-
-.category-nav::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-.category-nav::-webkit-scrollbar-thumb {
-  background-color: var(--color-border);
-  border-radius: 3px;
-}
-
-.category-nav::-webkit-scrollbar-thumb:hover {
-  background-color: var(--color-muted);
-}
-
-.category-nav__item {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  padding: 8px 14px;
-  border-radius: var(--radius-pill);
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
-  text-decoration: none;
-  color: var(--color-text);
-  font-size: var(--text-sm);
-  font-weight: 500;
-  white-space: nowrap;
-  transition: background 120ms ease, border-color 120ms ease, color 120ms ease;
-  cursor: pointer;
-  scroll-snap-align: start;
-  flex-shrink: 0;
-}
-
-.category-nav__item:hover {
-  background: var(--color-hover);
-  border-color: var(--color-muted);
-}
-
-.category-nav__item.active {
-  background: var(--color-hover);
-  border-color: var(--dark);
-  color: var(--dark);
-  font-weight: 600;
-}
-
-.category-nav__icon {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-}
-
 /* Hero */
 .hero {
   max-width: 1200px;
@@ -513,7 +410,6 @@ function toggleSave(id: string) {
 }
 
 .hero-card__title {
-  font-family: var(--font-display);
   font-size: var(--text-xl);
   font-weight: 800;
   margin: 0;
@@ -529,6 +425,21 @@ function toggleSave(id: string) {
 
 .hero-card--light .hero-card__text {
   color: var(--color-muted);
+}
+
+.hero-subline {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  margin: var(--space-6) 0 0;
+  font-size: var(--text-sm);
+  color: var(--color-text-subtle);
+  text-align: center;
+}
+
+.hero-subline__icon {
+  color: var(--color-primary-600);
 }
 
 .hero-card .btn {
@@ -606,9 +517,7 @@ function toggleSave(id: string) {
 
 /* Stats Bar */
 .stats-bar {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: var(--space-4);
+  padding: var(--space-4) 0 var(--space-6);
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: var(--space-4);
@@ -699,7 +608,6 @@ function toggleSave(id: string) {
 }
 
 .jobs-section__title {
-  font-family: var(--font-display);
   font-size: var(--text-xl);
   font-weight: 700;
   margin: 0;
@@ -721,12 +629,6 @@ function toggleSave(id: string) {
 }
 
 /* Job Grid */
-.job-grid {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: var(--space-4);
-}
-
 .job-card {
   background: var(--surface);
   border: 1px solid var(--border);
@@ -871,12 +773,6 @@ function toggleSave(id: string) {
 }
 
 /* Responsive */
-@media (max-width: 1024px) {
-  .job-grid {
-    grid-template-columns: repeat(2, 1fr);
-  }
-}
-
 @media (max-width: 768px) {
   .homepage-header__inner {
     flex-direction: column;
@@ -900,10 +796,6 @@ function toggleSave(id: string) {
   }
 
   .stats-bar {
-    grid-template-columns: 1fr;
-  }
-
-  .job-grid {
     grid-template-columns: 1fr;
   }
 }

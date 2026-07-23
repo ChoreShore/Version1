@@ -2,7 +2,6 @@ import { describe, it, expect, vi } from 'vitest';
 import { createError } from 'h3';
 import {
   ensureJobOwner,
-  ensureJobEmployer,
   ensureApplicationOwner,
   ensureContractParticipant,
   ensureMessageParticipant,
@@ -39,21 +38,6 @@ describe('Authorization Helper Functions', () => {
     it('should throw 403 when user does not own the job', async () => {
       const mockClient = createMockClient({ employer_id: 'other-user' });
       await expect(ensureJobOwner(mockClient as any, 'job-1', 'user-123')).rejects.toMatchObject({
-        statusCode: 403,
-        statusMessage: 'You can only access your own jobs'
-      });
-    });
-  });
-
-  describe('ensureJobEmployer', () => {
-    it('should call ensureJobOwner and allow access when user is employer', async () => {
-      const mockClient = createMockClient({ employer_id: 'user-123' });
-      await expect(ensureJobEmployer(mockClient as any, 'job-1', 'user-123')).resolves.not.toThrow();
-    });
-
-    it('should throw 403 when user is not employer', async () => {
-      const mockClient = createMockClient({ employer_id: 'other-user' });
-      await expect(ensureJobEmployer(mockClient as any, 'job-1', 'user-123')).rejects.toMatchObject({
         statusCode: 403,
         statusMessage: 'You can only access your own jobs'
       });

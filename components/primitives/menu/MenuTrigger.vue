@@ -1,18 +1,3 @@
-<template>
-  <button
-    ref="triggerEl"
-    class="menu__trigger"
-    type="button"
-    :id="triggerId"
-    :aria-controls="contentId"
-    aria-haspopup="menu"
-    :aria-expanded="isOpen"
-    @click="toggle"
-  >
-    <slot />
-  </button>
-</template>
-
 <script setup lang="ts">
 import { useMenuContext } from './context';
 
@@ -35,6 +20,21 @@ const toggle = () => {
   }
 };
 </script>
+
+<template>
+  <button
+    ref="triggerEl"
+    class="menu__trigger"
+    type="button"
+    :id="triggerId"
+    :aria-controls="contentId"
+    aria-haspopup="menu"
+    :aria-expanded="isOpen"
+    @click="toggle"
+  >
+    <slot />
+  </button>
+</template>
 
 <style scoped>
 .menu__trigger {

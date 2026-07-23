@@ -63,7 +63,6 @@
 }
 
 .trust-item h4 {
-  font-family: var(--font-display);
   margin: 0 0 var(--space-1) 0;
   font-size: var(--text-base);
 }

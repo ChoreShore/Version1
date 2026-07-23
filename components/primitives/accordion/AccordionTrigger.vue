@@ -1,3 +1,9 @@
+<script setup lang="ts">
+import { useAccordionItemContext } from './itemContext';
+
+const { triggerId, contentId, isOpen, toggle } = useAccordionItemContext('AccordionTrigger');
+</script>
+
 <template>
   <button
     class="accordion__trigger"
@@ -14,12 +20,6 @@
     <span class="accordion__chevron" :class="{ 'is-open': isOpen }" aria-hidden="true">⌃</span>
   </button>
 </template>
-
-<script setup lang="ts">
-import { useAccordionItemContext } from './itemContext';
-
-const { triggerId, contentId, isOpen, toggle } = useAccordionItemContext('AccordionTrigger');
-</script>
 
 <style scoped>
 .accordion__trigger {

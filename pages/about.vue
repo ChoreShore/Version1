@@ -36,51 +36,52 @@ useHead({
 
 <style scoped>
 .about-page {
-  padding-bottom: 40px;
+  padding-bottom: var(--space-10);
 }
 
 .about-header {
-  background: #111;
-  color: #fff;
-  padding: 40px 20px;
+  background: var(--color-dark);
+  color: var(--color-white);
+  padding: var(--space-10) var(--space-4);
   text-align: center;
-  margin-bottom: 30px;
+  margin-bottom: var(--space-8);
 }
 
 .about-header h1 {
   margin: 0;
-  font-size: 32px;
+  font-size: var(--text-3xl);
   font-weight: 700;
 }
 
 .about-container {
   max-width: 900px;
   margin: 0 auto;
-  padding: 0 20px;
+  padding: 0 var(--space-4);
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: var(--space-5);
 }
 
 .about-card {
-  background: #fff;
-  padding: 24px;
-  border-radius: 12px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+  background: var(--color-surface);
+  padding: var(--space-6);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--color-border);
 }
 
 .about-lead {
-  font-size: 18px;
-  color: #6b7280;
-  margin: 0 0 10px;
+  font-size: var(--text-lg);
+  color: var(--color-text-subtle);
+  margin: 0 0 var(--space-2);
   line-height: 1.5;
 }
 
 .about-card p {
   line-height: 1.7;
-  font-size: 15px;
-  color: #444;
-  margin: 0 0 14px;
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
+  margin: 0 0 var(--space-3);
 }
 
 .about-card p:last-child {
@@ -89,27 +90,27 @@ useHead({
 
 @media (max-width: 600px) {
   .about-header {
-    padding: 28px 16px;
+    padding: var(--space-8) var(--space-4);
   }
 
   .about-header h1 {
-    font-size: 24px;
+    font-size: var(--text-2xl);
   }
 
   .about-container {
-    padding: 0 16px;
+    padding: 0 var(--space-4);
   }
 
   .about-card {
-    padding: 18px;
+    padding: var(--space-4);
   }
 
   .about-lead {
-    font-size: 16px;
+    font-size: var(--text-base);
   }
 
   .about-card p {
-    font-size: 14px;
+    font-size: var(--text-sm);
   }
 }
 </style>

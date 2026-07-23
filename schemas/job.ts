@@ -1,4 +1,5 @@
-import { z, ZodError } from 'zod';
+import { z } from 'zod';
+import { validateSchema } from './validation';
 
 // Enums matching existing types
 export const BudgetTypeSchema = z.enum(['fixed', 'hourly']);
@@ -198,48 +199,5 @@ export type JobsBoardJobInput = z.infer<typeof JobsBoardJobSchema>;
 export type JobsBoardResponseInput = z.infer<typeof JobsBoardResponseSchema>;
 
 // Validation helper functions
-export const validateCreateJob = (data: unknown) => {
-  try {
-    return {
-      success: true,
-      data: CreateJobSchema.parse(data),
-      errors: null
-    };
-  } catch (error) {
-    if (error instanceof ZodError) {
-      return {
-        success: false,
-        data: null,
-        errors: error.issues.reduce((acc, err) => {
-          const field = err.path[0] as string;
-          acc[field] = err.message;
-          return acc;
-        }, {} as Record<string, string>)
-      };
-    }
-    throw error;
-  }
-};
-
-export const validateUpdateJob = (data: unknown) => {
-  try {
-    return {
-      success: true,
-      data: UpdateJobSchema.parse(data),
-      errors: null
-    };
-  } catch (error) {
-    if (error instanceof ZodError) {
-      return {
-        success: false,
-        data: null,
-        errors: error.issues.reduce((acc, err) => {
-          const field = err.path[0] as string;
-          acc[field] = err.message;
-          return acc;
-        }, {} as Record<string, string>)
-      };
-    }
-    throw error;
-  }
-};
+export const validateCreateJob = (data: unknown) => validateSchema(CreateJobSchema, data);
+export const validateUpdateJob = (data: unknown) => validateSchema(UpdateJobSchema, data);

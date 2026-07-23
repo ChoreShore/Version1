@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { validateSchema } from './validation';
 
 // Application status enum (lenient for database responses)
 export const ApplicationStatusSchema = z.union([
@@ -107,48 +108,5 @@ export type ApplicationStatus = z.infer<typeof ApplicationStatusSchema>;
 export type ApplicationWithDetails = ApplicationWithDetailsInput;
 
 // Validation helper functions
-export const validateCreateApplication = (data: unknown) => {
-  try {
-    return {
-      success: true,
-      data: CreateApplicationSchema.parse(data),
-      errors: null
-    };
-  } catch (error) {
-    if (error instanceof z.ZodError) {
-      return {
-        success: false,
-        data: null,
-        errors: error.issues.reduce((acc, err) => {
-          const field = err.path[0] as string;
-          acc[field] = err.message;
-          return acc;
-        }, {} as Record<string, string>)
-      };
-    }
-    throw error;
-  }
-};
-
-export const validateUpdateApplication = (data: unknown) => {
-  try {
-    return {
-      success: true,
-      data: UpdateApplicationSchema.parse(data),
-      errors: null
-    };
-  } catch (error) {
-    if (error instanceof z.ZodError) {
-      return {
-        success: false,
-        data: null,
-        errors: error.issues.reduce((acc, err) => {
-          const field = err.path[0] as string;
-          acc[field] = err.message;
-          return acc;
-        }, {} as Record<string, string>)
-      };
-    }
-    throw error;
-  }
-};
+export const validateCreateApplication = (data: unknown) => validateSchema(CreateApplicationSchema, data);
+export const validateUpdateApplication = (data: unknown) => validateSchema(UpdateApplicationSchema, data);

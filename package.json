@@ -21,6 +21,7 @@
     "date-fns": "^4.2.1",
     "ioredis": "^5.10.1",
     "nuxt": "^3.21.6",
+    "nuxt-security": "^1.4.3",
     "resend": "6.12.4",
     "vue": "^3.3.4",
     "vue-router": "^4.3.0",

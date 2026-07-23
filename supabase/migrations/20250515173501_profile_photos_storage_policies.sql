@@ -1,5 +1,6 @@
 -- Storage policies for profile-photos bucket
--- Run this after creating the 'profile-photos' bucket in Supabase dashboard
+-- The bucket is created/ensured public by migration 20260713130000_create_profile_photos_bucket.sql
+-- Expected object path: {employer-photos|worker-photos}/{user-id}/{timestamp}.{ext}
 
 -- Allow authenticated users to upload photos to their role-specific folder
 CREATE POLICY "Users can upload to their role folder"

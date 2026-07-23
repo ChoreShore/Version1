@@ -1,3 +1,20 @@
+<script setup lang="ts">
+import { useTabsContext } from './context';
+
+export interface TabsPanelProps {
+  /** Tab panel value */
+  value: string;
+}
+
+const props = defineProps<TabsPanelProps>();
+const { value: activeValue } = useTabsContext('TabsPanel');
+
+const panelId = `tabpanel-${props.value}`;
+const triggerId = `tab-${props.value}`;
+
+const isActive = computed(() => activeValue.value === props.value);
+</script>
+
 <template>
   <section
     class="tabs__panel"
@@ -10,18 +27,6 @@
     <slot />
   </section>
 </template>
-
-<script setup lang="ts">
-import { useTabsContext } from './context';
-
-const props = defineProps<{ value: string }>();
-const { value: activeValue } = useTabsContext('TabsPanel');
-
-const panelId = `tabpanel-${props.value}`;
-const triggerId = `tab-${props.value}`;
-
-const isActive = computed(() => activeValue.value === props.value);
-</script>
 
 <style scoped>
 .tabs__panel {

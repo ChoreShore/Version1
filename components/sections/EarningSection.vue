@@ -60,7 +60,6 @@
 }
 
 .earning-section__title {
-  font-family: var(--font-display);
   font-size: var(--text-2xl);
   margin-bottom: var(--space-5);
 }
@@ -93,7 +92,6 @@
 }
 
 .earning-card__label {
-  font-family: var(--font-display);
   font-size: var(--text-base);
 }
 

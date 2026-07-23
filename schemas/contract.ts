@@ -1,6 +1,7 @@
 import { z } from 'zod';
+import { validateSchema } from './validation';
 
-export const ContractStatusSchema = z.enum(['pending', 'active', 'completed', 'cancelled']);
+export const ContractStatusSchema = z.enum(['pending', 'active', 'pending_review', 'completed', 'cancelled']);
 export type ContractStatus = z.infer<typeof ContractStatusSchema>;
 
 export const ContractSchema = z.object({
@@ -20,6 +21,8 @@ export const ContractSchema = z.object({
   frozen_budget_amount: z.number().nullable().optional(),
   idempotency_key: z.string().nullable().optional(),
   worker_stripe_account_id: z.string().nullable().optional(),
+  worker_completed_at: z.string().nullable().optional(),
+  employer_approved_at: z.string().nullable().optional(),
   created_at: z.string(),
   updated_at: z.string()
 });
@@ -56,20 +59,10 @@ export type ContractResponseInput = z.infer<typeof ContractResponseSchema>;
 export type ContractsResponseInput = z.infer<typeof ContractsResponseSchema>;
 export type CreateContractInput = z.infer<typeof CreateContractSchema>;
 
-export const validateCreateContract = (data: unknown) => {
-  try {
-    return { success: true, data: CreateContractSchema.parse(data), errors: null };
-  } catch (error) {
-    if (error instanceof z.ZodError) {
-      return {
-        success: false,
-        data: null,
-        errors: error.issues.reduce((acc, err) => {
-          acc[err.path[0] as string] = err.message;
-          return acc;
-        }, {} as Record<string, string>)
-      };
-    }
-    throw error;
-  }
-};
+export const validateCreateContract = (data: unknown) => validateSchema(CreateContractSchema, data);
+
+export const CompletionResponseSchema = z.object({
+  success: z.literal(true),
+  contract: ContractWithDetailsSchema
+});
+export type CompletionResponseInput = z.infer<typeof CompletionResponseSchema>;

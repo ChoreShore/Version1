@@ -1,12 +1,12 @@
+<script setup lang="ts">
+// No props needed - just displays success indicator
+</script>
+
 <template>
   <span class="form-field__success">
     <slot />
   </span>
 </template>
-
-<script setup lang="ts">
-// No props needed - just displays success indicator
-</script>
 
 <style scoped>
 .form-field__success {

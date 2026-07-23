@@ -128,8 +128,8 @@ function toggleExpand() {
 
 <style scoped>
 .job-card {
-  background: var(--surface);
-  border: 1px solid var(--border);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
   border-radius: var(--radius-lg);
   padding: var(--space-5);
   box-shadow: var(--shadow);
@@ -145,7 +145,7 @@ function toggleExpand() {
 }
 
 .job-card.is-clickable:hover {
-  background: #fbfcfc;
+  background: var(--color-surface-elevated);
   box-shadow: var(--shadow-hover);
 }
 
@@ -168,14 +168,14 @@ function toggleExpand() {
   font-size: var(--text-xs);
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: var(--muted);
+  color: var(--color-text-muted);
 }
 
 .job-card__title {
   margin: 0;
   font-size: var(--text-lg);
   font-weight: 650;
-  color: var(--text);
+  color: var(--color-text);
   line-height: 1.3;
 }
 
@@ -185,14 +185,14 @@ function toggleExpand() {
 }
 
 .job-card__title a:focus-visible {
-  outline: 2px solid var(--dark);
+  outline: 2px solid var(--color-dark);
   outline-offset: 2px;
   border-radius: 2px;
 }
 
 .job-card__description {
   margin: 0;
-  color: var(--muted);
+  color: var(--color-text-muted);
   line-height: 1.6;
   max-height: 4.8em;
   overflow: hidden;
@@ -215,18 +215,18 @@ function toggleExpand() {
   left: 0;
   right: 0;
   height: 2em;
-  background: linear-gradient(transparent, var(--surface));
+  background: linear-gradient(transparent, var(--color-surface));
   pointer-events: none;
 }
 
 .job-card__expand {
   background: none;
   border: none;
-  color: var(--primary);
+  color: var(--color-primary);
   font-size: var(--text-sm);
   font-weight: 600;
   cursor: pointer;
-  padding: 4px 0;
+  padding: var(--space-1) 0;
   margin-top: var(--space-1);
   display: inline-flex;
   align-items: center;
@@ -235,11 +235,11 @@ function toggleExpand() {
 }
 
 .job-card__expand:hover {
-  color: var(--accent);
+  color: var(--color-accent);
 }
 
 .job-card__expand:focus-visible {
-  outline: 2px solid var(--dark);
+  outline: 2px solid var(--color-dark);
   outline-offset: 2px;
   border-radius: 2px;
 }
@@ -263,13 +263,13 @@ function toggleExpand() {
   font-size: var(--text-xs);
   text-transform: uppercase;
   letter-spacing: 0.08em;
-  color: var(--muted);
+  color: var(--color-text-muted);
 }
 
 .job-card__meta dd {
   margin: 0;
   font-weight: 600;
-  color: var(--text);
+  color: var(--color-text);
 }
 
 .job-card__footer {

@@ -1,3 +1,16 @@
+<script setup lang="ts">
+export interface DataGridProps {
+  /** Section title */
+  title?: string;
+  /** Eyebrow text above title */
+  eyebrow?: string;
+  /** Description below title */
+  description?: string;
+}
+
+defineProps<DataGridProps>();
+</script>
+
 <template>
   <div class="data-grid">
     <header v-if="title || $slots.actions" class="data-grid__header">
@@ -29,14 +42,6 @@
     </footer>
   </div>
 </template>
-
-<script setup lang="ts">
-defineProps<{
-  title?: string;
-  eyebrow?: string;
-  description?: string;
-}>();
-</script>
 
 <style scoped>
 .data-grid {

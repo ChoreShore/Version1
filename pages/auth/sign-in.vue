@@ -78,7 +78,7 @@ import { computed, ref } from 'vue';
 import { Check, Eye, EyeOff } from '@lucide/vue';
 
 definePageMeta({
-  layout: false,
+  layout: 'public',
   title: 'Sign In - HireBeHired'
 });
 import { useSupabaseClient, useSupabaseUser } from '#imports';

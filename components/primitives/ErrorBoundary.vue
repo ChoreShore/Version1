@@ -45,11 +45,16 @@
 <script setup lang="ts">
 import { ref, onErrorCaptured, type Ref } from 'vue';
 
-interface ErrorBoundaryProps {
+export interface ErrorBoundaryProps {
+  /** Error boundary title */
   title?: string;
+  /** Error message text */
   message?: string;
+  /** Show error details expander */
   showDetails?: boolean;
+  /** Show reset button */
   showReset?: boolean;
+  /** Custom error handler callback */
   onError?: (error: Error, instance: any, info: string) => void;
 }
 
@@ -133,11 +138,11 @@ defineExpose({
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 48px;
-  height: 48px;
+  width: var(--space-12);
+  height: var(--space-12);
   border-radius: var(--radius-md);
   background: var(--color-danger);
-  color: white;
+  color: var(--color-white);
 }
 
 .error-boundary__text {
@@ -171,7 +176,7 @@ defineExpose({
 .error-boundary__stack {
   margin: var(--space-2) 0 0 0;
   padding: var(--space-3);
-  background: rgba(0, 0, 0, 0.1);
+  background: var(--color-overlay-subtle);
   border-radius: var(--radius-md);
   font-size: var(--text-xs);
   font-family: monospace;
@@ -194,13 +199,13 @@ defineExpose({
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s;
-  background: white;
+  background: var(--color-white);
   color: var(--color-danger);
 }
 
 .error-boundary__button:hover {
   background: var(--color-danger);
-  color: white;
+  color: var(--color-white);
 }
 
 .error-boundary__button--retry {
@@ -210,6 +215,6 @@ defineExpose({
 
 .error-boundary__button--retry:hover {
   background: var(--color-primary);
-  color: white;
+  color: var(--color-white);
 }
 </style>

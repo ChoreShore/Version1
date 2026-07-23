@@ -1,27 +1,65 @@
+<script setup lang="ts">
+export interface ButtonProps {
+  /** Visual style variant */
+  variant?: 'primary' | 'secondary' | 'ghost' | 'danger';
+  /** Size of the button */
+  size?: 'sm' | 'md' | 'lg';
+  /** Full width button */
+  fullWidth?: boolean;
+  /** Loading state */
+  loading?: boolean;
+  /** Disabled state */
+  disabled?: boolean;
+  /** HTML button type */
+  type?: 'button' | 'submit' | 'reset';
+}
+
+const props = withDefaults(defineProps<ButtonProps>(), {
+  variant: 'primary',
+  size: 'md',
+  fullWidth: false,
+  loading: false,
+  disabled: false,
+  type: 'button'
+});
+
+const emit = defineEmits<{
+  click: [event: MouseEvent];
+}>();
+
+const isDisabled = computed(() => props.disabled || props.loading);
+
+const classes = computed(() => [
+  'btn',
+  `btn--${props.variant}`,
+  `btn--${props.size}`,
+  {
+    'btn--full-width': props.fullWidth,
+    'btn--loading': props.loading
+  }
+]);
+
+function handleClick(event: MouseEvent) {
+  if (!isDisabled.value) {
+    emit('click', event);
+  }
+}
+</script>
+
 <template>
   <button
-    :class="['btn', `btn--${variant}`, `btn--${size}`, { 'btn--disabled': disabled }]"
-    :disabled="disabled"
-    type="button"
+    :class="classes"
+    :disabled="isDisabled"
+    :type="type"
+    :aria-busy="loading"
+    @click="handleClick"
   >
-    <slot />
+    <span v-if="loading" class="btn__spinner" aria-hidden="true" />
+    <span class="btn__label">
+      <slot />
+    </span>
   </button>
 </template>
-
-<script setup lang="ts">
-withDefaults(
-  defineProps<{
-    variant?: 'primary' | 'secondary' | 'ghost' | 'danger';
-    size?: 'sm' | 'md' | 'lg';
-    disabled?: boolean;
-  }>(),
-  {
-    variant: 'primary',
-    size: 'md',
-    disabled: false
-  }
-);
-</script>
 
 <style scoped>
 .btn {
@@ -50,7 +88,7 @@ withDefaults(
 /* Variants */
 .btn--primary {
   background: var(--color-primary-600);
-  color: white;
+  color: var(--color-white);
 }
 
 .btn--primary:hover:not(:disabled) {
@@ -58,13 +96,13 @@ withDefaults(
 }
 
 .btn--secondary {
-  background: var(--hover);
+  background: var(--color-hover);
   color: var(--color-text);
-  border: 1px solid var(--border);
+  border: 1px solid var(--color-border);
 }
 
 .btn--secondary:hover:not(:disabled) {
-  background: var(--border);
+  background: var(--color-border);
 }
 
 .btn--ghost {
@@ -73,16 +111,16 @@ withDefaults(
 }
 
 .btn--ghost:hover:not(:disabled) {
-  background: var(--hover);
+  background: var(--color-hover);
 }
 
 .btn--danger {
   background: var(--color-error);
-  color: white;
+  color: var(--color-white);
 }
 
 .btn--danger:hover:not(:disabled) {
-  background: #C53030;
+  background: var(--color-error);
 }
 
 /* Sizes */
@@ -99,5 +137,33 @@ withDefaults(
 .btn--lg {
   padding: var(--space-4) var(--space-5);
   font-size: var(--text-lg);
+}
+
+.btn--full-width {
+  width: 100%;
+}
+
+.btn--loading {
+  position: relative;
+}
+
+.btn--loading .btn__label {
+  opacity: 0;
+}
+
+.btn__spinner {
+  position: absolute;
+  width: 1em;
+  height: 1em;
+  border: 2px solid currentColor;
+  border-right-color: transparent;
+  border-radius: 50%;
+  animation: spin 600ms linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
 }
 </style>

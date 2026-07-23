@@ -94,14 +94,6 @@ export async function ensureJobOwner(
   }
 }
 
-export async function ensureJobEmployer(
-  client: SupabaseClient,
-  jobId: string,
-  userId: string
-): Promise<void> {
-  await ensureJobOwner(client, jobId, userId);
-}
-
 export async function ensureApplicationOwner(
   client: SupabaseClient,
   applicationId: string,

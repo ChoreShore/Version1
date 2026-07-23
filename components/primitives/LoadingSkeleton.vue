@@ -1,24 +1,26 @@
-<template>
-  <div class="skeleton" :class="[`skeleton-${variant}`]" :style="style"></div>
-</template>
-
 <script setup lang="ts">
-const props = withDefaults(
-  defineProps<{
-    width?: string;
-    height?: string;
-    variant?: 'text' | 'circle' | 'block';
-  }>(),
-  {
-    variant: 'text'
-  }
-);
+export interface LoadingSkeletonProps {
+  /** CSS width */
+  width?: string;
+  /** CSS height */
+  height?: string;
+  /** Skeleton shape variant */
+  variant?: 'text' | 'circle' | 'block';
+}
+
+const props = withDefaults(defineProps<LoadingSkeletonProps>(), {
+  variant: 'text'
+});
 
 const style = computed(() => ({
   width: props.width,
   height: props.height
 }));
 </script>
+
+<template>
+  <div class="skeleton" :class="[`skeleton-${variant}`]" :style="style"></div>
+</template>
 
 <style scoped>
 .skeleton {

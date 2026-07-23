@@ -9,7 +9,7 @@ import {
 // ─── ContractStatusSchema ─────────────────────────────────────────────────────
 
 describe('ContractStatusSchema', () => {
-  it.each(['pending', 'active', 'completed', 'cancelled'])('accepts %s', (status) => {
+  it.each(['pending', 'active', 'pending_review', 'completed', 'cancelled'])('accepts %s', (status) => {
     expect(ContractStatusSchema.safeParse(status).success).toBe(true);
   });
 

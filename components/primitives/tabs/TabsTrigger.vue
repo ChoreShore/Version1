@@ -1,23 +1,12 @@
-<template>
-  <button
-    class="tabs__trigger"
-    role="tab"
-    type="button"
-    :id="triggerId"
-    :aria-controls="panelId"
-    :aria-selected="isActive"
-    :tabindex="isActive ? 0 : -1"
-    @click="activate"
-    @keydown="onKeydown"
-  >
-    <slot />
-  </button>
-</template>
-
 <script setup lang="ts">
 import { useTabsContext } from './context';
 
-const props = defineProps<{ value: string }>();
+export interface TabsTriggerProps {
+  /** Tab value */
+  value: string;
+}
+
+const props = defineProps<TabsTriggerProps>();
 const { value, registerTab, orientation } = useTabsContext('TabsTrigger');
 
 const triggerId = `tab-${props.value}`;
@@ -55,6 +44,22 @@ const onKeydown = (event: KeyboardEvent) => {
   nextTrigger?.click();
 };
 </script>
+
+<template>
+  <button
+    class="tabs__trigger"
+    role="tab"
+    type="button"
+    :id="triggerId"
+    :aria-controls="panelId"
+    :aria-selected="isActive"
+    :tabindex="isActive ? 0 : -1"
+    @click="activate"
+    @keydown="onKeydown"
+  >
+    <slot />
+  </button>
+</template>
 
 <style scoped>
 .tabs__trigger {

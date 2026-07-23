@@ -228,10 +228,10 @@ const handleCardClick = () => {
 }
 
 .application-card__message-btn {
-  padding: 8px 16px;
+  padding: var(--space-2) var(--space-4);
   border: 1px solid var(--color-primary-600);
   background: var(--color-primary-600);
-  color: white;
+  color: var(--color-white);
   border-radius: var(--radius-md);
   text-decoration: none;
   font-size: var(--text-sm);
@@ -244,8 +244,14 @@ const handleCardClick = () => {
   border-color: var(--color-primary-700);
 }
 
+.application-card__message-btn:focus-visible {
+  outline: 2px solid var(--color-dark);
+  outline-offset: 2px;
+  border-radius: var(--radius-md);
+}
+
 .application-card__withdraw-btn {
-  padding: 8px 16px;
+  padding: var(--space-2) var(--space-4);
   border: 1px solid var(--color-danger);
   background: transparent;
   color: var(--color-danger);
@@ -258,11 +264,17 @@ const handleCardClick = () => {
 
 .application-card__withdraw-btn:hover {
   background: var(--color-danger);
-  color: white;
+  color: var(--color-white);
+}
+
+.application-card__withdraw-btn:focus-visible {
+  outline: 2px solid var(--color-dark);
+  outline-offset: 2px;
+  border-radius: var(--radius-md);
 }
 
 .application-card__action-btn {
-  padding: 8px 16px;
+  padding: var(--space-2) var(--space-4);
   border: 1px solid;
   border-radius: var(--radius-md);
   font-size: var(--text-sm);
@@ -274,7 +286,7 @@ const handleCardClick = () => {
 .application-card__action-btn--accept {
   background: var(--color-success-600);
   border-color: var(--color-success-600);
-  color: white;
+  color: var(--color-white);
 }
 
 .application-card__action-btn--accept:hover {
@@ -290,6 +302,12 @@ const handleCardClick = () => {
 
 .application-card__action-btn--reject:hover {
   background: var(--color-danger);
-  color: white;
+  color: var(--color-white);
+}
+
+.application-card__action-btn:focus-visible {
+  outline: 2px solid var(--color-dark);
+  outline-offset: 2px;
+  border-radius: var(--radius-md);
 }
 </style>

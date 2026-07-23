@@ -1,4 +1,4 @@
-import type { ContractWithDetailsInput, ContractsResponseInput, ContractResponseInput } from '~/schemas/contract';
+import type { ContractWithDetailsInput, ContractsResponseInput, ContractResponseInput, CompletionResponseInput } from '~/schemas/contract';
 
 export const useContracts = () => {
   const getContract = async (contractId: string) => {
@@ -27,10 +27,31 @@ export const useContracts = () => {
     });
   };
 
+  const markComplete = async (contractId: string) => {
+    return await $fetch<CompletionResponseInput>(`/api/contracts/${contractId}/complete`, {
+      method: 'POST'
+    });
+  };
+
+  const approveCompletion = async (contractId: string) => {
+    return await $fetch<CompletionResponseInput>(`/api/contracts/${contractId}/approve`, {
+      method: 'POST'
+    });
+  };
+
+  const rejectCompletion = async (contractId: string) => {
+    return await $fetch<CompletionResponseInput>(`/api/contracts/${contractId}/reject-completion`, {
+      method: 'POST'
+    });
+  };
+
   return {
     getContract,
     createContract,
     getContractByJob,
-    listMyContracts
+    listMyContracts,
+    markComplete,
+    approveCompletion,
+    rejectCompletion
   };
 };

@@ -78,7 +78,7 @@ describe('Profile Photo Routes', () => {
         storage: {
           from: {
             'profile-photos': {
-              upload: { data: { path: 'worker-photos/user-1-1234567890.jpg' }, error: null },
+              upload: { data: { path: 'worker-photos/user-1/1234567890.jpg' }, error: null },
               getPublicUrl: { data: { publicUrl: 'https://example.com/photos/user-1.jpg' } },
             },
           },
@@ -99,7 +99,7 @@ describe('Profile Photo Routes', () => {
         storage: {
           from: {
             'profile-photos': {
-              upload: { data: { path: 'employer-photos/user-1-1234567890.jpg' }, error: null },
+              upload: { data: { path: 'employer-photos/user-1/1234567890.jpg' }, error: null },
               getPublicUrl: { data: { publicUrl: 'https://example.com/photos/user-1.jpg' } },
             },
           },

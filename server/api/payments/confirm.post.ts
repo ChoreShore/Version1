@@ -1,6 +1,6 @@
 import { serverSupabaseClient } from '#supabase/server';
 import { ConfirmPaymentSchema, PaymentConfirmationResponseSchema } from '~/schemas/payment';
-import { getAuthenticatedUser, ensureJobEmployer } from '~/server/utils/api';
+import { getAuthenticatedUser, ensureJobOwner } from '~/server/utils/api';
 import { sendNotificationEmail } from '~/server/utils/email';
 
 export default defineEventHandler(async (event) => {
@@ -34,7 +34,7 @@ export default defineEventHandler(async (event) => {
     }
 
     // Authorization check: only the job employer can confirm payments
-    await ensureJobEmployer(client, application.job_id, user.id);
+    await ensureJobOwner(client, application.job_id, user.id);
 
     const { data: existingEvent } = await client
       .from('payment_transactions')

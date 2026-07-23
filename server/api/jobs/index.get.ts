@@ -6,6 +6,7 @@ import { JobsResponseSchema } from '~/schemas/job';
 import { fetchPreviewJobs } from '~/server/utils/preview';
 import { rateLimiters } from '~/server/utils/rateLimit';
 import { hasRole } from '~/server/utils/roles';
+import { JOB_SELECT_WITH_RELATIONS } from '~/server/utils/queries';
 
 export default defineEventHandler(async (event) => {
   try {
@@ -36,11 +37,7 @@ export default defineEventHandler(async (event) => {
     const limit = query.limit ? parseInt(query.limit, 10) : 20;
     let builder = client
       .from('jobs')
-      .select(`
-        *,
-        employer:profiles!employer_id(first_name, last_name),
-        category:job_categories!category_id(name)
-      `)
+      .select(JOB_SELECT_WITH_RELATIONS)
       .order('created_at', { ascending: false })
       .limit(limit);
 

@@ -1,33 +1,36 @@
+<script setup lang="ts">
+export interface InfoBadgeProps {
+  /** Badge text label */
+  label?: string;
+  /** Visual style variant */
+  variant?: 'neutral' | 'success' | 'warning' | 'danger' | 'info';
+}
+
+const props = withDefaults(defineProps<InfoBadgeProps>(), {
+  variant: 'neutral'
+});
+
+const classes = computed(() => ['info-badge', `variant-${props.variant}`]);
+</script>
+
 <template>
-  <span class="info-badge" :class="`variant-${variant}`">
+  <span :class="classes">
     <slot>{{ label }}</slot>
   </span>
 </template>
-
-<script setup lang="ts">
-withDefaults(
-  defineProps<{
-    label?: string;
-    variant?: 'neutral' | 'success' | 'warning' | 'danger' | 'info';
-  }>(),
-  {
-    variant: 'neutral'
-  }
-);
-</script>
 
 <style scoped>
 .info-badge {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
+  gap: var(--space-1);
   padding: 0 var(--space-2);
   height: 28px;
   border-radius: var(--radius-pill);
   font-size: var(--text-xs);
   font-weight: 600;
-  background-color: var(--hover);
-  color: var(--text);
+  background-color: var(--color-hover);
+  color: var(--color-text);
 }
 
 .variant-info {
@@ -36,17 +39,17 @@ withDefaults(
 }
 
 .variant-success {
-  background-color: rgba(17, 17, 17, 0.12);
-  color: var(--success);
+  background-color: var(--color-success-bg);
+  color: var(--color-success);
 }
 
 .variant-warning {
-  background-color: rgba(212, 116, 94, 0.15);
-  color: var(--accent);
+  background-color: var(--color-warning-bg);
+  color: var(--color-warning-text);
 }
 
 .variant-danger {
-  background-color: rgba(192, 57, 43, 0.12);
+  background-color: var(--color-danger-bg);
   color: var(--color-danger);
 }
 </style>

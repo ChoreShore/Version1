@@ -25,22 +25,31 @@
 </template>
 
 <script setup lang="ts">
-const props = withDefaults(
-  defineProps<{
-    modelValue: boolean;
-    title: string;
-    description?: string;
-    eyebrow?: string;
-    size?: 'sm' | 'md' | 'lg';
-    closeOnOverlay?: boolean;
-  }>(),
-  {
-    size: 'md',
-    closeOnOverlay: true
-  }
-);
+export interface ModalProps {
+  /** Controls modal visibility */
+  modelValue: boolean;
+  /** Modal title */
+  title: string;
+  /** Modal description */
+  description?: string;
+  /** Eyebrow text above title */
+  eyebrow?: string;
+  /** Modal size */
+  size?: 'sm' | 'md' | 'lg';
+  /** Close when overlay is clicked */
+  closeOnOverlay?: boolean;
+}
 
-const emit = defineEmits<{ (e: 'update:modelValue', value: boolean): void; (e: 'close'): void; (e: 'open'): void }>();
+const props = withDefaults(defineProps<ModalProps>(), {
+  size: 'md',
+  closeOnOverlay: true
+});
+
+const emit = defineEmits<{
+  'update:modelValue': [value: boolean];
+  close: [];
+  open: [];
+}>();
 
 const isOpen = computed({
   get: () => props.modelValue,
@@ -64,57 +73,22 @@ const handleOverlayClick = () => {
   }
 };
 
-const trapFocus = (event: KeyboardEvent) => {
-  if (!isOpen.value || event.key !== 'Tab') {
-    return;
-  }
-
-  const focusable = panelRef.value?.querySelectorAll<HTMLElement>(
-    'a[href], button, textarea, input, select, [tabindex]:not([tabindex="-1"])'
-  );
-  if (!focusable || focusable.length === 0) {
-    return;
-  }
-
-  const first = focusable[0];
-  const last = focusable[focusable.length - 1];
-
-  if (event.shiftKey && document.activeElement === first) {
-    event.preventDefault();
-    last.focus();
-  } else if (!event.shiftKey && document.activeElement === last) {
-    event.preventDefault();
-    first.focus();
-  }
-};
+useFocusTrap(panelRef, () => isOpen.value, { onEscape: close });
 
 watch(
   () => isOpen.value,
   (open) => {
     if (open) {
       emit('open');
-      nextTick(() => panelRef.value?.focus());
-      document.addEventListener('keydown', onKeydown);
-      document.addEventListener('keydown', trapFocus);
       document.body.style.overflow = 'hidden';
     } else {
-      document.removeEventListener('keydown', onKeydown);
-      document.removeEventListener('keydown', trapFocus);
       document.body.style.overflow = '';
     }
   },
   { immediate: true }
 );
 
-const onKeydown = (event: KeyboardEvent) => {
-  if (event.key === 'Escape') {
-    close();
-  }
-};
-
 onBeforeUnmount(() => {
-  document.removeEventListener('keydown', onKeydown);
-  document.removeEventListener('keydown', trapFocus);
   document.body.style.overflow = '';
 });
 </script>
@@ -133,7 +107,7 @@ onBeforeUnmount(() => {
 .modal__overlay {
   position: absolute;
   inset: 0;
-  background: rgba(26, 26, 26, 0.35);
+  background: var(--color-overlay);
   backdrop-filter: blur(4px);
 }
 
@@ -143,10 +117,10 @@ onBeforeUnmount(() => {
   width: min(640px, 100%);
   max-height: 90vh;
   overflow-y: auto;
-  background: var(--surface);
+  background: var(--color-surface);
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow);
-  border: 1px solid var(--border);
+  border: 1px solid var(--color-border);
   display: flex;
   flex-direction: column;
 }
@@ -164,7 +138,7 @@ onBeforeUnmount(() => {
   justify-content: space-between;
   gap: var(--space-4);
   padding: var(--space-5);
-  border-bottom: 1px solid var(--border);
+  border-bottom: 1px solid var(--color-border);
 }
 
 .modal__title {
@@ -177,25 +151,25 @@ onBeforeUnmount(() => {
   text-transform: uppercase;
   letter-spacing: 0.08em;
   font-size: var(--text-xs);
-  color: var(--muted);
+  color: var(--color-text-muted);
 }
 
 .modal__description {
   margin: var(--space-2) 0 0;
-  color: var(--muted);
+  color: var(--color-text-muted);
 }
 
 .modal__close {
   border: none;
   background: transparent;
-  font-size: 1.5rem;
+  font-size: var(--text-2xl);
   line-height: 1;
-  color: var(--muted);
+  color: var(--color-text-muted);
   cursor: pointer;
 }
 
 .modal__close:hover {
-  color: var(--text);
+  color: var(--color-text);
 }
 
 .modal__body {
@@ -205,7 +179,7 @@ onBeforeUnmount(() => {
 
 .modal__footer {
   padding: var(--space-5);
-  border-top: 1px solid var(--border);
+  border-top: 1px solid var(--color-border);
   display: flex;
   justify-content: flex-end;
   gap: var(--space-3);

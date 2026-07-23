@@ -21,7 +21,7 @@
             >
               <template #actions>
                 <NuxtLink v-if="role === 'employer'" to="/jobs/new" class="empty-state__cta">Post your first job</NuxtLink>
-                <NuxtLink v-if="role === 'worker'" to="/jobs" class="empty-state__cta">Refresh</NuxtLink>
+                <NuxtLink v-if="role === 'worker'" to="/jobs" class="empty-state__cta">Find jobs</NuxtLink>
               </template>
             </EmptyState>
           </li>
@@ -47,7 +47,7 @@
               icon="📝"
             >
               <template #actions>
-                <NuxtLink v-if="role === 'employer'" to="/jobs/new" class="empty-state__cta">Post a job</NuxtLink>
+                <NuxtLink v-if="role === 'employer'" to="/jobs" class="empty-state__cta">View posted jobs</NuxtLink>
                 <NuxtLink v-if="role === 'worker'" to="/jobs" class="empty-state__cta">Find jobs</NuxtLink>
               </template>
             </EmptyState>
@@ -74,8 +74,8 @@
               :icon="CreditCard"
             >
               <template #actions>
-                <NuxtLink v-if="role === 'employer'" to="/jobs" class="empty-state__cta">Post a job</NuxtLink>
-                <NuxtLink v-if="role === 'worker'" to="/jobs" class="empty-state__cta">Find work</NuxtLink>
+                <NuxtLink v-if="role === 'employer'" to="/jobs" class="empty-state__cta">View posted jobs</NuxtLink>
+                <NuxtLink v-if="role === 'worker'" to="/jobs" class="empty-state__cta">Find jobs</NuxtLink>
               </template>
             </EmptyState>
           </li>
@@ -298,9 +298,9 @@ onActivated(() => {
 
 .empty-state__cta {
   display: inline-block;
-  padding: 10px 20px;
+  padding: var(--space-3) var(--space-5);
   background: var(--color-primary-600);
-  color: white;
+  color: var(--color-white);
   border-radius: var(--radius-md);
   text-decoration: none;
   font-weight: 600;
@@ -309,6 +309,12 @@ onActivated(() => {
 
 .empty-state__cta:hover {
   background: var(--color-primary-700);
+}
+
+.empty-state__cta:focus-visible {
+  outline: 2px solid var(--color-dark);
+  outline-offset: 2px;
+  border-radius: var(--radius-md);
 }
 
 </style>

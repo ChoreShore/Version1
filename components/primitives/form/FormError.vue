@@ -1,9 +1,3 @@
-<template>
-  <p v-if="shouldShow" class="form-field__error" :id="errorId" role="alert">
-    <slot>{{ externalError }}</slot>
-  </p>
-</template>
-
 <script setup lang="ts">
 import { computed } from 'vue';
 import { useFormFieldContext } from './context';
@@ -16,6 +10,12 @@ onMounted(() => registerError(true));
 
 onBeforeUnmount(() => registerError(false));
 </script>
+
+<template>
+  <p v-if="shouldShow" class="form-field__error" :id="errorId" role="alert">
+    <slot>{{ externalError }}</slot>
+  </p>
+</template>
 
 <style scoped>
 .form-field__error {

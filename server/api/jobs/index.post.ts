@@ -8,6 +8,7 @@ import { logger, logDetailedError } from '~/server/utils/logger';
 import { rateLimiters } from '~/server/utils/rateLimit';
 import { getErrorMessage } from '~/server/utils/errorMessages';
 import { requireCsrfProtection } from '~/server/utils/csrf';
+import { JOB_SELECT_WITH_RELATIONS } from '~/server/utils/queries';
 
 export default defineEventHandler(async (event) => {
   try {
@@ -94,11 +95,7 @@ export default defineEventHandler(async (event) => {
       // Return the recently created job instead of creating a duplicate
       const { data: existingJob, error: fetchError } = await client
         .from('jobs')
-        .select(`
-          *,
-          employer:profiles!employer_id(first_name, last_name),
-          category:job_categories!category_id(name)
-        `)
+        .select(JOB_SELECT_WITH_RELATIONS)
         .eq('id', recentDuplicate.id)
         .single();
 
@@ -145,11 +142,7 @@ export default defineEventHandler(async (event) => {
         longitude,
         status: 'open'
       })
-      .select(`
-        *,
-        employer:profiles!employer_id(first_name, last_name),
-        category:job_categories!category_id(name)
-      `)
+      .select(JOB_SELECT_WITH_RELATIONS)
       .single();
 
     if (error) {

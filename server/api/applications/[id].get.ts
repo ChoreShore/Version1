@@ -1,7 +1,7 @@
 import { serverSupabaseClient } from '#supabase/server';
 import { ApplicationResponseSchema } from '~/schemas/application';
 import { logger } from '~/server/utils/logger';
-import { getAuthenticatedUser, ensureApplicationOwner, ensureJobEmployer } from '~/server/utils/api';
+import { getAuthenticatedUser, ensureApplicationOwner, ensureJobOwner } from '~/server/utils/api';
 
 export default defineEventHandler(async (event) => {
   try {
@@ -32,7 +32,7 @@ export default defineEventHandler(async (event) => {
         .single();
       
       if (application) {
-        await ensureJobEmployer(client, application.job_id, user.id);
+        await ensureJobOwner(client, application.job_id, user.id);
       } else {
         throw error;
       }

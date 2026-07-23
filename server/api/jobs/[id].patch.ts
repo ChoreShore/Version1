@@ -5,6 +5,7 @@ import { getAuthenticatedUser, assertValidUuid, ensureJobOwner } from '~/server/
 import { logger, logDetailedError } from '~/server/utils/logger';
 import { getErrorMessage } from '~/server/utils/errorMessages';
 import { requireCsrfProtection } from '~/server/utils/csrf';
+import { JOB_SELECT_WITH_RELATIONS } from '~/server/utils/queries';
 
 const VALID_STATUS_TRANSITIONS: Record<string, string[]> = {
   draft: ['open'],
@@ -134,11 +135,7 @@ export default defineEventHandler(async (event) => {
       .from('jobs')
       .update(body)
       .eq('id', jobId)
-      .select(`
-        *,
-        employer:profiles!employer_id(first_name, last_name),
-        category:job_categories!category_id(name)
-      `)
+      .select(JOB_SELECT_WITH_RELATIONS)
       .single();
 
     if (error) {

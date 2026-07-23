@@ -1,21 +1,9 @@
-<template>
-  <button
-    ref="itemRef"
-    class="menu__item"
-    role="menuitem"
-    type="button"
-    @click="handleSelect"
-    @keydown.enter.prevent="handleSelect"
-    @keydown.space.prevent="handleSelect"
-  >
-    <slot />
-  </button>
-</template>
-
 <script setup lang="ts">
 import { useMenuContext } from './context';
 
-const emit = defineEmits<{ (e: 'select'): void }>();
+const emit = defineEmits<{
+  select: [];
+}>();
 const { registerItem, unregisterItem, close, closeOnSelect } = useMenuContext('MenuItem');
 
 const itemRef = ref<HTMLElement | null>(null);
@@ -39,6 +27,20 @@ const handleSelect = () => {
   }
 };
 </script>
+
+<template>
+  <button
+    ref="itemRef"
+    class="menu__item"
+    role="menuitem"
+    type="button"
+    @click="handleSelect"
+    @keydown.enter.prevent="handleSelect"
+    @keydown.space.prevent="handleSelect"
+  >
+    <slot />
+  </button>
+</template>
 
 <style scoped>
 .menu__item {

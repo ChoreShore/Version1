@@ -1,3 +1,21 @@
+<script setup lang="ts">
+export interface EmptyStateProps {
+  /** Main heading */
+  title: string;
+  /** Description text */
+  description?: string;
+  /** Eyebrow text above title */
+  eyebrow?: string;
+  /** Icon component or emoji string */
+  icon?: string | any;
+}
+
+withDefaults(defineProps<EmptyStateProps>(), {
+  description: '',
+  eyebrow: ''
+});
+</script>
+
 <template>
   <section class="empty-state">
     <div class="empty-state__icon" v-if="$slots.icon || icon">
@@ -17,28 +35,13 @@
   </section>
 </template>
 
-<script setup lang="ts">
-withDefaults(
-  defineProps<{
-    title: string;
-    description?: string;
-    eyebrow?: string;
-    icon?: string | any;
-  }>(),
-  {
-    description: '',
-    eyebrow: ''
-  }
-);
-</script>
-
 <style scoped>
 .empty-state {
-  border: 1px dashed var(--border);
+  border: 1px dashed var(--color-border);
   border-radius: var(--radius-lg);
   padding: var(--space-10) var(--space-6);
   text-align: center;
-  background: var(--surface);
+  background: var(--color-surface);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -49,15 +52,15 @@ withDefaults(
   width: 72px;
   height: 72px;
   border-radius: 50%;
-  background: var(--hover);
+  background: var(--color-hover);
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  font-size: 2rem;
+  font-size: var(--text-3xl);
 }
 
 .empty-state__icon span {
-  font-size: 2rem;
+  font-size: var(--text-3xl);
 }
 
 .empty-state__eyebrow {
@@ -65,7 +68,7 @@ withDefaults(
   text-transform: uppercase;
   letter-spacing: 0.08em;
   font-size: var(--text-xs);
-  color: var(--muted);
+  color: var(--color-text-muted);
 }
 
 .empty-state__title {
@@ -75,7 +78,7 @@ withDefaults(
 
 .empty-state__description {
   margin: 0;
-  color: var(--muted);
+  color: var(--color-text-muted);
   max-width: 36ch;
 }
 

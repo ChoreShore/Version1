@@ -2,7 +2,7 @@ import { createError } from 'h3';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import type { UpdateApplicationInput } from '~/schemas/application';
 import { ApplicationResponseSchema } from '~/schemas/application';
-import { ensureApplicationOwner, ensureJobEmployer } from '~/server/utils/api';
+import { ensureApplicationOwner, ensureJobOwner } from '~/server/utils/api';
 
 import { logger } from '~/server/utils/logger';
 
@@ -27,7 +27,7 @@ export async function authorizeAction(
   newStatus?: string
 ) {
   if (newStatus === 'accepted' || newStatus === 'rejected') {
-    await ensureJobEmployer(client, currentApp.job_id, userId);
+    await ensureJobOwner(client, currentApp.job_id, userId);
   } else if (newStatus === 'withdrawn') {
     await ensureApplicationOwner(client, applicationId, userId);
   }

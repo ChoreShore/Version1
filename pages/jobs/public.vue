@@ -50,9 +50,11 @@
       </button>
     </div>
 
-    <div v-if="jobsLoading" class="public-jobs-page__grid">
-      <LoadingSkeleton v-for="n in 8" :key="`job-skeleton-${n}`" variant="block" height="180px" />
-    </div>
+    <Carousel v-if="jobsLoading">
+      <div v-for="n in 8" :key="`job-skeleton-${n}`" class="job-skeleton-card">
+        <LoadingSkeleton variant="block" height="180px" />
+      </div>
+    </Carousel>
 
     <EmptyState
       v-else-if="!filteredJobs.length"
@@ -65,9 +67,9 @@
       </template>
     </EmptyState>
 
-    <div v-else class="public-jobs-page__grid">
-      <JobCard v-for="job in filteredJobs" :key="job.id" :job="job" />
-    </div>
+    <Carousel v-else>
+      <JobCardPublic v-for="job in filteredJobs" :key="job.id" :job="job" />
+    </Carousel>
 
     <!-- Content Sections -->
     <TrustSection />
@@ -82,9 +84,10 @@ definePageMeta({
 });
 import { onMounted, ref } from 'vue';
 import { Check, X } from '@lucide/vue';
-import JobCard from '~/components/jobs/JobCard.vue';
+import JobCardPublic from '~/components/jobs/JobCardPublic.vue';
 import EmptyState from '~/components/primitives/EmptyState.vue';
 import LoadingSkeleton from '~/components/primitives/LoadingSkeleton.vue';
+import Carousel from '~/components/primitives/Carousel.vue';
 import TrustSection from '~/components/sections/TrustSection.vue';
 import HowItWorksSection from '~/components/sections/HowItWorksSection.vue';
 import LegalSection from '~/components/sections/LegalSection.vue';
@@ -231,10 +234,8 @@ onMounted(() => {
   color: var(--color-text-subtle);
 }
 
-.public-jobs-page__grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-  gap: var(--space-4);
+.job-skeleton-card {
+  height: 180px;
 }
 
 .public-jobs-page__header-actions {

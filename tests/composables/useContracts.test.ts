@@ -2,7 +2,8 @@ import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { useContracts } from '~/composables/useContracts';
 import type {
   ContractResponseInput,
-  ContractsResponseInput
+  ContractsResponseInput,
+  CompletionResponseInput
 } from '~/schemas/contract';
 
 const contractsComposable = useContracts();
@@ -172,6 +173,105 @@ describe('useContracts composable', () => {
       mockFetch.mockRejectedValue(new Error('Failed to fetch contracts'));
 
       await expect(contractsComposable.listMyContracts('user-1')).rejects.toThrow('Failed to fetch contracts');
+    });
+  });
+
+  describe('markComplete', () => {
+    it('posts to /api/contracts/:id/complete', async () => {
+      const response: CompletionResponseInput = {
+        success: true,
+        contract: {
+          id: 'contract-1',
+          application_id: 'app-1',
+          employer_id: 'employer-1',
+          worker_id: 'worker-1',
+          job_id: 'job-1',
+          status: 'pending_review',
+          created_at: '2025-01-01T00:00:00Z',
+          updated_at: '2025-01-01T00:00:00Z'
+        }
+      };
+
+      mockFetch.mockResolvedValue(response);
+
+      const result = await contractsComposable.markComplete('contract-1');
+
+      expect(result).toBe(response);
+      expect(mockFetch).toHaveBeenCalledWith('/api/contracts/contract-1/complete', {
+        method: 'POST'
+      });
+    });
+
+    it('propagates fetch errors', async () => {
+      mockFetch.mockRejectedValue(new Error('Only active contracts'));
+
+      await expect(contractsComposable.markComplete('contract-1')).rejects.toThrow('Only active contracts');
+    });
+  });
+
+  describe('approveCompletion', () => {
+    it('posts to /api/contracts/:id/approve', async () => {
+      const response: CompletionResponseInput = {
+        success: true,
+        contract: {
+          id: 'contract-1',
+          application_id: 'app-1',
+          employer_id: 'employer-1',
+          worker_id: 'worker-1',
+          job_id: 'job-1',
+          status: 'completed',
+          created_at: '2025-01-01T00:00:00Z',
+          updated_at: '2025-01-01T00:00:00Z'
+        }
+      };
+
+      mockFetch.mockResolvedValue(response);
+
+      const result = await contractsComposable.approveCompletion('contract-1');
+
+      expect(result).toBe(response);
+      expect(mockFetch).toHaveBeenCalledWith('/api/contracts/contract-1/approve', {
+        method: 'POST'
+      });
+    });
+
+    it('propagates fetch errors', async () => {
+      mockFetch.mockRejectedValue(new Error('Only the employer'));
+
+      await expect(contractsComposable.approveCompletion('contract-1')).rejects.toThrow('Only the employer');
+    });
+  });
+
+  describe('rejectCompletion', () => {
+    it('posts to /api/contracts/:id/reject-completion', async () => {
+      const response: CompletionResponseInput = {
+        success: true,
+        contract: {
+          id: 'contract-1',
+          application_id: 'app-1',
+          employer_id: 'employer-1',
+          worker_id: 'worker-1',
+          job_id: 'job-1',
+          status: 'active',
+          created_at: '2025-01-01T00:00:00Z',
+          updated_at: '2025-01-01T00:00:00Z'
+        }
+      };
+
+      mockFetch.mockResolvedValue(response);
+
+      const result = await contractsComposable.rejectCompletion('contract-1');
+
+      expect(result).toBe(response);
+      expect(mockFetch).toHaveBeenCalledWith('/api/contracts/contract-1/reject-completion', {
+        method: 'POST'
+      });
+    });
+
+    it('propagates fetch errors', async () => {
+      mockFetch.mockRejectedValue(new Error('Only the employer'));
+
+      await expect(contractsComposable.rejectCompletion('contract-1')).rejects.toThrow('Only the employer');
     });
   });
 });

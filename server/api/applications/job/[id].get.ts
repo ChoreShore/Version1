@@ -1,7 +1,7 @@
 import { serverSupabaseClient } from '#supabase/server';
 import { logger } from '~/server/utils/logger';
 import { ApplicationWithDetailsSchema, ApplicationsResponseSchema } from '~/schemas/application';
-import { getAuthenticatedUser, ensureJobEmployer } from '~/server/utils/api';
+import { getAuthenticatedUser, ensureJobOwner } from '~/server/utils/api';
 
 export default defineEventHandler(async (event) => {
   try {
@@ -20,7 +20,7 @@ export default defineEventHandler(async (event) => {
     const client = await serverSupabaseClient(event);
 
     // Authorization check: only the job employer can view applications for their job
-    await ensureJobEmployer(client, jobId, user.id);
+    await ensureJobOwner(client, jobId, user.id);
 
     // Get applications for this job with worker and job details
     const { data, error } = await client

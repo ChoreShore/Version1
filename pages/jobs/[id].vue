@@ -1,6 +1,7 @@
 <template>
+<NuxtLayout :name="user ? 'default' : 'public'">
   <section class="job-detail">
-    <NuxtLink class="job-detail__back" to="/jobs">← Back to jobs</NuxtLink>
+    <NuxtLink class="job-detail__back" :to="user ? '/jobs' : '/jobs/public'">← Back to jobs</NuxtLink>
 
     <div v-if="loading" class="job-detail__skeletons">
       <LoadingSkeleton variant="block" height="220px" />
@@ -16,7 +17,7 @@
       :icon="AlertTriangle"
     >
       <template #actions>
-        <NuxtLink to="/jobs" class="empty-state__cta">Find jobs</NuxtLink>
+        <NuxtLink :to="user ? '/jobs' : '/jobs/public'" class="empty-state__cta">Find jobs</NuxtLink>
       </template>
     </EmptyState>
 
@@ -70,13 +71,16 @@
           </aside>
 
           <!-- Send Offer (public view) -->
-          <div v-if="!user" class="job-detail__offer">
-            <h3><MessageSquare :size="20" class="section-icon" /> Send an Offer</h3>
-            <p>Propose your own rate or availability to stand out</p>
-            <input type="text" placeholder="Your offer (£/hour)" class="offer-input" />
-            <textarea placeholder="Message (e.g. available evenings)" class="offer-textarea" />
-            <NuxtLink to="/auth/sign-up" class="btn btn--primary">Sign up to apply</NuxtLink>
-            <p class="offer-hint">Example: £16/hr — "Experienced cleaner, available immediately"</p>
+          <div v-if="!user" class="job-detail__offer job-detail__offer--cta">
+            <h3><MessageSquare :size="20" class="section-icon" /> Want to send an offer?</h3>
+            <p>Create a free account to propose your rate and message the employer directly.</p>
+            <div class="offer-preview">
+              <span class="offer-preview__label">Example offer you could send:</span>
+              <blockquote class="offer-preview__quote">
+                "Experienced cleaner, available immediately — £16/hr"
+              </blockquote>
+            </div>
+            <NuxtLink to="/auth/sign-up" class="btn btn--primary btn--full">Sign up — it's free</NuxtLink>
             <div class="offer-tip">
               💡 Fair pay guidance applies. Travel distance, skill level and job duration should always be considered when making offers.
             </div>
@@ -192,10 +196,13 @@
       />
     </template>
   </section>
+</NuxtLayout>
 </template>
 
 <script setup lang="ts">
-definePageMeta({ layout: 'default' });
+definePageMeta({
+  layout: false // layout is chosen dynamically via <NuxtLayout>
+});
 import { computed, onMounted, ref, watch } from 'vue';
 import { useRoute, useSupabaseUser, useRouter } from '#imports';
 import { AlertTriangle, Brush, MapPin, Star, Heart, Link, MessageSquare, Users, BarChart3, Check, Flame, Zap } from '@lucide/vue';
@@ -240,7 +247,7 @@ const similarJobs = ref<any[]>([]);
 
 const jobId = computed(() => route.params.id as string);
 const isWorkerRole = computed(() => role.value === 'worker');
-const isEmployerOwner = computed(() => role.value === 'employer' && job.value?.employer_id === user.value?.id);
+const isEmployerOwner = computed(() => !!user.value?.id && role.value === 'employer' && job.value?.employer_id === user.value.id);
 const workerApplication = computed(() => applications.value.find((a) => a.worker_id === user.value?.id) ?? null);
 const showApplyPanel = computed(() => isWorkerRole.value && job.value?.status === 'open');
 const canApply = computed(() => !!showApplyPanel.value && !workerApplication.value && job.value?.employer_id !== user.value?.id);
@@ -391,9 +398,10 @@ onMounted(() => { fetchJob(); if (isEmployerOwner.value) fetchApplications(); })
 .job-detail__offer { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: var(--space-5); display: flex; flex-direction: column; gap: var(--space-3); }
 .job-detail__offer h3 { margin: 0; font-size: var(--text-lg); }
 .job-detail__offer p { margin: 0; color: var(--muted); font-size: var(--text-sm); }
-.offer-input, .offer-textarea { width: 100%; padding: var(--space-3); border: 1px solid var(--border); border-radius: var(--radius-md); font-size: var(--text-base); background: white; }
-.offer-textarea { min-height: 80px; resize: vertical; }
-.offer-hint { font-size: var(--text-sm); color: var(--muted); }
+.job-detail__offer--cta { background: var(--color-primary-50); border-color: var(--color-primary-200); }
+.offer-preview { background: var(--surface); border: 1px dashed var(--border); border-radius: var(--radius-md); padding: var(--space-3); }
+.offer-preview__label { display: block; font-size: var(--text-xs); color: var(--muted); margin-bottom: var(--space-1); text-transform: uppercase; letter-spacing: 0.05em; }
+.offer-preview__quote { margin: 0; font-size: var(--text-sm); color: var(--text); font-style: italic; line-height: 1.5; }
 .offer-tip { background: #fffbeb; padding: var(--space-3); border-radius: var(--radius-md); font-size: var(--text-sm); color: var(--text); }
 
 .job-detail__status-control { display: flex; align-items: center; gap: var(--space-3); padding: var(--space-4); background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); }

@@ -2,6 +2,7 @@ import { serverSupabaseClient } from '#supabase/server';
 import { JobResponseSchema } from '~/schemas/job';
 import { logger } from '~/server/utils/logger';
 import { assertValidUuid, getAuthenticatedUser } from '~/server/utils/api';
+import { JOB_SELECT_WITH_RELATIONS } from '~/server/utils/queries';
 
 export default defineEventHandler(async (event) => {
   try {
@@ -30,17 +31,9 @@ export default defineEventHandler(async (event) => {
       throw createError({ statusCode: 403, statusMessage: 'This job is not available' });
     }
 
-    // Build selective query based on ownership
-    let select = `*, category:job_categories!category_id(name)`;
-    if (isOwner) {
-      select += `, employer:profiles!employer_id(first_name, last_name)`;
-    } else {
-      select += `, employer:profiles!employer_id(first_name, last_name)`;
-    }
-
     const { data: jobData, error: jobError } = await client
       .from('jobs')
-      .select(select)
+      .select(JOB_SELECT_WITH_RELATIONS)
       .eq('id', jobId)
       .single();
 

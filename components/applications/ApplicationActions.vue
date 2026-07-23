@@ -165,7 +165,7 @@ const handleError = (error: unknown, formName?: string) => {
 
 .application-actions__button--pending:hover:not(:disabled) {
   background: var(--color-info);
-  color: white;
+  color: var(--color-white);
 }
 
 .application-actions__button--success {
@@ -175,7 +175,7 @@ const handleError = (error: unknown, formName?: string) => {
 
 .application-actions__button--success:hover:not(:disabled) {
   background: var(--color-success);
-  color: white;
+  color: var(--color-white);
 }
 
 .application-actions__button--danger {
@@ -185,6 +185,6 @@ const handleError = (error: unknown, formName?: string) => {
 
 .application-actions__button--danger:hover:not(:disabled) {
   background: var(--color-danger);
-  color: white;
+  color: var(--color-white);
 }
 </style>

@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { validateSchema } from './validation';
 
 // Review creation schema (strict for input validation)
 export const CreateReviewSchema = z.object({
@@ -60,25 +61,4 @@ export type ReviewsResponseInput = z.infer<typeof ReviewsResponseSchema>;
 export type ReviewResponseInput = z.infer<typeof ReviewResponseSchema>;
 
 // Validation helper functions
-export const validateCreateReview = (data: unknown) => {
-  try {
-    return {
-      success: true,
-      data: CreateReviewSchema.parse(data),
-      errors: null
-    };
-  } catch (error) {
-    if (error instanceof z.ZodError) {
-      return {
-        success: false,
-        data: null,
-        errors: error.issues.reduce((acc, err) => {
-          const field = err.path[0] as string;
-          acc[field] = err.message;
-          return acc;
-        }, {} as Record<string, string>)
-      };
-    }
-    throw error;
-  }
-};
+export const validateCreateReview = (data: unknown) => validateSchema(CreateReviewSchema, data);

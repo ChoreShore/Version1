@@ -102,7 +102,7 @@ const currentRoleLabel = computed(() => {
 
 .nav-sidebar__brand {
   padding-bottom: var(--space-4);
-  border-bottom: 1px solid var(--border);
+  border-bottom: 1px solid var(--color-border);
 }
 
 .nav-sidebar__brand-link {
@@ -114,17 +114,17 @@ const currentRoleLabel = computed(() => {
 }
 
 .nav-sidebar__brand-mark {
-  width: 40px;
-  height: 40px;
+  width: var(--space-10);
+  height: var(--space-10);
   border-radius: var(--radius-lg);
-  background: linear-gradient(135deg, var(--dark), var(--accent));
-  color: white;
+  background: linear-gradient(135deg, var(--color-dark), var(--color-accent));
+  color: var(--color-white);
   display: inline-flex;
   align-items: center;
   justify-content: center;
   font-weight: 700;
   font-size: var(--text-sm);
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
+  box-shadow: var(--shadow-sm);
 }
 
 .nav-sidebar__brand-title {
@@ -137,7 +137,7 @@ const currentRoleLabel = computed(() => {
 .nav-sidebar__brand-subtitle {
   margin: 0;
   font-size: var(--text-xs);
-  color: var(--muted);
+  color: var(--color-text-muted);
   letter-spacing: 0.2px;
 }
 
@@ -148,16 +148,16 @@ const currentRoleLabel = computed(() => {
   margin: 0;
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: var(--space-1);
 }
 
 .nav-sidebar__link {
   display: flex;
   align-items: center;
   gap: var(--space-3);
-  padding: 10px 12px;
+  padding: var(--space-2) var(--space-3);
   border-radius: var(--radius-md);
-  color: var(--text);
+  color: var(--color-text);
   text-decoration: none;
   font-weight: 500;
   transition: background 120ms ease, color 120ms ease;
@@ -173,7 +173,7 @@ const currentRoleLabel = computed(() => {
 }
 
 .nav-sidebar__link:focus-visible {
-  outline: 2px solid var(--dark);
+  outline: 2px solid var(--color-dark);
   outline-offset: 2px;
   border-radius: var(--radius-md);
 }
@@ -188,7 +188,7 @@ const currentRoleLabel = computed(() => {
 
 .nav-sidebar__badge {
   margin-left: auto;
-  padding: 2px 8px;
+  padding: var(--space-1) var(--space-2);
   border-radius: var(--radius-pill);
   background-color: var(--color-hover);
   color: var(--color-text);
@@ -199,14 +199,14 @@ const currentRoleLabel = computed(() => {
 .nav-sidebar__footer {
   margin-top: auto;
   padding-top: var(--space-4);
-  border-top: 1px solid var(--border);
+  border-top: 1px solid var(--color-border);
 }
 
 .nav-sidebar__role-badge {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  padding: 4px 10px;
+  gap: var(--space-1);
+  padding: var(--space-1) var(--space-2);
   border-radius: var(--radius-pill);
   background: var(--color-hover);
   color: var(--color-text);
@@ -219,6 +219,6 @@ const currentRoleLabel = computed(() => {
   width: 6px;
   height: 6px;
   border-radius: 50%;
-  background: var(--dark);
+  background: var(--color-dark);
 }
 </style>

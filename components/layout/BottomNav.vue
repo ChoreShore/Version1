@@ -81,8 +81,8 @@ const handleMenuClick = () => {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 4px;
-  padding: 8px 12px;
+  gap: var(--space-1);
+  padding: var(--space-2) var(--space-3);
   text-decoration: none;
   color: var(--color-text-muted);
   border-radius: var(--radius-md);
@@ -91,7 +91,7 @@ const handleMenuClick = () => {
 }
 
 .bottom-nav__item:hover {
-  background: var(--hover);
+  background: var(--color-hover);
   color: var(--color-text);
 }
 
@@ -100,12 +100,12 @@ const handleMenuClick = () => {
 }
 
 .bottom-nav__icon {
-  font-size: 20px;
+  font-size: var(--text-xl);
   line-height: 1;
 }
 
 .bottom-nav__label {
-  font-size: 11px;
+  font-size: var(--text-xs);
   font-weight: 500;
   line-height: 1;
 }
@@ -118,7 +118,7 @@ const handleMenuClick = () => {
 }
 
 .bottom-nav__item--menu:hover {
-  background: var(--hover);
+  background: var(--color-hover);
   color: var(--color-text);
 }
 

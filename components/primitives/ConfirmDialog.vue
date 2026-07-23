@@ -1,49 +1,22 @@
-<template>
-  <Teleport to="body">
-    <Transition name="modal">
-      <div v-if="isOpen" class="confirm-dialog-overlay" @click="handleOverlayClick">
-        <div class="confirm-dialog" @click.stop>
-          <div class="confirm-dialog__header">
-            <h3 class="confirm-dialog__title">{{ title }}</h3>
-          </div>
-          
-          <div class="confirm-dialog__body">
-            <p class="confirm-dialog__message">{{ message }}</p>
-          </div>
-          
-          <div class="confirm-dialog__actions">
-            <button 
-              type="button" 
-              class="confirm-dialog__button confirm-dialog__button--cancel"
-              @click="handleCancel"
-            >
-              {{ cancelText }}
-            </button>
-            <button 
-              type="button" 
-              class="confirm-dialog__button confirm-dialog__button--confirm"
-              @click="handleConfirm"
-            >
-              {{ confirmText }}
-            </button>
-          </div>
-        </div>
-      </div>
-    </Transition>
-  </Teleport>
-</template>
-
 <script setup lang="ts">
-interface Props {
+import Button from './Button.vue';
+
+export interface ConfirmDialogProps {
+  /** Controls dialog visibility */
   isOpen: boolean;
+  /** Dialog title */
   title?: string;
+  /** Dialog message */
   message?: string;
+  /** Confirm button text */
   confirmText?: string;
+  /** Cancel button text */
   cancelText?: string;
+  /** Close when overlay is clicked */
   closeOnOverlayClick?: boolean;
 }
 
-const props = withDefaults(defineProps<Props>(), {
+const props = withDefaults(defineProps<ConfirmDialogProps>(), {
   title: 'Confirm',
   message: 'Are you sure?',
   confirmText: 'Confirm',
@@ -55,6 +28,9 @@ const emit = defineEmits<{
   confirm: [];
   cancel: [];
 }>();
+
+const dialogRef = ref<HTMLElement | null>(null);
+const titleId = `confirm-title-${useId()}`;
 
 const handleConfirm = () => {
   emit('confirm');
@@ -69,7 +45,57 @@ const handleOverlayClick = () => {
     handleCancel();
   }
 };
+
+watch(
+  () => props.isOpen,
+  (open) => {
+    if (typeof document === 'undefined') return;
+    document.body.style.overflow = open ? 'hidden' : '';
+  },
+  { immediate: true }
+);
+
+useFocusTrap(dialogRef, () => props.isOpen, { onEscape: handleCancel });
+
+onBeforeUnmount(() => {
+  document.body.style.overflow = '';
+});
 </script>
+
+<template>
+  <Teleport to="body">
+    <Transition name="modal">
+      <div
+        v-if="isOpen"
+        ref="dialogRef"
+        class="confirm-dialog-overlay"
+        role="dialog"
+        aria-modal="true"
+        :aria-labelledby="titleId"
+        @click="handleOverlayClick"
+      >
+        <div class="confirm-dialog" @click.stop>
+          <div class="confirm-dialog__header">
+            <h3 :id="titleId" class="confirm-dialog__title">{{ title }}</h3>
+          </div>
+          
+          <div class="confirm-dialog__body">
+            <p class="confirm-dialog__message">{{ message }}</p>
+          </div>
+          
+          <div class="confirm-dialog__actions">
+            <Button variant="secondary" @click="handleCancel">
+              {{ cancelText }}
+            </Button>
+            <Button variant="primary" @click="handleConfirm">
+              {{ confirmText }}
+            </Button>
+          </div>
+        </div>
+      </div>
+    </Transition>
+  </Teleport>
+</template>
 
 <style scoped>
 .confirm-dialog-overlay {
@@ -78,7 +104,7 @@ const handleOverlayClick = () => {
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(26, 26, 26, 0.35);
+  background: var(--color-overlay);
   backdrop-filter: blur(4px);
   display: flex;
   align-items: center;
@@ -88,7 +114,7 @@ const handleOverlayClick = () => {
 }
 
 .confirm-dialog {
-  background: var(--surface);
+  background: var(--color-surface);
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-xl);
   max-width: 500px;
@@ -98,14 +124,14 @@ const handleOverlayClick = () => {
 
 .confirm-dialog__header {
   padding: var(--space-6) var(--space-6) var(--space-4);
-  border-bottom: 1px solid var(--border);
+  border-bottom: 1px solid var(--color-border);
 }
 
 .confirm-dialog__title {
   margin: 0;
   font-size: var(--text-lg);
   font-weight: 600;
-  color: var(--text);
+  color: var(--color-text);
 }
 
 .confirm-dialog__body {
@@ -114,7 +140,7 @@ const handleOverlayClick = () => {
 
 .confirm-dialog__message {
   margin: 0;
-  color: var(--muted);
+  color: var(--color-text-muted);
   line-height: 1.5;
 }
 
@@ -123,36 +149,7 @@ const handleOverlayClick = () => {
   display: flex;
   gap: var(--space-3);
   justify-content: flex-end;
-  border-top: 1px solid var(--border);
-}
-
-.confirm-dialog__button {
-  padding: var(--space-3) var(--space-4);
-  border-radius: var(--radius-md);
-  font-weight: 500;
-  font-size: var(--text-sm);
-  cursor: pointer;
-  transition: all 150ms ease;
-  border: none;
-}
-
-.confirm-dialog__button--cancel {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  color: var(--text);
-}
-
-.confirm-dialog__button--cancel:hover {
-  background: var(--hover);
-}
-
-.confirm-dialog__button--confirm {
-  background: var(--dark);
-  color: white;
-}
-
-.confirm-dialog__button--confirm:hover {
-  background: var(--success);
+  border-top: 1px solid var(--color-border);
 }
 
 /* Modal transition */

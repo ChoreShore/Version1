@@ -98,11 +98,11 @@ const toggleHelp = () => {
 .role-switcher {
   position: relative;
   display: inline-flex;
-  gap: 6px;
-  padding: 4px;
+  gap: var(--space-1);
+  padding: var(--space-1);
   border-radius: var(--radius-lg);
-  background-color: var(--surface);
-  border: 1px solid var(--border);
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
   width: 100%;
   max-width: 280px;
   min-width: 0;
@@ -128,14 +128,14 @@ const toggleHelp = () => {
 }
 
 .role-switcher__help:focus-visible {
-  outline: 2px solid var(--dark);
+  outline: 2px solid var(--color-dark);
   outline-offset: 2px;
 }
 
 .role-switcher__option {
   border: none;
   border-radius: calc(var(--radius-md) - 2px);
-  padding: 10px 16px;
+  padding: var(--space-3) var(--space-4);
   text-align: left;
   background: transparent;
   transition: background 150ms ease, color 150ms ease, box-shadow 150ms ease;
@@ -144,11 +144,11 @@ const toggleHelp = () => {
 }
 
 .role-switcher__option:hover {
-  background-color: var(--hover);
+  background-color: var(--color-hover);
 }
 
 .role-switcher__option:focus-visible {
-  outline: 2px solid var(--dark);
+  outline: 2px solid var(--color-dark);
   outline-offset: 2px;
   z-index: 1;
 }
@@ -168,8 +168,8 @@ const toggleHelp = () => {
 
 .role-switcher__description {
   display: block;
-  font-size: 0.75rem;
-  color: var(--muted);
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
   white-space: nowrap;
 }
 
@@ -178,9 +178,9 @@ const toggleHelp = () => {
   bottom: calc(100% + 8px);
   left: 50%;
   transform: translateX(-50%);
-  background: var(--dark);
-  color: var(--white);
-  padding: 8px 12px;
+  background: var(--color-dark);
+  color: var(--color-white);
+  padding: var(--space-2) var(--space-3);
   border-radius: var(--radius-md);
   font-size: var(--text-xs);
   white-space: nowrap;
@@ -203,9 +203,9 @@ const toggleHelp = () => {
 .role-switcher__tooltip-close {
   background: none;
   border: none;
-  color: var(--white);
+  color: var(--color-white);
   cursor: pointer;
-  padding: 2px;
+  padding: var(--space-1);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -225,7 +225,7 @@ const toggleHelp = () => {
   left: 50%;
   transform: translateX(-50%);
   border: 6px solid transparent;
-  border-top-color: var(--dark);
+  border-top-color: var(--color-dark);
 }
 
 .role-switcher__tooltip.is-visible {
@@ -241,7 +241,7 @@ const toggleHelp = () => {
 
   .role-switcher__option {
     flex: 1 0 auto;
-    padding: 8px 12px;
+    padding: var(--space-2) var(--space-3);
   }
 
   .role-switcher__description {

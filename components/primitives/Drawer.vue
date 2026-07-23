@@ -25,24 +25,34 @@
 </template>
 
 <script setup lang="ts">
-const props = withDefaults(
-  defineProps<{
-    modelValue: boolean;
-    title: string;
-    description?: string;
-    eyebrow?: string;
-    placement?: 'left' | 'right';
-    size?: 'sm' | 'md' | 'lg';
-    closeOnOverlay?: boolean;
-  }>(),
-  {
-    placement: 'right',
-    size: 'md',
-    closeOnOverlay: true
-  }
-);
+export interface DrawerProps {
+  /** Controls drawer visibility */
+  modelValue: boolean;
+  /** Drawer title */
+  title: string;
+  /** Drawer description */
+  description?: string;
+  /** Eyebrow text above title */
+  eyebrow?: string;
+  /** Drawer placement */
+  placement?: 'left' | 'right';
+  /** Drawer size */
+  size?: 'sm' | 'md' | 'lg';
+  /** Close when overlay is clicked */
+  closeOnOverlay?: boolean;
+}
 
-const emit = defineEmits<{ (e: 'update:modelValue', value: boolean): void; (e: 'open'): void; (e: 'close'): void }>();
+const props = withDefaults(defineProps<DrawerProps>(), {
+  placement: 'right',
+  size: 'md',
+  closeOnOverlay: true
+});
+
+const emit = defineEmits<{
+  'update:modelValue': [value: boolean];
+  open: [];
+  close: [];
+}>();
 
 const isOpen = computed({
   get: () => props.modelValue,
@@ -103,7 +113,7 @@ onBeforeUnmount(() => {
 .drawer__overlay {
   position: absolute;
   inset: 0;
-  background: rgba(26, 26, 26, 0.35);
+  background: var(--color-overlay);
   backdrop-filter: blur(4px);
 }
 
@@ -112,9 +122,9 @@ onBeforeUnmount(() => {
   top: 0;
   bottom: 0;
   width: min(480px, 100%);
-  background: var(--surface);
-  border-left: 1px solid var(--border);
-  border-right: 1px solid var(--border);
+  background: var(--color-surface);
+  border-left: 1px solid var(--color-border);
+  border-right: 1px solid var(--color-border);
   display: flex;
   flex-direction: column;
   box-shadow: var(--shadow);
@@ -139,11 +149,11 @@ onBeforeUnmount(() => {
 .drawer__header,
 .drawer__footer {
   padding: var(--space-5);
-  border-bottom: 1px solid var(--border);
+  border-bottom: 1px solid var(--color-border);
 }
 
 .drawer__footer {
-  border-top: 1px solid var(--border);
+  border-top: 1px solid var(--color-border);
   border-bottom: none;
   display: flex;
   justify-content: flex-end;
@@ -166,24 +176,24 @@ onBeforeUnmount(() => {
   text-transform: uppercase;
   letter-spacing: 0.08em;
   font-size: var(--text-xs);
-  color: var(--muted);
+  color: var(--color-text-muted);
 }
 
 .drawer__description {
   margin: var(--space-2) 0 0;
-  color: var(--muted);
+  color: var(--color-text-muted);
 }
 
 .drawer__close {
   border: none;
   background: transparent;
-  font-size: 1.5rem;
-  color: var(--muted);
+  font-size: var(--text-2xl);
+  color: var(--color-text-muted);
   cursor: pointer;
 }
 
 .drawer__close:hover {
-  color: var(--text);
+  color: var(--color-text);
 }
 
 @media (prefers-reduced-motion: reduce) {

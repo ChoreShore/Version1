@@ -85,8 +85,8 @@ describe('POST /api/profile/photo - Photo Upload API', () => {
   it('should successfully upload a valid photo', async () => {
     const response = {
       success: true,
-      photoUrl: 'https://example.com/profile-photos/worker-photos/user-123-1234567890.jpg',
-      path: 'worker-photos/user-123-1234567890.jpg'
+      photoUrl: 'https://example.com/profile-photos/worker-photos/user-123/1234567890.jpg',
+      path: 'worker-photos/user-123/1234567890.jpg'
     };
 
     mockFetch.mockResolvedValue(response);

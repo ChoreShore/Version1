@@ -54,7 +54,53 @@
 
 
 
-      <div v-if="actionError" class="contract-detail__error">{{ actionError }}</div>
+      <div v-if="actionError" class="contract-detail__error" role="alert">{{ actionError }}</div>
+
+      <div v-if="showActions" class="contract-detail__actions" aria-label="Contract actions">
+        <button
+          v-if="isWorker && contract.status === 'active'"
+          type="button"
+          class="contract-detail__btn contract-detail__btn--primary"
+          :disabled="actionLoading"
+          :aria-busy="actionLoading"
+          @click="handleMarkComplete"
+        >
+          Mark job as complete
+        </button>
+
+        <button
+          v-if="isEmployer && contract.status === 'pending_review'"
+          type="button"
+          class="contract-detail__btn contract-detail__btn--success"
+          :disabled="actionLoading"
+          :aria-busy="actionLoading"
+          @click="handleApprove"
+        >
+          Approve and release payment
+        </button>
+
+        <button
+          v-if="isEmployer && contract.status === 'pending_review'"
+          type="button"
+          class="contract-detail__btn contract-detail__btn--danger"
+          :disabled="actionLoading"
+          :aria-busy="actionLoading"
+          @click="handleReject"
+        >
+          Request changes
+        </button>
+
+        <button
+          v-if="isEmployer && contract.status === 'completed' && contract.payout_status === 'pending'"
+          type="button"
+          class="contract-detail__btn contract-detail__btn--success"
+          :disabled="actionLoading"
+          :aria-busy="actionLoading"
+          @click="handleReleasePayout"
+        >
+          Release payout
+        </button>
+      </div>
     </template>
 
   </section>
@@ -70,12 +116,14 @@ import EmptyState from '~/components/primitives/EmptyState.vue';
 import LoadingSkeleton from '~/components/primitives/LoadingSkeleton.vue';
 import StatusPill from '~/components/primitives/StatusPill.vue';
 import { useContracts } from '~/composables/useContracts';
+import { usePayments } from '~/composables/usePayments';
 import type { ContractWithDetailsInput, ContractStatus } from '~/schemas/contract';
 
 
 const route = useRoute();
 const user = useSupabaseUser();
 const contractsApi = useContracts();
+const paymentsApi = usePayments();
 
 const contract = ref<ContractWithDetailsInput | null>(null);
 const loading = ref(true);
@@ -85,10 +133,20 @@ const actionError = ref<string | null>(null);
 
 const contractId = computed(() => route.params.id as string);
 const isEmployer = computed(() => user.value?.id === contract.value?.employer_id);
+const isWorker = computed(() => user.value?.id === contract.value?.worker_id);
+const showActions = computed(() => {
+  if (!contract.value) return false;
+  const s = contract.value.status;
+  if (isWorker.value && s === 'active') return true;
+  if (isEmployer.value && s === 'pending_review') return true;
+  if (isEmployer.value && s === 'completed' && contract.value.payout_status === 'pending') return true;
+  return false;
+});
 
 const statusVariantMap: Record<ContractStatus, 'neutral' | 'warning' | 'success' | 'info'> = {
   pending: 'warning',
   active: 'info',
+  pending_review: 'warning',
   completed: 'success',
   cancelled: 'neutral'
 };
@@ -96,6 +154,7 @@ const statusVariantMap: Record<ContractStatus, 'neutral' | 'warning' | 'success'
 const statusLabelMap: Record<ContractStatus, string> = {
   pending: 'Pending',
   active: 'In Progress',
+  pending_review: 'Awaiting Approval',
   completed: 'Completed',
   cancelled: 'Cancelled'
 };
@@ -119,6 +178,61 @@ const fetchContract = async () => {
     error.value = err?.data?.statusMessage || 'Could not load contract.';
   } finally {
     loading.value = false;
+  }
+};
+
+const handleMarkComplete = async () => {
+  actionLoading.value = true;
+  actionError.value = null;
+  try {
+    const response = await contractsApi.markComplete(contractId.value);
+    contract.value = response.contract as ContractWithDetailsInput;
+  } catch (err: any) {
+    actionError.value = err?.data?.statusMessage || 'Failed to mark job as complete.';
+  } finally {
+    actionLoading.value = false;
+  }
+};
+
+const handleApprove = async () => {
+  actionLoading.value = true;
+  actionError.value = null;
+  try {
+    const response = await contractsApi.approveCompletion(contractId.value);
+    contract.value = response.contract as ContractWithDetailsInput;
+  } catch (err: any) {
+    actionError.value = err?.data?.statusMessage || 'Failed to approve completion.';
+  } finally {
+    actionLoading.value = false;
+  }
+};
+
+const handleReject = async () => {
+  actionLoading.value = true;
+  actionError.value = null;
+  try {
+    const response = await contractsApi.rejectCompletion(contractId.value);
+    contract.value = response.contract as ContractWithDetailsInput;
+  } catch (err: any) {
+    actionError.value = err?.data?.statusMessage || 'Failed to request changes.';
+  } finally {
+    actionLoading.value = false;
+  }
+};
+
+const handleReleasePayout = async () => {
+  actionLoading.value = true;
+  actionError.value = null;
+  try {
+    await paymentsApi.processPayout({
+      contract_id: contractId.value,
+      idempotency_key: `payout-${contractId.value}-${Date.now()}`
+    });
+    await fetchContract();
+  } catch (err: any) {
+    actionError.value = err?.data?.statusMessage || 'Failed to release payout.';
+  } finally {
+    actionLoading.value = false;
   }
 };
 
@@ -220,6 +334,11 @@ onMounted(() => {
   padding: 12px 24px;
   font-weight: 600;
   cursor: pointer;
+}
+
+.contract-detail__btn:focus-visible {
+  outline: 2px solid var(--color-primary-500);
+  outline-offset: 2px;
 }
 
 .contract-detail__btn:disabled {

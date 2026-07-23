@@ -3,7 +3,7 @@ import {
   CreatePaymentIntentSchema,
   PaymentIntentResponseSchema
 } from '~/schemas/payment';
-import { getAuthenticatedUser, ensureJobEmployer } from '~/server/utils/api';
+import { getAuthenticatedUser, ensureJobOwner } from '~/server/utils/api';
 
 export default defineEventHandler(async (event) => {
   try {
@@ -38,7 +38,7 @@ export default defineEventHandler(async (event) => {
     }
 
     // Authorization check: only the job employer can create payment intents
-    await ensureJobEmployer(client, application.job?.id, user.id);
+    await ensureJobOwner(client, application.job?.id, user.id);
 
     if (application.job?.budget_type !== 'fixed') {
       throw createError({ statusCode: 400, statusMessage: 'Payment intents are only required for fixed-price jobs' });

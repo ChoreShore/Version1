@@ -11,16 +11,28 @@
           </div>
         </NuxtLink>
 
-        <nav class="public-layout__nav">
-          <NuxtLink to="/jobs/public" class="public-layout__nav-link">Find Jobs</NuxtLink>
-          <NuxtLink to="/workers/public" class="public-layout__nav-link">Find Workers</NuxtLink>
+        <nav class="public-layout__nav" :class="{ 'is-open': menuOpen }">
+          <NuxtLink to="/jobs/public" class="public-layout__nav-link" @click="menuOpen = false">Find Jobs</NuxtLink>
+          <NuxtLink to="/workers/public" class="public-layout__nav-link" @click="menuOpen = false">Find Workers</NuxtLink>
         </nav>
 
-        <div class="public-layout__actions">
-          <NuxtLink to="/jobs/new" class="btn btn--primary btn--post">Post a job</NuxtLink>
-          <NuxtLink to="/auth/sign-in" class="btn btn--ghost">Sign in</NuxtLink>
-          <NuxtLink to="/auth/sign-up" class="btn btn--outline">Sign up</NuxtLink>
+        <div class="public-layout__actions" :class="{ 'is-open': menuOpen }">
+          <NuxtLink to="/auth/sign-up" class="btn btn--primary btn--post" @click="menuOpen = false">Post a job</NuxtLink>
+          <NuxtLink to="/auth/sign-in" class="btn btn--ghost" @click="menuOpen = false">Sign in</NuxtLink>
+          <NuxtLink to="/auth/sign-up" class="btn btn--outline" @click="menuOpen = false">Sign up</NuxtLink>
         </div>
+
+        <button
+          type="button"
+          class="public-layout__menu-toggle"
+          :aria-expanded="menuOpen"
+          aria-controls="public-nav"
+          @click="menuOpen = !menuOpen"
+        >
+          <span class="menu-toggle__bar" :class="{ 'is-open': menuOpen }"></span>
+          <span class="menu-toggle__bar" :class="{ 'is-open': menuOpen }"></span>
+          <span class="menu-toggle__bar" :class="{ 'is-open': menuOpen }"></span>
+        </button>
       </div>
     </header>
 
@@ -39,7 +51,7 @@
         </div>
         <div class="public-layout__footer-section">
           <h4>For Employers</h4>
-          <NuxtLink to="/jobs/new">Post a Job</NuxtLink>
+          <NuxtLink to="/auth/sign-up">Post a Job</NuxtLink>
           <NuxtLink to="/auth/sign-up">Hire Workers</NuxtLink>
         </div>
         <div class="public-layout__footer-section">
@@ -64,7 +76,9 @@
 </template>
 
 <script setup lang="ts">
-// Public layout for unauthenticated pages
+import { ref } from 'vue';
+
+const menuOpen = ref(false);
 </script>
 
 <style scoped>
@@ -209,23 +223,78 @@
   color: var(--color-text-subtle);
 }
 
+/* Hamburger button — hidden on desktop */
+.public-layout__menu-toggle {
+  display: none;
+  flex-direction: column;
+  gap: 5px;
+  background: none;
+  border: none;
+  padding: var(--space-2);
+  cursor: pointer;
+  align-items: center;
+  justify-content: center;
+}
+
+.menu-toggle__bar {
+  display: block;
+  width: 24px;
+  height: 2px;
+  background: var(--color-text);
+  border-radius: 1px;
+  transition: transform 200ms ease, opacity 200ms ease;
+}
+
+.menu-toggle__bar.is-open:nth-child(1) {
+  transform: translateY(7px) rotate(45deg);
+}
+
+.menu-toggle__bar.is-open:nth-child(2) {
+  opacity: 0;
+}
+
+.menu-toggle__bar.is-open:nth-child(3) {
+  transform: translateY(-7px) rotate(-45deg);
+}
+
 @media (max-width: 768px) {
   .public-layout__header-inner {
-    flex-direction: column;
-    align-items: flex-start;
+    flex-wrap: wrap;
     padding: var(--space-4);
-  }
-
-  .public-layout__nav {
-    width: 100%;
-    flex-direction: column;
     gap: var(--space-3);
   }
 
-  .public-layout__actions {
+  .public-layout__nav {
+    display: none;
+    order: 3;
     width: 100%;
     flex-direction: column;
-    align-items: stretch;
+    gap: var(--space-3);
+    padding-top: var(--space-3);
+    border-top: 1px solid var(--color-border);
+  }
+
+  .public-layout__nav.is-open {
+    display: flex;
+  }
+
+  .public-layout__actions {
+    display: none;
+    order: 4;
+    width: 100%;
+    flex-direction: column;
+    gap: var(--space-3);
+    padding-top: var(--space-3);
+  }
+
+  .public-layout__actions.is-open {
+    display: flex;
+  }
+
+  .public-layout__menu-toggle {
+    display: flex;
+    order: 2;
+    margin-left: auto;
   }
 
   .btn--post {

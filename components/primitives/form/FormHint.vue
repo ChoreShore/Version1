@@ -1,9 +1,3 @@
-<template>
-  <p v-if="showHint" class="form-field__hint" :id="hintId">
-    <slot />
-  </p>
-</template>
-
 <script setup lang="ts">
 import { useFormFieldContext } from './context';
 
@@ -15,6 +9,12 @@ onMounted(() => registerHint(true));
 
 onBeforeUnmount(() => registerHint(false));
 </script>
+
+<template>
+  <p v-if="showHint" class="form-field__hint" :id="hintId">
+    <slot />
+  </p>
+</template>
 
 <style scoped>
 .form-field__hint {

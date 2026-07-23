@@ -7,249 +7,267 @@
           <p class="auth-subtitle">Join HireBeHired to find work or hire talent</p>
         </header>
 
-        <FormErrorBoundary 
+        <FormErrorBoundary
           form-name="sign-up-form"
           @form-error="handleFormError"
           @reset="handleFormReset"
         >
           <form @submit.prevent="handleSubmit" class="auth-form" novalidate>
-            <!-- First Name Field -->
-            <FormField id="first_name" :error="errors.first_name" :state="getFieldState('first_name')">
-              <FormLabel for="first_name">First Name</FormLabel>
-              <FormControl>
-                <input
-                  id="first_name"
-                  v-model="form.first_name"
-                  type="text"
-                  placeholder="Enter your first name"
-                  :disabled="loading"
-                  autocomplete="given-name"
-                  required
-                  @input="validateField('first_name')"
-                  @blur="validateField('first_name')"
-                />
-              </FormControl>
-              <FormError v-if="errors.first_name">{{ errors.first_name }}</FormError>
-              <FormSuccess v-if="!errors.first_name && form.first_name.length > 0"><Check :size="16" class="success-icon" /></FormSuccess>
-            </FormField>
-
-            <!-- Last Name Field -->
-            <FormField id="last_name" :error="errors.last_name" :state="getFieldState('last_name')">
-              <FormLabel for="last_name">Last Name</FormLabel>
-              <FormControl>
-                <input
-                  id="last_name"
-                  v-model="form.last_name"
-                  type="text"
-                  placeholder="Enter your last name"
-                  :disabled="loading"
-                  autocomplete="family-name"
-                  required
-                  @input="validateField('last_name')"
-                  @blur="validateField('last_name')"
-                />
-              </FormControl>
-              <FormError v-if="errors.last_name">{{ errors.last_name }}</FormError>
-              <FormSuccess v-if="!errors.last_name && form.last_name.length > 0"><Check :size="16" class="success-icon" /></FormSuccess>
-            </FormField>
-
-            <!-- Email Field -->
-            <FormField id="email" :error="errors.email" :state="getFieldState('email')">
-              <FormLabel for="email">Email Address</FormLabel>
-              <FormControl>
-                <input
-                  id="email"
-                  v-model="form.email"
-                  type="email"
-                  placeholder="Enter your email"
-                  :disabled="loading"
-                  autocomplete="email"
-                  required
-                  @input="validateField('email')"
-                  @blur="validateField('email')"
-                />
-              </FormControl>
-              <FormError v-if="errors.email">{{ errors.email }}</FormError>
-              <FormSuccess v-if="!errors.email && form.email.length > 0"><Check :size="16" class="success-icon" /></FormSuccess>
-            </FormField>
-
-            <!-- Password Field -->
-            <FormField id="password" :error="errors.password" :state="getFieldState('password')">
-              <FormLabel for="password">Password</FormLabel>
-              <FormControl>
-                <div class="password-input-wrapper">
-                  <input
-                    id="password"
-                    v-model="form.password"
-                    :type="showPassword ? 'text' : 'password'"
-                    placeholder="Create a strong password"
-                    :disabled="loading"
-                    autocomplete="new-password"
-                    required
-                    @input="validateField('password')"
-                    @blur="validateField('password')"
-                  />
-                  <button type="button" class="password-toggle" @click="showPassword = !showPassword">
-                    <EyeOff v-if="showPassword" :size="18" />
-                    <Eye v-else :size="18" />
-                  </button>
-                </div>
-              </FormControl>
-              <FormError v-if="errors.password">{{ errors.password }}</FormError>
-              <FormHint>8+ characters, uppercase, lowercase, and number</FormHint>
-              <FormSuccess v-if="!errors.password && form.password.length >= 8"><Check :size="16" class="success-icon" /></FormSuccess>
-            </FormField>
-
-            <!-- Confirm Password Field -->
-            <FormField id="confirmPassword" :error="errors.confirmPassword" :state="getFieldState('confirmPassword')">
-              <FormLabel for="confirmPassword">Confirm Password</FormLabel>
-              <FormControl>
-                <div class="password-input-wrapper">
-                  <input
-                    id="confirmPassword"
-                    v-model="form.confirmPassword"
-                    :type="showConfirmPassword ? 'text' : 'password'"
-                    placeholder="Confirm your password"
-                    :disabled="loading"
-                    autocomplete="new-password"
-                    required
-                    @input="validateConfirmPassword"
-                    @blur="validateField('confirmPassword')"
-                  />
-                  <button type="button" class="password-toggle" @click="showConfirmPassword = !showConfirmPassword">
-                    <EyeOff v-if="showConfirmPassword" :size="18" />
-                    <Eye v-else :size="18" />
-                  </button>
-                </div>
-              </FormControl>
-              <FormError v-if="errors.confirmPassword">{{ errors.confirmPassword }}</FormError>
-              <FormSuccess v-if="!errors.confirmPassword && form.confirmPassword === form.password && form.confirmPassword.length > 0"><Check :size="16" class="success-icon" /></FormSuccess>
-            </FormField>
-
-            <!-- Username Field -->
-            <FormField id="username" :error="errors.username" :state="getFieldState('username')">
-              <FormLabel for="username">Username</FormLabel>
-              <FormControl>
-                <input
-                  id="username"
-                  v-model="form.username"
-                  type="text"
-                  placeholder="Choose a username"
-                  :disabled="loading"
-                  autocomplete="username"
-                  required
-                  maxlength="12"
-                  @input="handleUsernameInput"
-                  @blur="validateField('username')"
-                />
-              </FormControl>
-              <div class="form-field__hint-row">
-                <FormError v-if="errors.username">{{ errors.username }}</FormError>
-                <span class="char-count" :class="{ 'is-over': form.username.length > 12 }">{{ form.username.length }}/12</span>
+            <!-- Step indicator -->
+            <div class="step-indicator">
+              <div class="step-indicator__item" :class="{ active: currentStep === 1, complete: currentStep === 2 }">
+                <span class="step-indicator__number">1</span>
+                <span class="step-indicator__label">Account</span>
               </div>
-              <FormSuccess v-if="!errors.username && usernameAvailable === true && form.username.length > 0"><Check :size="16" class="success-icon" /> Available</FormSuccess>
-              <FormError v-if="!errors.username && usernameAvailable === false && form.username.length > 0">Username taken</FormError>
-              <p class="username-warning">Choose carefully — your username cannot be changed later</p>
-            </FormField>
-
-            <!-- Postcode Field -->
-            <FormField id="postcode" :error="errors.postcode" :state="getFieldState('postcode')">
-              <FormLabel for="postcode">Postcode</FormLabel>
-              <FormControl>
-                <input
-                  id="postcode"
-                  v-model="form.postcode"
-                  type="text"
-                  placeholder="UK Postcode (e.g. SW1A 1AA)"
-                  :disabled="loading"
-                  autocomplete="postal-code"
-                  required
-                  @input="validateField('postcode')"
-                  @blur="validateField('postcode')"
-                />
-              </FormControl>
-              <FormError v-if="errors.postcode">{{ errors.postcode }}</FormError>
-              <FormSuccess v-if="!errors.postcode && form.postcode.length >= 4"><Check :size="16" class="success-icon" /></FormSuccess>
-            </FormField>
-
-            <!-- Role Field -->
-            <FormField id="role" :error="errors.role" :state="getFieldState('role')">
-              <FormLabel for="role">How will you use HireBeHired?</FormLabel>
-              <FormControl>
-                <select
-                  id="role"
-                  v-model="form.role"
-                  class="form-select"
-                  :disabled="loading"
-                  required
-                  @change="validateField('role')"
-                  @blur="validateField('role')"
-                >
-                  <option value="" disabled>Select a role</option>
-                  <option value="employer">Hire talent (Employer)</option>
-                  <option value="worker">Find work (Worker)</option>
-                </select>
-              </FormControl>
-              <FormError v-if="errors.role">{{ errors.role }}</FormError>
-              <FormSuccess v-if="!errors.role && form.role"><Check :size="16" class="success-icon" /></FormSuccess>
-            </FormField>
-
-            <!-- Required Checkboxes -->
-            <div class="checkbox-section">
-              <FormField id="age_confirmation" :error="errors.age_confirmation" :state="getFieldState('age_confirmation')">
-                <FormControl>
-                  <label class="checkbox-label">
-                    <input
-                      id="age_confirmation"
-                      v-model="form.age_confirmation"
-                      type="checkbox"
-                      :disabled="loading"
-                      @change="validateField('age_confirmation')"
-                    />
-                    <span>I confirm I am 18+ and legally allowed to use this platform</span>
-                  </label>
-                </FormControl>
-                <FormError v-if="errors.age_confirmation">{{ errors.age_confirmation }}</FormError>
-              </FormField>
-
-              <FormField id="terms_agreement" :error="errors.terms_agreement" :state="getFieldState('terms_agreement')">
-                <FormControl>
-                  <label class="checkbox-label">
-                    <input
-                      id="terms_agreement"
-                      v-model="form.terms_agreement"
-                      type="checkbox"
-                      :disabled="loading"
-                      @change="validateField('terms_agreement')"
-                    />
-                    <span>I agree to the Terms of Service and Privacy Policy</span>
-                  </label>
-                </FormControl>
-                <FormError v-if="errors.terms_agreement">{{ errors.terms_agreement }}</FormError>
-              </FormField>
-
-              <FormField id="tax_responsibility" :error="errors.tax_responsibility" :state="getFieldState('tax_responsibility')">
-                <FormControl>
-                  <label class="checkbox-label">
-                    <input
-                      id="tax_responsibility"
-                      v-model="form.tax_responsibility"
-                      type="checkbox"
-                      :disabled="loading"
-                      @change="validateField('tax_responsibility')"
-                    />
-                    <span>I understand users are responsible for complying with UK laws and tax obligations</span>
-                  </label>
-                </FormControl>
-                <FormError v-if="errors.tax_responsibility">{{ errors.tax_responsibility }}</FormError>
-              </FormField>
+              <div class="step-indicator__line" :class="{ complete: currentStep === 2 }"></div>
+              <div class="step-indicator__item" :class="{ active: currentStep === 2 }">
+                <span class="step-indicator__number">2</span>
+                <span class="step-indicator__label">Profile</span>
+              </div>
             </div>
 
-            <!-- Submit Button -->
-            <button class="auth-form__submit" type="submit" :disabled="loading || !canSubmit">
-              <LoadingSkeleton v-if="loading" variant="text" width="100%" height="16px" />
-              <span v-else>Sign up</span>
-            </button>
+            <!-- Step 1: Account -->
+            <template v-if="currentStep === 1">
+              <FormField id="email" :error="errors.email" :state="getFieldState('email')">
+                <FormLabel for="email">Email Address</FormLabel>
+                <FormControl>
+                  <input
+                    id="email"
+                    v-model="form.email"
+                    type="email"
+                    placeholder="you@example.com"
+                    :disabled="loading"
+                    autocomplete="email"
+                    required
+                    @input="validateField('email')"
+                    @blur="validateField('email')"
+                  />
+                </FormControl>
+                <FormError v-if="errors.email">{{ errors.email }}</FormError>
+                <FormSuccess v-if="!errors.email && form.email.length > 0"><Check :size="16" class="success-icon" /></FormSuccess>
+              </FormField>
+
+              <FormField id="password" :error="errors.password" :state="getFieldState('password')">
+                <FormLabel for="password">Password</FormLabel>
+                <FormControl>
+                  <div class="password-input-wrapper">
+                    <input
+                      id="password"
+                      v-model="form.password"
+                      :type="showPassword ? 'text' : 'password'"
+                      placeholder="Create a strong password"
+                      :disabled="loading"
+                      autocomplete="new-password"
+                      required
+                      @input="validateField('password')"
+                      @blur="validateField('password')"
+                    />
+                    <button type="button" class="password-toggle" @click="showPassword = !showPassword">
+                      <EyeOff v-if="showPassword" :size="18" />
+                      <Eye v-else :size="18" />
+                    </button>
+                  </div>
+                </FormControl>
+                <FormError v-if="errors.password">{{ errors.password }}</FormError>
+                <FormHint>8+ characters, uppercase, lowercase, and number</FormHint>
+                <FormSuccess v-if="!errors.password && form.password.length >= 8"><Check :size="16" class="success-icon" /></FormSuccess>
+              </FormField>
+
+              <FormField id="confirmPassword" :error="errors.confirmPassword" :state="getFieldState('confirmPassword')">
+                <FormLabel for="confirmPassword">Confirm Password</FormLabel>
+                <FormControl>
+                  <div class="password-input-wrapper">
+                    <input
+                      id="confirmPassword"
+                      v-model="form.confirmPassword"
+                      :type="showConfirmPassword ? 'text' : 'password'"
+                      placeholder="Confirm your password"
+                      :disabled="loading"
+                      autocomplete="new-password"
+                      required
+                      @input="validateConfirmPassword"
+                      @blur="validateField('confirmPassword')"
+                    />
+                    <button type="button" class="password-toggle" @click="showConfirmPassword = !showConfirmPassword">
+                      <EyeOff v-if="showConfirmPassword" :size="18" />
+                      <Eye v-else :size="18" />
+                    </button>
+                  </div>
+                </FormControl>
+                <FormError v-if="errors.confirmPassword">{{ errors.confirmPassword }}</FormError>
+                <FormSuccess v-if="!errors.confirmPassword && form.confirmPassword === form.password && form.confirmPassword.length > 0"><Check :size="16" class="success-icon" /></FormSuccess>
+              </FormField>
+
+              <FormField id="role" :error="errors.role" :state="getFieldState('role')">
+                <FormLabel for="role">How will you use HireBeHired?</FormLabel>
+                <FormControl>
+                  <select
+                    id="role"
+                    v-model="form.role"
+                    class="form-select"
+                    :disabled="loading"
+                    required
+                    @change="validateField('role')"
+                    @blur="validateField('role')"
+                  >
+                    <option value="" disabled>Select a role</option>
+                    <option value="employer">Hire talent (Employer)</option>
+                    <option value="worker">Find work (Worker)</option>
+                  </select>
+                </FormControl>
+                <FormError v-if="errors.role">{{ errors.role }}</FormError>
+                <FormSuccess v-if="!errors.role && form.role"><Check :size="16" class="success-icon" /></FormSuccess>
+              </FormField>
+
+              <button type="button" class="auth-form__submit" :disabled="!canGoToStep2" @click="goToStep2">
+                Continue
+              </button>
+            </template>
+
+            <!-- Step 2: Profile -->
+            <template v-if="currentStep === 2">
+              <FormField id="first_name" :error="errors.first_name" :state="getFieldState('first_name')">
+                <FormLabel for="first_name">First Name</FormLabel>
+                <FormControl>
+                  <input
+                    id="first_name"
+                    v-model="form.first_name"
+                    type="text"
+                    placeholder="Enter your first name"
+                    :disabled="loading"
+                    autocomplete="given-name"
+                    required
+                    @input="validateField('first_name')"
+                    @blur="validateField('first_name')"
+                  />
+                </FormControl>
+                <FormError v-if="errors.first_name">{{ errors.first_name }}</FormError>
+                <FormSuccess v-if="!errors.first_name && form.first_name.length > 0"><Check :size="16" class="success-icon" /></FormSuccess>
+              </FormField>
+
+              <FormField id="last_name" :error="errors.last_name" :state="getFieldState('last_name')">
+                <FormLabel for="last_name">Last Name</FormLabel>
+                <FormControl>
+                  <input
+                    id="last_name"
+                    v-model="form.last_name"
+                    type="text"
+                    placeholder="Enter your last name"
+                    :disabled="loading"
+                    autocomplete="family-name"
+                    required
+                    @input="validateField('last_name')"
+                    @blur="validateField('last_name')"
+                  />
+                </FormControl>
+                <FormError v-if="errors.last_name">{{ errors.last_name }}</FormError>
+                <FormSuccess v-if="!errors.last_name && form.last_name.length > 0"><Check :size="16" class="success-icon" /></FormSuccess>
+              </FormField>
+
+              <FormField id="username" :error="errors.username" :state="getFieldState('username')">
+                <FormLabel for="username">Username</FormLabel>
+                <FormControl>
+                  <input
+                    id="username"
+                    v-model="form.username"
+                    type="text"
+                    placeholder="Choose a username"
+                    :disabled="loading"
+                    autocomplete="username"
+                    required
+                    maxlength="12"
+                    @input="handleUsernameInput"
+                    @blur="validateField('username')"
+                  />
+                </FormControl>
+                <div class="form-field__hint-row">
+                  <FormError v-if="errors.username">{{ errors.username }}</FormError>
+                  <span class="char-count" :class="{ 'is-over': form.username.length > 12 }">{{ form.username.length }}/12</span>
+                </div>
+                <FormSuccess v-if="!errors.username && usernameAvailable === true && form.username.length > 0"><Check :size="16" class="success-icon" /> Available</FormSuccess>
+                <FormError v-if="!errors.username && usernameAvailable === false && form.username.length > 0">Username taken</FormError>
+                <p class="username-warning">Choose carefully — your username cannot be changed later</p>
+              </FormField>
+
+              <FormField id="postcode" :error="errors.postcode" :state="getFieldState('postcode')">
+                <FormLabel for="postcode">Postcode</FormLabel>
+                <FormControl>
+                  <input
+                    id="postcode"
+                    v-model="form.postcode"
+                    type="text"
+                    placeholder="UK Postcode (e.g. SW1A 1AA)"
+                    :disabled="loading"
+                    autocomplete="postal-code"
+                    required
+                    @input="validateField('postcode')"
+                    @blur="validateField('postcode')"
+                  />
+                </FormControl>
+                <FormError v-if="errors.postcode">{{ errors.postcode }}</FormError>
+                <FormSuccess v-if="!errors.postcode && form.postcode.length >= 4"><Check :size="16" class="success-icon" /></FormSuccess>
+              </FormField>
+
+              <div class="checkbox-section">
+                <FormField id="age_confirmation" :error="errors.age_confirmation" :state="getFieldState('age_confirmation')">
+                  <FormControl>
+                    <label class="checkbox-label">
+                      <input
+                        id="age_confirmation"
+                        v-model="form.age_confirmation"
+                        type="checkbox"
+                        :disabled="loading"
+                        @change="validateField('age_confirmation')"
+                      />
+                      <span>I confirm I am 18+ and legally allowed to use this platform</span>
+                    </label>
+                  </FormControl>
+                  <FormError v-if="errors.age_confirmation">{{ errors.age_confirmation }}</FormError>
+                </FormField>
+
+                <FormField id="terms_agreement" :error="errors.terms_agreement" :state="getFieldState('terms_agreement')">
+                  <FormControl>
+                    <label class="checkbox-label">
+                      <input
+                        id="terms_agreement"
+                        v-model="form.terms_agreement"
+                        type="checkbox"
+                        :disabled="loading"
+                        @change="validateField('terms_agreement')"
+                      />
+                      <span>I agree to the Terms of Service and Privacy Policy</span>
+                    </label>
+                  </FormControl>
+                  <FormError v-if="errors.terms_agreement">{{ errors.terms_agreement }}</FormError>
+                </FormField>
+
+                <FormField id="tax_responsibility" :error="errors.tax_responsibility" :state="getFieldState('tax_responsibility')">
+                  <FormControl>
+                    <label class="checkbox-label">
+                      <input
+                        id="tax_responsibility"
+                        v-model="form.tax_responsibility"
+                        type="checkbox"
+                        :disabled="loading"
+                        @change="validateField('tax_responsibility')"
+                      />
+                      <span>I understand users are responsible for complying with UK laws and tax obligations</span>
+                    </label>
+                  </FormControl>
+                  <FormError v-if="errors.tax_responsibility">{{ errors.tax_responsibility }}</FormError>
+                </FormField>
+              </div>
+
+              <div class="step-actions">
+                <button type="button" class="btn btn--secondary btn--full" @click="goBackToStep1" :disabled="loading">
+                  Back
+                </button>
+                <button class="auth-form__submit" type="submit" :disabled="loading || !canSubmit">
+                  <LoadingSkeleton v-if="loading" variant="text" width="100%" height="16px" />
+                  <span v-else>Sign up</span>
+                </button>
+              </div>
+            </template>
 
             <!-- Submit Error -->
             <div v-if="submitError" role="alert" id="submit-error" class="submit-error">
@@ -303,7 +321,7 @@ import { validateSignUpForm, validateSignUp, SignUpFormSchema } from '~/schemas/
 import type { SignUpFormInput, SignUpInput } from '~/schemas/auth';
 
 definePageMeta({
-  layout: false,
+  layout: 'public',
   title: 'Sign Up - HireBeHired'
 });
 
@@ -334,6 +352,7 @@ const usernameAvailable = ref<boolean | null>(null);
 const usernameCheckDebounce = ref<ReturnType<typeof setTimeout> | null>(null);
 const showPassword = ref(false);
 const showConfirmPassword = ref(false);
+const currentStep = ref(1);
 
 // Username availability check
 const handleUsernameInput = () => {
@@ -418,14 +437,6 @@ const validateForm = () => {
   return Object.keys(errors).length === 0;
 };
 
-const isFormValid = computed(() => {
-  return Object.values(form).every(value => {
-    if (typeof value === 'boolean') return value === true;
-    return value && value.trim() !== '';
-  }) &&
-         Object.keys(errors).length === 0;
-});
-
 const canSubmit = computed(() => {
   return Object.keys(errors).length === 0 &&
          Object.values(form).every(value => {
@@ -433,6 +444,26 @@ const canSubmit = computed(() => {
            return value && value.trim() !== '';
          });
 });
+
+const canGoToStep2 = computed(() => {
+  const step1Fields = ['email', 'password', 'confirmPassword', 'role'];
+  return step1Fields.every(field => {
+    const value = form[field as keyof SignUpFormInput];
+    if (!value || String(value).trim() === '') return false;
+    return !errors[field];
+  }) && form.confirmPassword === form.password;
+});
+
+const goToStep2 = () => {
+  const step1Fields = ['email', 'password', 'confirmPassword', 'role'];
+  step1Fields.forEach(field => validateField(field as keyof SignUpFormInput));
+  if (!canGoToStep2.value) return;
+  currentStep.value = 2;
+};
+
+const goBackToStep1 = () => {
+  currentStep.value = 1;
+};
 
 // Form submission
 const handleSubmit = async () => {
@@ -507,6 +538,7 @@ const handleFormReset = () => {
   Object.keys(errors).forEach(key => delete errors[key]);
   submitError.value = '';
   success.value = false;
+  currentStep.value = 1;
   resetDirty();
 };
 
@@ -571,6 +603,95 @@ const handleDialogCancel = () => {
   display: flex;
   flex-direction: column;
   gap: var(--space-6);
+}
+
+.step-indicator {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-bottom: var(--space-2);
+}
+
+.step-indicator__item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--text-sm);
+  font-weight: 500;
+  color: var(--color-text-subtle);
+}
+
+.step-indicator__item.active,
+.step-indicator__item.complete {
+  color: var(--color-primary-700);
+  font-weight: 600;
+}
+
+.step-indicator__number {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--color-surface-muted);
+  border: 1px solid var(--color-border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--color-text-subtle);
+}
+
+.step-indicator__item.active .step-indicator__number,
+.step-indicator__item.complete .step-indicator__number {
+  background: var(--color-primary-600);
+  border-color: var(--color-primary-600);
+  color: white;
+}
+
+.step-indicator__line {
+  flex: 1;
+  height: 2px;
+  background: var(--color-border);
+  border-radius: 1px;
+}
+
+.step-indicator__line.complete {
+  background: var(--color-primary-600);
+}
+
+.step-actions {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 10px 18px;
+  border-radius: var(--radius-md);
+  font-weight: 600;
+  font-size: var(--text-sm);
+  text-decoration: none;
+  border: none;
+  cursor: pointer;
+  transition: background 120ms ease, transform 80ms ease;
+}
+
+.btn--full {
+  width: 100%;
+}
+
+.btn--secondary {
+  background: var(--color-surface-muted);
+  color: var(--color-text);
+  border: 1px solid var(--color-border);
+}
+
+.btn--secondary:hover {
+  background: var(--color-hover);
 }
 
 .form-select {
@@ -726,17 +847,8 @@ const handleDialogCancel = () => {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .auth-container {
-  }
-
   .auth-form__submit {
     transition: none;
-  }
-
-  .auth-form__submit.is-loading {
-  }
-
-  .auth-form__success-icon {
   }
 }
 </style>

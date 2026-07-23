@@ -1,23 +1,17 @@
-<template>
-  <div class="form-field" :class="[`state-${state}`]">
-    <slot />
-  </div>
-</template>
-
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue';
 import { provideFormFieldContext } from './context';
 
-const props = withDefaults(
-  defineProps<{
-    id: string;
-    error?: string | null;
-    state?: 'default' | 'success' | 'error';
-  }>(),
-  {
-    state: 'default'
-  }
-);
+export interface FormFieldProps {
+  /** Field identifier */
+  id: string;
+  /** Validation error message */
+  error?: string | null;
+  /** Field state */
+  state?: 'default' | 'success' | 'error';
+}
+
+const props = withDefaults(defineProps<FormFieldProps>(), {});
 
 const hasHint = ref(false);
 const hasError = ref(Boolean(props.error));
@@ -57,10 +51,16 @@ provideFormFieldContext({
 const state = computed(() => props.state ?? (externalError.value ? 'error' : 'default'));
 </script>
 
+<template>
+  <div class="form-field" :class="[`state-${state}`]">
+    <slot />
+  </div>
+</template>
+
 <style scoped>
 .form-field {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: var(--space-1);
 }
 </style>

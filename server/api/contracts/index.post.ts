@@ -1,7 +1,6 @@
 import { validateCreateContract, ContractResponseSchema } from '~/schemas/contract';
 import { serverSupabaseClient } from '#supabase/server';
-import { getAuthenticatedUser } from '~/server/utils/api';
-import { ensureJobEmployer } from '~/server/utils/api';
+import { getAuthenticatedUser, ensureJobOwner } from '~/server/utils/api';
 import { logger, logDetailedError } from '~/server/utils/logger';
 import { getErrorMessage } from '~/server/utils/errorMessages';
 import { requireCsrfProtection } from '~/server/utils/csrf';
@@ -30,7 +29,7 @@ export default defineEventHandler(async (event) => {
     const client = await serverSupabaseClient(event);
 
     // Authorization check: only the job employer can create a contract
-    await ensureJobEmployer(client, job_id, user.id);
+    await ensureJobOwner(client, job_id, user.id);
 
     // Verify the application exists and belongs to this job
     const { data: application, error: applicationError } = await client

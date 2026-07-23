@@ -220,7 +220,7 @@ onMounted(loadJobs);
 .jobs-page__cta {
   border: 1px solid var(--color-border);
   border-radius: var(--radius-pill);
-  padding: 10px 20px;
+  padding: var(--space-3) var(--space-5);
   background: var(--color-surface);
   text-decoration: none;
   color: inherit;
@@ -229,6 +229,12 @@ onMounted(loadJobs);
 
 .jobs-page__cta:hover {
   background: var(--color-surface-muted);
+}
+
+.jobs-page__cta:focus-visible {
+  outline: 2px solid var(--color-dark);
+  outline-offset: 2px;
+  border-radius: var(--radius-md);
 }
 
 .jobs-page__header-actions {
@@ -240,7 +246,7 @@ onMounted(loadJobs);
 .jobs-page__location-btn {
   border: 1px solid var(--color-border);
   border-radius: var(--radius-pill);
-  padding: 10px 20px;
+  padding: var(--space-3) var(--space-5);
   background: var(--color-surface);
   text-decoration: none;
   color: inherit;
@@ -251,6 +257,12 @@ onMounted(loadJobs);
 
 .jobs-page__location-btn:hover:not(:disabled) {
   background: var(--color-surface-muted);
+}
+
+.jobs-page__location-btn:focus-visible {
+  outline: 2px solid var(--color-dark);
+  outline-offset: 2px;
+  border-radius: var(--radius-md);
 }
 
 .jobs-page__location-btn:disabled {
@@ -276,16 +288,22 @@ onMounted(loadJobs);
 
 .jobs-page__retry-btn {
   background: var(--color-danger-600);
-  color: white;
+  color: var(--color-white);
   border: none;
   border-radius: var(--radius-md);
-  padding: 8px 16px;
+  padding: var(--space-2) var(--space-4);
   cursor: pointer;
   font: inherit;
 }
 
 .jobs-page__retry-btn:hover {
   background: var(--color-danger-700);
+}
+
+.jobs-page__retry-btn:focus-visible {
+  outline: 2px solid var(--color-dark);
+  outline-offset: 2px;
+  border-radius: var(--radius-md);
 }
 
 .jobs-page__nearby-banner {
@@ -306,16 +324,22 @@ onMounted(loadJobs);
 
 .jobs-page__clear-btn {
   background: var(--color-primary-600);
-  color: white;
+  color: var(--color-white);
   border: none;
   border-radius: var(--radius-md);
-  padding: 8px 16px;
+  padding: var(--space-2) var(--space-4);
   cursor: pointer;
   font: inherit;
 }
 
 .jobs-page__clear-btn:hover {
   background: var(--color-primary-700);
+}
+
+.jobs-page__clear-btn:focus-visible {
+  outline: 2px solid var(--color-dark);
+  outline-offset: 2px;
+  border-radius: var(--radius-md);
 }
 
 @media (max-width: 768px) {

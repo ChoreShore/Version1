@@ -1,3 +1,22 @@
+<script setup lang="ts">
+export interface StatCardProps {
+  /** Card title / label */
+  title: string;
+  /** Main numeric or text value */
+  value: string | number;
+  /** Optional description */
+  description?: string;
+  /** Icon emoji or character */
+  icon?: string;
+  /** Trend indicator */
+  trend?: { value: string; label?: string; variant?: 'up' | 'down' };
+}
+
+const props = defineProps<StatCardProps>();
+
+const trendVariant = computed(() => props.trend?.variant ?? 'up');
+</script>
+
 <template>
   <section class="stat-card">
     <div class="stat-card__header">
@@ -19,24 +38,12 @@
   </section>
 </template>
 
-<script setup lang="ts">
-const props = defineProps<{
-  title: string;
-  value: string | number;
-  description?: string;
-  icon?: string;
-  trend?: { value: string; label?: string; variant?: 'up' | 'down' };
-}>();
-
-const trendVariant = computed(() => props.trend?.variant ?? 'up');
-</script>
-
 <style scoped>
 .stat-card {
-  background: var(--surface);
+  background: var(--color-surface);
   border-radius: var(--radius-lg);
   padding: var(--space-5);
-  border: 1px solid var(--border);
+  border: 1px solid var(--color-border);
   box-shadow: var(--shadow-sm);
   display: flex;
   flex-direction: column;
@@ -53,44 +60,44 @@ const trendVariant = computed(() => props.trend?.variant ?? 'up');
 .stat-card__title {
   margin: 0;
   font-size: var(--text-sm);
-  color: var(--muted);
+  color: var(--color-text-muted);
   text-transform: uppercase;
   letter-spacing: 0.08em;
 }
 
 .stat-card__icon {
-  width: 32px;
-  height: 32px;
+  width: var(--space-8);
+  height: var(--space-8);
   border-radius: var(--radius-md);
-  background: linear-gradient(135deg, var(--hover), #ffffff);
-  color: var(--text);
+  background: linear-gradient(135deg, var(--color-hover), var(--color-white));
+  color: var(--color-text);
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  border: 1px solid var(--border);
+  border: 1px solid var(--color-border);
 }
 
 .stat-card__value {
   margin: 0;
-  font-size: 2rem;
+  font-size: var(--text-3xl);
   font-weight: 600;
 }
 
 .stat-card__description {
   margin: 0;
-  color: var(--muted);
+  color: var(--color-text-muted);
 }
 
 .stat-card__trend {
   display: inline-flex;
   align-items: baseline;
-  gap: 6px;
+  gap: var(--space-1);
   font-size: var(--text-sm);
   font-weight: 600;
 }
 
 .stat-card__trend.up {
-  color: var(--success);
+  color: var(--color-success);
 }
 
 .stat-card__trend.down {
@@ -99,6 +106,6 @@ const trendVariant = computed(() => props.trend?.variant ?? 'up');
 
 .stat-card__trend-label {
   font-weight: 400;
-  color: var(--muted);
+  color: var(--color-text-muted);
 }
 </style>

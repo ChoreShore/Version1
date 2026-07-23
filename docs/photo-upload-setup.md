@@ -75,11 +75,13 @@ Photos are stored in Supabase storage with the following structure:
 ```
 profile-photos/
 ├── employer-photos/
-│   ├── {user-id}-{timestamp}.jpg
-│   └── ...
+│   └── {user-id}/
+│       ├── {timestamp}.jpg
+│       └── ...
 └── worker-photos/
-    ├── {user-id}-{timestamp}.png
-    └── ...
+    └── {user-id}/
+        ├── {timestamp}.png
+        └── ...
 ```
 
 ## Security

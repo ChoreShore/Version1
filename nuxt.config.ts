@@ -39,5 +39,16 @@ export default defineNuxtConfig({
       }
     }
   },
+  app: {
+    head: {
+      script: [
+        {
+          id: 'cookieyes',
+          src: 'https://cdn-cookieyes.com/client_data/9bb25d23d078fc5f7def7d3f609e04f1/script.js',
+          type: 'text/javascript'
+        }
+      ]
+    }
+  },
   compatibilityDate: '2026-03-03'
 });

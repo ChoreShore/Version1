@@ -62,9 +62,11 @@
       </button>
     </div>
 
-    <div v-if="workersLoading" class="public-workers-page__grid">
-      <LoadingSkeleton v-for="n in 8" :key="`worker-skeleton-${n}`" variant="block" height="250px" />
-    </div>
+    <Carousel v-if="workersLoading">
+      <div v-for="n in 8" :key="`worker-skeleton-${n}`" class="worker-skeleton-card">
+        <LoadingSkeleton variant="block" height="250px" />
+      </div>
+    </Carousel>
 
     <EmptyState
       v-else-if="!filteredWorkers.length"
@@ -77,9 +79,9 @@
       </template>
     </EmptyState>
 
-    <div v-else class="public-workers-page__grid">
+    <Carousel v-else>
       <WorkerCard v-for="worker in filteredWorkers" :key="worker.id" :worker="worker" />
-    </div>
+    </Carousel>
 
     <!-- Content Sections -->
     <TrustSection />
@@ -98,6 +100,7 @@ import { onMounted, ref } from 'vue';
 import WorkerCard from '~/components/workers/WorkerCard.vue';
 import EmptyState from '~/components/primitives/EmptyState.vue';
 import LoadingSkeleton from '~/components/primitives/LoadingSkeleton.vue';
+import Carousel from '~/components/primitives/Carousel.vue';
 import TrustSection from '~/components/sections/TrustSection.vue';
 import HowItWorksSection from '~/components/sections/HowItWorksSection.vue';
 import EarningSection from '~/components/sections/EarningSection.vue';
@@ -257,9 +260,11 @@ onMounted(() => {
 }
 
 .public-workers-page__grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-  gap: var(--space-4);
+  display: contents;
+}
+
+.worker-skeleton-card {
+  height: 250px;
 }
 
 .public-workers-page__header-actions {
@@ -452,10 +457,6 @@ onMounted(() => {
   .public-workers-page__geo-error {
     flex-direction: column;
     align-items: flex-start;
-  }
-
-  .public-workers-page__grid {
-    grid-template-columns: 1fr;
   }
 }
 </style>

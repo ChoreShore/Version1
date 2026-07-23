@@ -327,7 +327,7 @@ const handleFormReset = () => {
 .application-form__button {
   padding: var(--space-3) var(--space-4);
   background: var(--color-primary-500) !important;
-  color: white !important;
+  color: var(--color-white) !important;
   border: none;
   border-radius: var(--radius-md);
   font-weight: 600;

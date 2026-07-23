@@ -1,25 +1,24 @@
-<template>
-  <div class="tabs" :class="[`orientation-${orientationClass}`]">
-    <slot />
-  </div>
-</template>
-
 <script setup lang="ts">
 import { provideTabsContext } from './context';
 
 type Orientation = 'horizontal' | 'vertical';
 
-type Props = {
+export interface TabsRootProps {
+  /** Controlled active tab value */
   modelValue?: string;
+  /** Initial active tab value */
   defaultValue?: string;
+  /** Tab orientation */
   orientation?: Orientation;
-};
+}
 
-const props = withDefaults(defineProps<Props>(), {
+const props = withDefaults(defineProps<TabsRootProps>(), {
   orientation: 'horizontal'
 });
 
-const emit = defineEmits<{ (e: 'update:modelValue', value: string): void }>();
+const emit = defineEmits<{
+  'update:modelValue': [value: string];
+}>();
 
 const value = ref(props.modelValue ?? props.defaultValue ?? '');
 
@@ -47,6 +46,12 @@ provideTabsContext({ value, registerTab, orientation });
 
 const orientationClass = computed(() => orientation.value);
 </script>
+
+<template>
+  <div class="tabs" :class="[`orientation-${orientationClass}`]">
+    <slot />
+  </div>
+</template>
 
 <style scoped>
 .tabs {

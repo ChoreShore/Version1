@@ -10,8 +10,6 @@ export default defineEventHandler(async (event) => {
     // Apply CSRF protection
     requireCsrfProtection(event);
 
-    const body = await readBody(event);
-
     const user = await getAuthenticatedUser(event, 'Sign in to upload photos');
 
     const formData = await readFormData(event);
@@ -53,10 +51,11 @@ export default defineEventHandler(async (event) => {
     const role = profile.roles && profile.roles.length > 0 ? profile.roles[0] : 'worker';
     const folder = role === 'employer' ? 'employer-photos' : 'worker-photos';
 
-    // Generate unique filename
+    // Generate unique filename — user ID is a separate folder component
+    // so that RLS policy `auth.uid()::text = (storage.foldername(name))[2]` matches
     const fileExt = file.name.split('.').pop();
-    const fileName = `${user.id}-${Date.now()}.${fileExt}`;
-    const filePath = `${folder}/${fileName}`;
+    const fileName = `${Date.now()}.${fileExt}`;
+    const filePath = `${folder}/${user.id}/${fileName}`;
 
     // Upload to Supabase storage
     const { data: uploadData, error: uploadError } = await client

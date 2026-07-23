@@ -1,20 +1,14 @@
-<template>
-  <div class="menu-root">
-    <slot />
-  </div>
-</template>
-
 <script setup lang="ts">
 import { provideMenuContext } from './context';
 
-const props = withDefaults(
-  defineProps<{
-    closeOnSelect?: boolean;
-  }>(),
-  {
-    closeOnSelect: true
-  }
-);
+export interface MenuRootProps {
+  /** Close menu when an item is selected */
+  closeOnSelect?: boolean;
+}
+
+const props = withDefaults(defineProps<MenuRootProps>(), {
+  closeOnSelect: true
+});
 
 const isOpen = ref(false);
 const triggerRef = ref<HTMLElement | null>(null);
@@ -96,6 +90,12 @@ provideMenuContext({
   close
 });
 </script>
+
+<template>
+  <div class="menu-root">
+    <slot />
+  </div>
+</template>
 
 <style scoped>
 .menu-root {

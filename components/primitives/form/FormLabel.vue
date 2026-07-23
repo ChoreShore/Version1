@@ -1,14 +1,14 @@
-<template>
-  <label class="form-field__label" :for="fieldId">
-    <slot />
-  </label>
-</template>
-
 <script setup lang="ts">
 import { useFormFieldContext } from './context';
 
 const { fieldId } = useFormFieldContext('FormLabel');
 </script>
+
+<template>
+  <label class="form-field__label" :for="fieldId">
+    <slot />
+  </label>
+</template>
 
 <style scoped>
 .form-field__label {

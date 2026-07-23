@@ -79,7 +79,7 @@ const handleConfirm = () => {
 .withdraw-modal__overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.45);
+  background: var(--color-overlay-dense);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -190,12 +190,12 @@ const handleConfirm = () => {
 .withdraw-modal__btn--confirm {
   background: var(--color-danger);
   border: 1px solid var(--color-danger);
-  color: white;
+  color: var(--color-white);
 }
 
 .withdraw-modal__btn--confirm:hover:not(:disabled) {
-  background: var(--color-danger-dark, #b91c1c);
-  border-color: var(--color-danger-dark, #b91c1c);
+  background: var(--color-danger-dark);
+  border-color: var(--color-danger-dark);
 }
 
 .withdraw-modal__btn--confirm:disabled {

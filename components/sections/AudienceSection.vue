@@ -44,7 +44,6 @@
 }
 
 .audience-section__title {
-  font-family: var(--font-display);
   font-size: var(--text-2xl);
   margin-bottom: var(--space-1);
 }
@@ -83,7 +82,6 @@
 }
 
 .audience-card__label {
-  font-family: var(--font-display);
   font-weight: 600;
 }
 

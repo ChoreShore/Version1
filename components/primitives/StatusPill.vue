@@ -1,32 +1,33 @@
+<script setup lang="ts">
+export interface StatusPillProps {
+  /** Pill text label */
+  label?: string;
+  /** Visual style variant */
+  variant?: 'neutral' | 'info' | 'success' | 'warning' | 'danger';
+}
+
+withDefaults(defineProps<StatusPillProps>(), {
+  variant: 'neutral'
+});
+</script>
+
 <template>
   <span class="status-pill" :class="[`status-${variant}`]">
     <slot>{{ label }}</slot>
   </span>
 </template>
 
-<script setup lang="ts">
-withDefaults(
-  defineProps<{
-    label?: string;
-    variant?: 'neutral' | 'info' | 'success' | 'warning' | 'danger';
-  }>(),
-  {
-    variant: 'neutral'
-  }
-);
-</script>
-
 <style scoped>
 .status-pill {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  padding: 0.25rem 0.75rem;
+  gap: var(--space-1);
+  padding: var(--space-1) var(--space-2);
   border-radius: var(--radius-pill);
   font-size: var(--text-sm);
   font-weight: 600;
-  background: var(--hover);
-  color: var(--muted);
+  background: var(--color-hover);
+  color: var(--color-text-muted);
 }
 
 .status-info {
@@ -35,17 +36,17 @@ withDefaults(
 }
 
 .status-success {
-  background: rgba(17, 17, 17, 0.12);
-  color: var(--success);
+  background: var(--color-success-bg);
+  color: var(--color-success);
 }
 
 .status-warning {
-  background: rgba(212, 116, 94, 0.15);
-  color: #A8553D;
+  background: var(--color-warning-bg);
+  color: var(--color-warning-text);
 }
 
 .status-danger {
-  background: rgba(192, 57, 43, 0.12);
+  background: var(--color-danger-bg);
   color: var(--color-danger);
 }
 </style>

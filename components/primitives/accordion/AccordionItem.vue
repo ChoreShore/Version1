@@ -1,15 +1,14 @@
-<template>
-  <div class="accordion__item">
-    <slot />
-  </div>
-</template>
-
 <script setup lang="ts">
 import { computed } from 'vue';
 import { provideAccordionItemContext } from './itemContext';
 import { useAccordionContext } from './context';
 
-const props = defineProps<{ value: string }>();
+export interface AccordionItemProps {
+  /** Unique item value */
+  value: string;
+}
+
+const props = defineProps<AccordionItemProps>();
 const { isItemOpen, toggle } = useAccordionContext('AccordionItem');
 
 const triggerId = `accordion-trigger-${props.value}`;
@@ -24,6 +23,12 @@ provideAccordionItemContext({
   toggle: () => toggle(props.value)
 });
 </script>
+
+<template>
+  <div class="accordion__item">
+    <slot />
+  </div>
+</template>
 
 <style scoped>
 .accordion__item {

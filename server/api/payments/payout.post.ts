@@ -1,6 +1,6 @@
 import { serverSupabaseClient } from '#supabase/server';
 import { PayoutSchema, PayoutResponseSchema } from '~/schemas/payment';
-import { getAuthenticatedUser, ensureJobEmployer } from '~/server/utils/api';
+import { getAuthenticatedUser, ensureJobOwner } from '~/server/utils/api';
 
 export default defineEventHandler(async (event) => {
   try {
@@ -29,16 +29,15 @@ export default defineEventHandler(async (event) => {
       throw createError({ statusCode: 404, statusMessage: 'Contract not found' });
     }
 
-    // Security check: only active contracts can be paid out
-    if (contract.status !== 'active') {
+    if (contract.status !== 'completed') {
       throw createError({
         statusCode: 400,
-        statusMessage: `Cannot process payout for contract with status "${contract.status}". Only active contracts can be paid out.`
+        statusMessage: `Cannot process payout for contract with status "${contract.status}". Only completed contracts can be paid out.`
       });
     }
 
     // Authorization check: only the job employer can process payouts
-    await ensureJobEmployer(client, contract.job_id, user.id);
+    await ensureJobOwner(client, contract.job_id, user.id);
 
     const occurredAt = new Date().toISOString();
     const payoutAmount = Number(contract.payout_amount ?? 0);

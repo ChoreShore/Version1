@@ -55,7 +55,7 @@ defineExpose({ openSidebar, closeSidebar, toggleSidebar });
   position: relative;
   display: flex;
   min-height: 100vh;
-  background-color: var(--bg);
+  background-color: var(--color-bg);
   overflow-x: hidden;
 }
 
@@ -66,8 +66,8 @@ defineExpose({ openSidebar, closeSidebar, toggleSidebar });
   bottom: 0;
   width: 280px;
   padding: var(--space-6) var(--space-4);
-  background-color: var(--surface);
-  border-right: 1px solid var(--border);
+  background-color: var(--color-surface);
+  border-right: 1px solid var(--color-border);
   overflow-y: auto;
   transform: translateX(-100%);
   z-index: 50;
@@ -97,9 +97,9 @@ defineExpose({ openSidebar, closeSidebar, toggleSidebar });
   position: sticky;
   top: 0;
   z-index: 40;
-  background-color: rgba(255, 255, 255, 0.85);
+  background-color: var(--color-surface-translucent);
   backdrop-filter: blur(12px);
-  border-bottom: 1px solid var(--border);
+  border-bottom: 1px solid var(--color-border);
 }
 
 .app-shell__main {
@@ -116,7 +116,7 @@ defineExpose({ openSidebar, closeSidebar, toggleSidebar });
 .app-shell__scrim {
   position: fixed;
   inset: 0;
-  background-color: rgba(26, 26, 26, 0.35);
+  background-color: var(--color-overlay);
   z-index: 40;
 }
 
@@ -157,8 +157,8 @@ defineExpose({ openSidebar, closeSidebar, toggleSidebar });
   bottom: 0;
   left: 0;
   right: 0;
-  background: var(--surface);
-  border-top: 1px solid var(--border);
+  background: var(--color-surface);
+  border-top: 1px solid var(--color-border);
   padding: var(--space-2) var(--space-4);
   z-index: 50;
 }

@@ -34,6 +34,7 @@ const props = defineProps<{ contract: ContractWithDetailsInput }>();
 const contractStatusVariantMap: Record<ContractStatus, 'neutral' | 'warning' | 'success' | 'info' | 'danger'> = {
   pending: 'warning',
   active: 'info',
+  pending_review: 'warning',
   completed: 'success',
   cancelled: 'neutral'
 };
@@ -41,6 +42,7 @@ const contractStatusVariantMap: Record<ContractStatus, 'neutral' | 'warning' | '
 const contractStatusLabelMap: Record<ContractStatus, string> = {
   pending: 'Pending',
   active: 'In Progress',
+  pending_review: 'Awaiting Approval',
   completed: 'Completed',
   cancelled: 'Cancelled'
 };

@@ -1,3 +1,16 @@
+<script setup lang="ts">
+export interface DataListProps {
+  /** Section title */
+  title?: string;
+  /** Eyebrow text above title */
+  eyebrow?: string;
+  /** Description below title */
+  description?: string;
+}
+
+defineProps<DataListProps>();
+</script>
+
 <template>
   <section class="data-list">
     <header v-if="title || $slots.actions" class="data-list__header">
@@ -16,14 +29,6 @@
     </ul>
   </section>
 </template>
-
-<script setup lang="ts">
-defineProps<{
-  title?: string;
-  eyebrow?: string;
-  description?: string;
-}>();
-</script>
 
 <style scoped>
 .data-list {

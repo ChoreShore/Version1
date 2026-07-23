@@ -1,3 +1,7 @@
+<script setup lang="ts">
+// Presentational separator — no props
+</script>
+
 <template>
   <div class="menu__separator" role="separator"></div>
 </template>

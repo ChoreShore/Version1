@@ -1,26 +1,24 @@
-<template>
-  <div class="accordion">
-    <slot />
-  </div>
-</template>
-
 <script setup lang="ts">
 import { provideAccordionContext } from './context';
 
 type AccordionType = 'single' | 'multiple';
 
-const props = withDefaults(
-  defineProps<{
-    type?: AccordionType;
-    modelValue?: string[];
-    defaultValue?: string[];
-  }>(),
-  {
-    type: 'single'
-  }
-);
+export interface AccordionRootProps {
+  /** Accordion behavior type */
+  type?: AccordionType;
+  /** Controlled open values */
+  modelValue?: string[];
+  /** Initial open values */
+  defaultValue?: string[];
+}
 
-const emit = defineEmits<{ (e: 'update:modelValue', value: string[]): void }>();
+const props = withDefaults(defineProps<AccordionRootProps>(), {
+  type: 'single'
+});
+
+const emit = defineEmits<{
+  'update:modelValue': [value: string[]];
+}>();
 
 const openValues = ref<string[]>(props.modelValue ?? props.defaultValue ?? []);
 
@@ -50,6 +48,12 @@ const isItemOpen = (value: string) => openValues.value.includes(value);
 
 provideAccordionContext({ openValues, toggle, isItemOpen, allowMultiple: props.type === 'multiple' });
 </script>
+
+<template>
+  <div class="accordion">
+    <slot />
+  </div>
+</template>
 
 <style scoped>
 .accordion {

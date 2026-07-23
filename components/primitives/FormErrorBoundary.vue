@@ -17,11 +17,16 @@
 <script setup lang="ts">
 import ErrorBoundary from './ErrorBoundary.vue';
 
-interface FormErrorBoundaryProps {
+export interface FormErrorBoundaryProps {
+  /** Error boundary title */
   title?: string;
+  /** Error message text */
   message?: string;
+  /** Show error details expander */
   showDetails?: boolean;
+  /** Show reset button */
   showReset?: boolean;
+  /** Form identifier for error logging */
   formName?: string;
 }
 

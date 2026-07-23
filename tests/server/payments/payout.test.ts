@@ -12,7 +12,7 @@ describe('POST /api/payments/payout - Security Fixes', () => {
     it('should reject payout for cancelled contract', async () => {
       const error = {
         statusCode: 400,
-        statusMessage: 'Cannot process payout for contract with status "cancelled". Only active contracts can be paid out.'
+        statusMessage: 'Cannot process payout for contract with status "cancelled". Only completed contracts can be paid out.'
       };
 
       mockFetch.mockRejectedValue(error);
@@ -28,7 +28,7 @@ describe('POST /api/payments/payout - Security Fixes', () => {
     it('should reject payout for pending contract', async () => {
       const error = {
         statusCode: 400,
-        statusMessage: 'Cannot process payout for contract with status "pending". Only active contracts can be paid out.'
+        statusMessage: 'Cannot process payout for contract with status "pending". Only completed contracts can be paid out.'
       };
 
       mockFetch.mockRejectedValue(error);
@@ -41,7 +41,7 @@ describe('POST /api/payments/payout - Security Fixes', () => {
       ).rejects.toMatchObject(error);
     });
 
-    it('should allow payout for active contract', async () => {
+    it('should allow payout for completed contract', async () => {
       const response = {
         success: true,
         payout_amount: 1000,
@@ -53,7 +53,7 @@ describe('POST /api/payments/payout - Security Fixes', () => {
 
       const result = await $fetch('/api/payments/payout', {
         method: 'POST',
-        body: { contract_id: 'active-contract' }
+        body: { contract_id: 'completed-contract' }
       });
 
       expect(result).toEqual(response);

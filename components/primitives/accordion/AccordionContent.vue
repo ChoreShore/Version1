@@ -1,3 +1,9 @@
+<script setup lang="ts">
+import { useAccordionItemContext } from './itemContext';
+
+const { triggerId, contentId, isOpen } = useAccordionItemContext('AccordionContent');
+</script>
+
 <template>
   <section
     class="accordion__content"
@@ -9,12 +15,6 @@
     <slot />
   </section>
 </template>
-
-<script setup lang="ts">
-import { useAccordionItemContext } from './itemContext';
-
-const { triggerId, contentId, isOpen } = useAccordionItemContext('AccordionContent');
-</script>
 
 <style scoped>
 .accordion__content {
