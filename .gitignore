@@ -31,6 +31,9 @@ cypress.env.*.json
 cypress/screenshots
 cypress/videos
 
+# Test coverage
+coverage/
+
 # Supabase migrations
 /supabase/migrations
 
